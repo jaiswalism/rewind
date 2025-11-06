@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Apn-P8-zwA">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Onboarding Screen View Controller-->
+        <scene sceneID="vYz-Ne-nrF">
+            <objects>
+                <viewController id="Apn-P8-zwA" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="e5K-nq-rKe">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/praying" translatesAutoresizingMaskIntoConstraints="NO" id="KRv-ss-1MF">
+                                <rect key="frame" x="-4.6666666666666572" y="80" width="402.33333333333326" height="477"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/bottomCircle" translatesAutoresizingMaskIntoConstraints="NO" id="oha-yo-lp2">
+                                <rect key="frame" x="0.0" y="500" width="393" height="352"/>
+                                <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Personalize Your Mental Health State With Rewind" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BmS-8K-abO">
+                                <rect key="frame" x="21.666666666666657" y="563" width="350" height="114"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="114" id="8MS-YA-EWN"/>
+                                    <constraint firstAttribute="width" constant="350" id="klU-gN-wpj"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="29"/>
+                                <color key="textColor" name="colors/Primary/Light"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ySW-Bl-MQf">
+                                <rect key="frame" x="175" y="741" width="43" height="43"/>
+                                <rect key="contentStretch" x="1" y="1" width="1" height="1"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" cornerStyle="capsule">
+                                    <imageReference key="image" image="chevron.right" catalog="system" symbolScale="default"/>
+                                    <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" scale="default" weight="heavy"/>
+                                    <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+                                    <color key="baseBackgroundColor" name="colors/Primary/Light"/>
+                                </buttonConfiguration>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="40"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <segue destination="QMP-yR-XF1" kind="presentation" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="w37-ji-DuW"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.20000000000000001" translatesAutoresizingMaskIntoConstraints="NO" id="1R0-oj-gE3">
+                                <rect key="frame" x="106.66666666666669" y="707" width="180" height="4"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="CKn-p5-KB1"/>
+                                </constraints>
+                                <color key="progressTintColor" name="colors/Primary/Light"/>
+                                <color key="trackTintColor" name="colors/Blue&amp;Shades/blue-200"/>
+                            </progressView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="59e-Zp-rYH"/>
+                        <color key="backgroundColor" name="colors/baseBlue"/>
+                        <constraints>
+                            <constraint firstItem="BmS-8K-abO" firstAttribute="centerX" secondItem="e5K-nq-rKe" secondAttribute="centerX" id="4GF-KG-8dy"/>
+                            <constraint firstItem="1R0-oj-gE3" firstAttribute="centerX" secondItem="e5K-nq-rKe" secondAttribute="centerX" id="4K6-Vj-MSq"/>
+                            <constraint firstAttribute="bottom" secondItem="oha-yo-lp2" secondAttribute="bottom" id="D7W-KX-BCM"/>
+                            <constraint firstItem="ySW-Bl-MQf" firstAttribute="bottom" secondItem="59e-Zp-rYH" secondAttribute="bottom" id="IVk-aC-UKT"/>
+                            <constraint firstItem="ySW-Bl-MQf" firstAttribute="centerX" secondItem="e5K-nq-rKe" secondAttribute="centerX" id="MxH-sm-woa"/>
+                            <constraint firstItem="1R0-oj-gE3" firstAttribute="top" secondItem="BmS-8K-abO" secondAttribute="bottom" constant="30" id="O1G-11-TVC"/>
+                            <constraint firstItem="oha-yo-lp2" firstAttribute="leading" secondItem="59e-Zp-rYH" secondAttribute="leading" id="Qow-cd-X4b"/>
+                            <constraint firstItem="oha-yo-lp2" firstAttribute="trailing" secondItem="59e-Zp-rYH" secondAttribute="trailing" id="Uml-RO-1Ef"/>
+                            <constraint firstItem="1R0-oj-gE3" firstAttribute="centerX" secondItem="e5K-nq-rKe" secondAttribute="centerX" id="g4l-Yf-xAo"/>
+                            <constraint firstItem="1R0-oj-gE3" firstAttribute="top" secondItem="KRv-ss-1MF" secondAttribute="bottom" constant="150" id="iUj-ti-2mv"/>
+                            <constraint firstItem="ySW-Bl-MQf" firstAttribute="top" secondItem="1R0-oj-gE3" secondAttribute="bottom" constant="30" id="uHt-DC-CN3"/>
+                            <constraint firstItem="KRv-ss-1MF" firstAttribute="centerX" secondItem="e5K-nq-rKe" secondAttribute="centerX" id="xQG-px-FQq"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nextBtn1" destination="ySW-Bl-MQf" id="TO1-2P-bCY"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="rxE-e0-hrm" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1791.6030534351144" y="91.549295774647888"/>
+        </scene>
+        <!--Onboarding Screen View Controller-->
+        <scene sceneID="lsA-w4-w50">
+            <objects>
+                <viewController id="Nma-FY-01D" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="rz7-Lf-sak">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/heart" translatesAutoresizingMaskIntoConstraints="NO" id="RTV-tE-rl5">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="579"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/bottomCircle" translatesAutoresizingMaskIntoConstraints="NO" id="xyh-gO-Cv3">
+                                <rect key="frame" x="0.0" y="500" width="393" height="352"/>
+                                <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Build A Healthier Relationship With Yourself" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2T4-OD-JmP">
+                                <rect key="frame" x="21.666666666666657" y="597" width="350" height="114"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="114" id="VKY-5l-g9Z"/>
+                                    <constraint firstAttribute="width" constant="350" id="gZk-Di-a7Z"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="29"/>
+                                <color key="textColor" name="colors/Primary/Light"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="YMv-9r-sdP">
+                                <rect key="frame" x="175" y="775" width="43" height="43"/>
+                                <rect key="contentStretch" x="1" y="1" width="1" height="1"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" cornerStyle="capsule">
+                                    <imageReference key="image" image="chevron.right" catalog="system" symbolScale="default"/>
+                                    <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" scale="default" weight="heavy"/>
+                                    <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+                                    <color key="baseBackgroundColor" name="colors/Primary/Light"/>
+                                </buttonConfiguration>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="40"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <segue destination="h2S-q5-lWg" kind="presentation" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="l18-Yi-WXX"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.80000000000000004" translatesAutoresizingMaskIntoConstraints="NO" id="nPu-Up-SnT">
+                                <rect key="frame" x="106.66666666666669" y="741" width="180" height="4"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="BPR-7K-mZX"/>
+                                </constraints>
+                                <color key="progressTintColor" name="colors/Primary/Light"/>
+                                <color key="trackTintColor" name="colors/Blue&amp;Shades/blue-200"/>
+                            </progressView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="ady-Sg-iPl"/>
+                        <color key="backgroundColor" name="colors/baseBlue"/>
+                        <constraints>
+                            <constraint firstItem="2T4-OD-JmP" firstAttribute="centerX" secondItem="rz7-Lf-sak" secondAttribute="centerX" id="03L-ZG-LXp"/>
+                            <constraint firstItem="YMv-9r-sdP" firstAttribute="centerX" secondItem="rz7-Lf-sak" secondAttribute="centerX" id="365-Tw-J2g"/>
+                            <constraint firstItem="RTV-tE-rl5" firstAttribute="leading" secondItem="rz7-Lf-sak" secondAttribute="leading" id="99D-bt-scs"/>
+                            <constraint firstItem="nPu-Up-SnT" firstAttribute="top" secondItem="2T4-OD-JmP" secondAttribute="bottom" constant="30" id="HNZ-wt-Ohd"/>
+                            <constraint firstItem="xyh-gO-Cv3" firstAttribute="trailing" secondItem="ady-Sg-iPl" secondAttribute="trailing" id="JnM-2E-B2z"/>
+                            <constraint firstItem="xyh-gO-Cv3" firstAttribute="leading" secondItem="ady-Sg-iPl" secondAttribute="leading" id="KSj-TB-frU"/>
+                            <constraint firstItem="nPu-Up-SnT" firstAttribute="centerX" secondItem="rz7-Lf-sak" secondAttribute="centerX" id="Ksi-nU-IGz"/>
+                            <constraint firstItem="RTV-tE-rl5" firstAttribute="centerX" secondItem="rz7-Lf-sak" secondAttribute="centerX" id="Nlq-7n-vho"/>
+                            <constraint firstAttribute="trailing" secondItem="RTV-tE-rl5" secondAttribute="trailing" id="R92-gF-PsI"/>
+                            <constraint firstItem="YMv-9r-sdP" firstAttribute="top" secondItem="nPu-Up-SnT" secondAttribute="bottom" constant="30" id="cMx-2e-FGf"/>
+                            <constraint firstAttribute="bottom" secondItem="xyh-gO-Cv3" secondAttribute="bottom" id="cyh-jO-jh7"/>
+                            <constraint firstItem="RTV-tE-rl5" firstAttribute="top" secondItem="rz7-Lf-sak" secondAttribute="top" id="eoE-ah-qXp"/>
+                            <constraint firstItem="YMv-9r-sdP" firstAttribute="bottom" secondItem="ady-Sg-iPl" secondAttribute="bottom" id="iCb-ok-xtZ"/>
+                            <constraint firstItem="nPu-Up-SnT" firstAttribute="centerX" secondItem="rz7-Lf-sak" secondAttribute="centerX" id="icC-Mf-O0b"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nextBtn1" destination="YMv-9r-sdP" id="ujA-jZ-Ioz"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="XpL-cu-u87" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3916.7938931297708" y="91.549295774647888"/>
+        </scene>
+        <!--Onboarding Screen View Controller-->
+        <scene sceneID="FeE-ad-8V3">
+            <objects>
+                <viewController id="bZr-K2-eY0" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ela-29-ukh">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/reading" translatesAutoresizingMaskIntoConstraints="NO" id="g4l-ng-1Lt">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="579"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/bottomCircle" translatesAutoresizingMaskIntoConstraints="NO" id="NuT-RN-7hW">
+                                <rect key="frame" x="0.0" y="500" width="393" height="352"/>
+                                <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Understand Your Emotions Better Everyday" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RIz-aa-JUb">
+                                <rect key="frame" x="21.666666666666657" y="597" width="350" height="114"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="114" id="DuY-m6-Nfq"/>
+                                    <constraint firstAttribute="width" constant="350" id="XbV-Eg-gi3"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="29"/>
+                                <color key="textColor" name="colors/Primary/Light"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="00Q-Mr-KRt">
+                                <rect key="frame" x="175" y="775" width="43" height="43"/>
+                                <rect key="contentStretch" x="1" y="1" width="1" height="1"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" cornerStyle="capsule">
+                                    <imageReference key="image" image="chevron.right" catalog="system" symbolScale="default"/>
+                                    <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" scale="default" weight="heavy"/>
+                                    <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+                                    <color key="baseBackgroundColor" name="colors/Primary/Light"/>
+                                </buttonConfiguration>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="40"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <segue destination="Nma-FY-01D" kind="presentation" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="hse-We-nnA"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.59999999999999998" translatesAutoresizingMaskIntoConstraints="NO" id="3II-yi-f8C">
+                                <rect key="frame" x="106.66666666666669" y="741" width="180" height="4"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="7jT-Q6-0PL"/>
+                                </constraints>
+                                <color key="progressTintColor" name="colors/Primary/Light"/>
+                                <color key="trackTintColor" name="colors/Blue&amp;Shades/blue-200"/>
+                            </progressView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="aTl-bM-ZfZ"/>
+                        <color key="backgroundColor" name="colors/baseBlue"/>
+                        <constraints>
+                            <constraint firstItem="NuT-RN-7hW" firstAttribute="trailing" secondItem="aTl-bM-ZfZ" secondAttribute="trailing" id="1Uf-bH-fWe"/>
+                            <constraint firstAttribute="trailing" secondItem="g4l-ng-1Lt" secondAttribute="trailing" id="4W7-Jo-rgK"/>
+                            <constraint firstItem="00Q-Mr-KRt" firstAttribute="centerX" secondItem="Ela-29-ukh" secondAttribute="centerX" id="BWy-BD-VXs"/>
+                            <constraint firstItem="RIz-aa-JUb" firstAttribute="centerX" secondItem="Ela-29-ukh" secondAttribute="centerX" id="ByZ-CY-klN"/>
+                            <constraint firstItem="g4l-ng-1Lt" firstAttribute="top" secondItem="Ela-29-ukh" secondAttribute="top" id="FfE-nX-wnh"/>
+                            <constraint firstItem="3II-yi-f8C" firstAttribute="top" secondItem="RIz-aa-JUb" secondAttribute="bottom" constant="30" id="TMb-pV-J5b"/>
+                            <constraint firstItem="3II-yi-f8C" firstAttribute="centerX" secondItem="Ela-29-ukh" secondAttribute="centerX" id="Xkn-L1-aIP"/>
+                            <constraint firstItem="00Q-Mr-KRt" firstAttribute="bottom" secondItem="aTl-bM-ZfZ" secondAttribute="bottom" id="egP-XV-JsU"/>
+                            <constraint firstItem="3II-yi-f8C" firstAttribute="centerX" secondItem="Ela-29-ukh" secondAttribute="centerX" id="i6S-gX-7fx"/>
+                            <constraint firstItem="NuT-RN-7hW" firstAttribute="leading" secondItem="aTl-bM-ZfZ" secondAttribute="leading" id="nJu-OH-Auq"/>
+                            <constraint firstAttribute="bottom" secondItem="NuT-RN-7hW" secondAttribute="bottom" id="q96-zB-fTF"/>
+                            <constraint firstItem="g4l-ng-1Lt" firstAttribute="centerX" secondItem="Ela-29-ukh" secondAttribute="centerX" id="tLV-ia-Lxb"/>
+                            <constraint firstItem="00Q-Mr-KRt" firstAttribute="top" secondItem="3II-yi-f8C" secondAttribute="bottom" constant="30" id="xPo-Zz-JRi"/>
+                            <constraint firstItem="g4l-ng-1Lt" firstAttribute="leading" secondItem="Ela-29-ukh" secondAttribute="leading" id="yfK-Nb-vIM"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nextBtn1" destination="00Q-Mr-KRt" id="gMo-fJ-rfn"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="zHW-DZ-1je" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3213" y="92"/>
+        </scene>
+        <!--Onboarding Screen View Controller-->
+        <scene sceneID="AJN-4e-ILS">
+            <objects>
+                <viewController id="h2S-q5-lWg" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="66s-Hc-Vha">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/girl" translatesAutoresizingMaskIntoConstraints="NO" id="TJy-V1-rtp">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="579"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/bottomCircle" translatesAutoresizingMaskIntoConstraints="NO" id="aD6-RC-Sgs">
+                                <rect key="frame" x="0.0" y="500" width="393" height="352"/>
+                                <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Ready to Refuel, Reflect &amp; Rewind? " textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1An-SP-qRB">
+                                <rect key="frame" x="21.666666666666657" y="597" width="350" height="114"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="350" id="mZN-yw-D0s"/>
+                                    <constraint firstAttribute="height" constant="114" id="yeq-sL-wAP"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="29"/>
+                                <color key="textColor" name="colors/Primary/Light"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mSs-ag-2Gv">
+                                <rect key="frame" x="175" y="775" width="43" height="43"/>
+                                <rect key="contentStretch" x="1" y="1" width="1" height="1"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" cornerStyle="capsule">
+                                    <imageReference key="image" image="chevron.right" catalog="system" symbolScale="default"/>
+                                    <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" scale="default" weight="heavy"/>
+                                    <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+                                    <color key="baseBackgroundColor" name="colors/Primary/Light"/>
+                                </buttonConfiguration>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="40"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="finishOnboardingTapped:" destination="h2S-q5-lWg" eventType="touchUpInside" id="B7o-Um-YiL"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="1" translatesAutoresizingMaskIntoConstraints="NO" id="I4C-Ho-Wyb">
+                                <rect key="frame" x="106.66666666666669" y="741" width="180" height="4"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="LJ2-rX-HC6"/>
+                                </constraints>
+                                <color key="progressTintColor" name="colors/Primary/Light"/>
+                                <color key="trackTintColor" name="colors/Blue&amp;Shades/blue-200"/>
+                            </progressView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="kXT-Y3-Qcs"/>
+                        <color key="backgroundColor" name="colors/baseBlue"/>
+                        <constraints>
+                            <constraint firstItem="TJy-V1-rtp" firstAttribute="centerX" secondItem="66s-Hc-Vha" secondAttribute="centerX" id="2uS-pY-RkK"/>
+                            <constraint firstItem="mSs-ag-2Gv" firstAttribute="centerX" secondItem="66s-Hc-Vha" secondAttribute="centerX" id="3Vv-cs-GBg"/>
+                            <constraint firstAttribute="bottom" secondItem="aD6-RC-Sgs" secondAttribute="bottom" id="D0V-bW-w0E"/>
+                            <constraint firstItem="mSs-ag-2Gv" firstAttribute="top" secondItem="I4C-Ho-Wyb" secondAttribute="bottom" constant="30" id="Hyz-Xq-dM8"/>
+                            <constraint firstItem="TJy-V1-rtp" firstAttribute="top" secondItem="66s-Hc-Vha" secondAttribute="top" id="KdW-4L-kS7"/>
+                            <constraint firstItem="mSs-ag-2Gv" firstAttribute="bottom" secondItem="kXT-Y3-Qcs" secondAttribute="bottom" id="SI3-9V-NkF"/>
+                            <constraint firstItem="aD6-RC-Sgs" firstAttribute="leading" secondItem="kXT-Y3-Qcs" secondAttribute="leading" id="U7c-2c-4y9"/>
+                            <constraint firstItem="I4C-Ho-Wyb" firstAttribute="top" secondItem="1An-SP-qRB" secondAttribute="bottom" constant="30" id="Xf6-B3-ZVE"/>
+                            <constraint firstAttribute="trailing" secondItem="TJy-V1-rtp" secondAttribute="trailing" id="bEb-3d-y2c"/>
+                            <constraint firstItem="aD6-RC-Sgs" firstAttribute="trailing" secondItem="kXT-Y3-Qcs" secondAttribute="trailing" id="bdq-38-ihx"/>
+                            <constraint firstItem="I4C-Ho-Wyb" firstAttribute="centerX" secondItem="66s-Hc-Vha" secondAttribute="centerX" id="eC3-TG-sLT"/>
+                            <constraint firstItem="1An-SP-qRB" firstAttribute="centerX" secondItem="66s-Hc-Vha" secondAttribute="centerX" id="imm-8A-cbg"/>
+                            <constraint firstItem="I4C-Ho-Wyb" firstAttribute="centerX" secondItem="66s-Hc-Vha" secondAttribute="centerX" id="r5v-Ub-6yV"/>
+                            <constraint firstItem="TJy-V1-rtp" firstAttribute="leading" secondItem="66s-Hc-Vha" secondAttribute="leading" id="x0s-j8-FpQ"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nextBtn1" destination="mSs-ag-2Gv" id="npR-6I-EG0"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="sI4-PO-2bc" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4660" y="92"/>
+        </scene>
+        <!--Onboarding Screen View Controller-->
+        <scene sceneID="bKA-89-ypA">
+            <objects>
+                <viewController id="QMP-yR-XF1" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="jSa-YI-Alc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/crying" translatesAutoresizingMaskIntoConstraints="NO" id="byd-W8-kpP">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="579"/>
+                            </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="illustrations/onboarding/bottomCircle" translatesAutoresizingMaskIntoConstraints="NO" id="7ot-ze-56O">
+                                <rect key="frame" x="0.0" y="500" width="393" height="352"/>
+                                <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Mood Journaling &amp; AI Companian" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zQp-gk-Dnx">
+                                <rect key="frame" x="21.666666666666657" y="597" width="350" height="114"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="350" id="MGA-Ww-PTg"/>
+                                    <constraint firstAttribute="height" constant="114" id="Wj6-TL-IMB"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="heavy" pointSize="29"/>
+                                <color key="textColor" name="colors/Primary/Light"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i7f-QH-Jan">
+                                <rect key="frame" x="175" y="775" width="43" height="43"/>
+                                <rect key="contentStretch" x="1" y="1" width="1" height="1"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" cornerStyle="capsule">
+                                    <imageReference key="image" image="chevron.right" catalog="system" symbolScale="default"/>
+                                    <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" scale="default" weight="heavy"/>
+                                    <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+                                    <color key="baseBackgroundColor" name="colors/Primary/Light"/>
+                                </buttonConfiguration>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="40"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <segue destination="bZr-K2-eY0" kind="presentation" modalPresentationStyle="fullScreen" modalTransitionStyle="crossDissolve" id="fdj-P9-Re3"/>
+                                </connections>
+                            </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.40000000000000002" translatesAutoresizingMaskIntoConstraints="NO" id="wMl-Sv-CSM">
+                                <rect key="frame" x="106.66666666666669" y="741" width="180" height="4"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="P5y-R3-jx3"/>
+                                </constraints>
+                                <color key="progressTintColor" name="colors/Primary/Light"/>
+                                <color key="trackTintColor" name="colors/Blue&amp;Shades/blue-200"/>
+                            </progressView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="kKZ-9e-JPQ"/>
+                        <color key="backgroundColor" name="colors/baseBlue"/>
+                        <constraints>
+                            <constraint firstAttribute="bottom" secondItem="7ot-ze-56O" secondAttribute="bottom" id="4k7-en-OaL"/>
+                            <constraint firstItem="7ot-ze-56O" firstAttribute="leading" secondItem="kKZ-9e-JPQ" secondAttribute="leading" id="6nG-6T-U5u"/>
+                            <constraint firstItem="i7f-QH-Jan" firstAttribute="bottom" secondItem="kKZ-9e-JPQ" secondAttribute="bottom" id="IbD-bo-Stg"/>
+                            <constraint firstItem="wMl-Sv-CSM" firstAttribute="top" secondItem="zQp-gk-Dnx" secondAttribute="bottom" constant="30" id="TKt-Mm-59R"/>
+                            <constraint firstItem="zQp-gk-Dnx" firstAttribute="centerX" secondItem="jSa-YI-Alc" secondAttribute="centerX" id="TYb-O2-zoc"/>
+                            <constraint firstItem="wMl-Sv-CSM" firstAttribute="centerX" secondItem="jSa-YI-Alc" secondAttribute="centerX" id="WhQ-bm-mv9"/>
+                            <constraint firstItem="wMl-Sv-CSM" firstAttribute="centerX" secondItem="jSa-YI-Alc" secondAttribute="centerX" id="aEB-PP-m2k"/>
+                            <constraint firstItem="byd-W8-kpP" firstAttribute="leading" secondItem="jSa-YI-Alc" secondAttribute="leading" id="awp-SV-p2t"/>
+                            <constraint firstItem="byd-W8-kpP" firstAttribute="top" secondItem="jSa-YI-Alc" secondAttribute="top" id="duO-Gf-fNw"/>
+                            <constraint firstItem="byd-W8-kpP" firstAttribute="centerX" secondItem="jSa-YI-Alc" secondAttribute="centerX" id="f09-eh-JU1"/>
+                            <constraint firstItem="7ot-ze-56O" firstAttribute="trailing" secondItem="kKZ-9e-JPQ" secondAttribute="trailing" id="gTe-Es-bih"/>
+                            <constraint firstAttribute="trailing" secondItem="byd-W8-kpP" secondAttribute="trailing" id="jZd-A3-ttE"/>
+                            <constraint firstItem="i7f-QH-Jan" firstAttribute="top" secondItem="wMl-Sv-CSM" secondAttribute="bottom" constant="30" id="n6V-16-ddX"/>
+                            <constraint firstItem="i7f-QH-Jan" firstAttribute="centerX" secondItem="jSa-YI-Alc" secondAttribute="centerX" id="z9X-mX-WTa"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="nextBtn1" destination="i7f-QH-Jan" id="w2b-Hy-isa"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="YSa-E2-Kqn" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2518" y="92"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="chevron.right" catalog="system" width="97" height="128"/>
+        <image name="illustrations/onboarding/bottomCircle" width="401" height="352"/>
+        <image name="illustrations/onboarding/crying" width="402" height="579"/>
+        <image name="illustrations/onboarding/girl" width="402" height="579"/>
+        <image name="illustrations/onboarding/heart" width="402" height="579"/>
+        <image name="illustrations/onboarding/praying" width="402" height="477"/>
+        <image name="illustrations/onboarding/reading" width="402" height="579"/>
+        <namedColor name="colors/Blue&amp;Shades/blue-200">
+            <color red="0.64705884456634521" green="0.63921570777893066" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="colors/Blue&amp;Shades/blue-400">
+            <color red="0.38431376218795776" green="0.37647059559822083" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="colors/Primary/Light">
+            <color red="0.93725490570068359" green="0.93725490570068359" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="colors/baseBlue">
+            <color red="0.43137252330780029" green="0.54509806632995605" blue="0.97254902124404907" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>
