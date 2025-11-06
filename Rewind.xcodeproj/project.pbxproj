@@ -6,6 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5214F65A2EBD0CD5005020AA /* AppDelegate.swift */; };
+		5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */; };
+		5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 5214F6642EBD0CD5005020AA /* Rewind.xcdatamodeld */; };
+		5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5214F6652EBD0CD5005020AA /* SceneDelegate.swift */; };
+		5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65B2EBD0CD5005020AA /* Assets.xcassets */; };
+		5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65E2EBD0CD5005020AA /* LaunchScreen.storyboard */; };
+		5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F6612EBD0CD5005020AA /* Onboarding.storyboard */; };
+		523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D762EBD1EAA00DB875D /* LoginViewController.swift */; };
+		523E8D792EBD1EAA00DB875D /* LoginViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D772EBD1EAA00DB875D /* LoginViewController.xib */; };
+		523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */; };
+		523E8D7D2EBD1F9A00DB875D /* SignupViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D7B2EBD1F9A00DB875D /* SignupViewController.xib */; };
+		523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D7E2EBD1FB400DB875D /* ForgotPasswordViewController.swift */; };
+		523E8D812EBD1FB400DB875D /* ForgotPasswordViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D7F2EBD1FB400DB875D /* ForgotPasswordViewController.xib */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		52A84E452EB9531200D47157 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,30 +40,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		5214F65A2EBD0CD5005020AA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		5214F65B2EBD0CD5005020AA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5214F65C2EBD0CD5005020AA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5214F65D2EBD0CD5005020AA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		5214F6612EBD0CD5005020AA /* Onboarding.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Onboarding.storyboard; sourceTree = "<group>"; };
+		5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScreenViewController.swift; sourceTree = "<group>"; };
+		5214F6632EBD0CD5005020AA /* Rewind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Rewind.entitlements; sourceTree = "<group>"; };
+		5214F6652EBD0CD5005020AA /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		5214F6682EBD0CD5005020AA /* Rewind.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Rewind.xcdatamodel; sourceTree = "<group>"; };
+		523E8D762EBD1EAA00DB875D /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		523E8D772EBD1EAA00DB875D /* LoginViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LoginViewController.xib; sourceTree = "<group>"; };
+		523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupViewController.swift; sourceTree = "<group>"; };
+		523E8D7B2EBD1F9A00DB875D /* SignupViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SignupViewController.xib; sourceTree = "<group>"; };
+		523E8D7E2EBD1FB400DB875D /* ForgotPasswordViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordViewController.swift; sourceTree = "<group>"; };
+		523E8D7F2EBD1FB400DB875D /* ForgotPasswordViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ForgotPasswordViewController.xib; sourceTree = "<group>"; };
 		52A84E2A2EB9531100D47157 /* Rewind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rewind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A84E442EB9531200D47157 /* RewindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RewindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A84E4E2EB9531200D47157 /* RewindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RewindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		52A84E562EB9531200D47157 /* Exceptions for "Rewind" folder in "Rewind" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 52A84E292EB9531100D47157 /* Rewind */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		52A84E2C2EB9531100D47157 /* Rewind */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				52A84E562EB9531200D47157 /* Exceptions for "Rewind" folder in "Rewind" target */,
-			);
-			path = Rewind;
-			sourceTree = "<group>";
-		};
 		52A84E472EB9531200D47157 /* RewindTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RewindTests;
@@ -85,10 +98,88 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5214F6562EBD0CD5005020AA /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */,
+				523E8D762EBD1EAA00DB875D /* LoginViewController.swift */,
+				523E8D7E2EBD1FB400DB875D /* ForgotPasswordViewController.swift */,
+				523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		5214F6572EBD0CD5005020AA /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5214F6642EBD0CD5005020AA /* Rewind.xcdatamodeld */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		5214F6582EBD0CD5005020AA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5214F65E2EBD0CD5005020AA /* LaunchScreen.storyboard */,
+				5214F65B2EBD0CD5005020AA /* Assets.xcassets */,
+				5214F65C2EBD0CD5005020AA /* Info.plist */,
+				5214F6632EBD0CD5005020AA /* Rewind.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5214F6592EBD0CD5005020AA /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				523E8D692EBD147F00DB875D /* Shared */,
+				5214F6752EBD0D11005020AA /* Authentication */,
+				5214F6742EBD0D05005020AA /* Onboarding */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		5214F6672EBD0CD5005020AA /* Rewind */ = {
+			isa = PBXGroup;
+			children = (
+				5214F6562EBD0CD5005020AA /* Controllers */,
+				5214F6572EBD0CD5005020AA /* Models */,
+				5214F6582EBD0CD5005020AA /* Resources */,
+				5214F6592EBD0CD5005020AA /* Views */,
+				5214F65A2EBD0CD5005020AA /* AppDelegate.swift */,
+				5214F6652EBD0CD5005020AA /* SceneDelegate.swift */,
+			);
+			path = Rewind;
+			sourceTree = "<group>";
+		};
+		5214F6742EBD0D05005020AA /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				5214F6612EBD0CD5005020AA /* Onboarding.storyboard */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		5214F6752EBD0D11005020AA /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				523E8D7F2EBD1FB400DB875D /* ForgotPasswordViewController.xib */,
+				523E8D772EBD1EAA00DB875D /* LoginViewController.xib */,
+				523E8D7B2EBD1F9A00DB875D /* SignupViewController.xib */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		523E8D692EBD147F00DB875D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		52A84E212EB9531100D47157 = {
 			isa = PBXGroup;
 			children = (
-				52A84E2C2EB9531100D47157 /* Rewind */,
+				5214F6672EBD0CD5005020AA /* Rewind */,
 				52A84E472EB9531200D47157 /* RewindTests */,
 				52A84E512EB9531200D47157 /* RewindUITests */,
 				52A84E2B2EB9531100D47157 /* Products */,
@@ -119,9 +210,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				52A84E2C2EB9531100D47157 /* Rewind */,
 			);
 			name = Rewind;
 			packageProductDependencies = (
@@ -225,6 +313,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				523E8D812EBD1FB400DB875D /* ForgotPasswordViewController.xib in Resources */,
+				523E8D792EBD1EAA00DB875D /* LoginViewController.xib in Resources */,
+				523E8D7D2EBD1F9A00DB875D /* SignupViewController.xib in Resources */,
+				5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */,
+				5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */,
+				5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +343,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */,
+				523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */,
+				5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */,
+				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
+				5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */,
+				523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */,
+				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,23 +382,33 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		5214F65E2EBD0CD5005020AA /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				5214F65D2EBD0CD5005020AA /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		52A84E582EB9531200D47157 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Rewind/Rewind.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B6J4R9QTM2;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Rewind/Info.plist;
+				INFOPLIST_FILE = Rewind/Resources/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -306,12 +417,16 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.san.Rewind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -320,17 +435,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Rewind/Rewind.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = B6J4R9QTM2;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Rewind/Info.plist;
+				INFOPLIST_FILE = Rewind/Resources/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -339,12 +453,16 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.san.Rewind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -593,6 +711,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		5214F6642EBD0CD5005020AA /* Rewind.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				5214F6682EBD0CD5005020AA /* Rewind.xcdatamodel */,
+			);
+			currentVersion = 5214F6682EBD0CD5005020AA /* Rewind.xcdatamodel */;
+			path = Rewind.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 52A84E222EB9531100D47157 /* Project object */;
 }
