@@ -17,20 +17,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
 
-        // 2. Check if onboarding is complete
+        // Check if onboarding is complete
         let onboardingCompleted = UserDefaults.standard.bool(forKey: "onboardingCompleted")
 
-//        if onboardingCompleted {
-//            // 3. Onboarding is done: Show the new SwiftUI flow
-//            let swiftUIView = AuthenticationFlowView()
-//            let hostingController = UIHostingController(rootView: swiftUIView)
-//            window?.rootViewController = hostingController
-//        } else {
-            // 4. First launch: Show the UIKit Onboarding flow
+        if onboardingCompleted {
+            // Onboarding is done: Show the Signup screen.
+            let signupViewController = SignupViewController()
+            window?.rootViewController = signupViewController
+        } else {
+            // First launch: Show the UIKit Onboarding flow
             let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
             let onboardingViewController = onboardingStoryboard.instantiateInitialViewController()
             window?.rootViewController = onboardingViewController
-//        }
+        }
 
         window?.makeKeyAndVisible()
     }
