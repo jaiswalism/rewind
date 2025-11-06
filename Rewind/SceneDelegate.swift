@@ -16,7 +16,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+
+        window = UIWindow(windowScene: windowScene)
+
+        let onboardingCompleted = UserDefaults.standard.bool(forKey: "onboardingCompleted")
+
+        if onboardingCompleted {
+            // Onboarding has been completed, show the main app.
+            // Assumes your main storyboard is named "Main".
+            let mainStoryboard = UIStoryboard(name: "Main", bundle: nil)
+            let mainViewController = mainStoryboard.instantiateInitialViewController()
+            window?.rootViewController = mainViewController
+        } else {
+            // This is the first launch, show the onboarding.
+            let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
+            let onboardingViewController = onboardingStoryboard.instantiateInitialViewController()
+            window?.rootViewController = onboardingViewController
+        }
+
+        window?.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -36,6 +55,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
 
+
+
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
@@ -52,4 +73,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
 }
-
