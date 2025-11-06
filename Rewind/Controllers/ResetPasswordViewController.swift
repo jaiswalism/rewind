@@ -1,29 +1,25 @@
 //
-//  SignupViewController.swift
+//  ResetPasswordViewController.swift
 //  Rewind
 //
-//  Created by Shyam on 06/11/25.
+//  Created by Shyam on 07/11/25.
 //
 
 import UIKit
 
-class SignupViewController: UIViewController {
+class ResetPasswordViewController: UIViewController {
 
-    
-    @IBOutlet var nameInput: UITextField!
-    @IBOutlet var emailPhoneField: UITextField!
     @IBOutlet var passwordField: UITextField!
+    @IBOutlet var confirmPasswordField: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        let fields = [nameInput, emailPhoneField, passwordField]
+        let fields = [passwordField, confirmPasswordField]
             fields.forEach { $0?.styleRoundedInput() }
-
-            passwordField.enablePasswordToggle()
     }
-    
+
 
     /*
     // MARK: - Navigation
