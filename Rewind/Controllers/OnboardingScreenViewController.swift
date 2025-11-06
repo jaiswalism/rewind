@@ -31,8 +31,21 @@ class OnboardingScreenViewController: UIViewController {
     // 2. This is the new hand-off action
     // We will connect the FINAL button in the storyboard to this
     @IBAction func finishOnboardingTapped(_ sender: Any) {
-        
-        
+        // 1. Mark onboarding as complete so the app will skip it next time.
+        UserDefaults.standard.set(true, forKey: "onboardingCompleted")
+
+        // 2. Instantiate the SignupViewController.
+        let signupViewController = SignupViewController()
+
+        // 3. Transition to the new view controller.
+        guard let window = view.window else { return }
+
+        window.rootViewController = signupViewController
+        UIView.transition(with: window,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve,
+                          animations: nil,
+                          completion: nil)
     }
 
     /*
