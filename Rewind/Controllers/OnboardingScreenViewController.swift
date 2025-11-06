@@ -31,7 +31,12 @@ class OnboardingScreenViewController: UIViewController {
     // 2. This is the new hand-off action
     // We will connect the FINAL button in the storyboard to this
     @IBAction func finishOnboardingTapped(_ sender: Any) {
-        
+        // Instantiate LoginViewController from its XIB file
+            let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
+            
+            // Present it full screen
+            loginVC.modalPresentationStyle = .fullScreen
+            self.present(loginVC, animated: true, completion: nil)
         
     }
 
