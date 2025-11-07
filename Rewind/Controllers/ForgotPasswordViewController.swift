@@ -9,10 +9,13 @@ import UIKit
 
 class ForgotPasswordViewController: UIViewController {
 
+    @IBOutlet var emailPhoneField: UITextField!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        emailPhoneField.styleRoundedInput()
     }
 
 
