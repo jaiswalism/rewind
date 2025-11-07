@@ -11,6 +11,8 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="LoginViewController" customModule="Rewind" customModuleProvider="target">
             <connections>
+                <outlet property="nameTextField" destination="2uE-eo-Fms" id="atK-xd-8wH"/>
+                <outlet property="passwordTextField" destination="E0q-Iy-76U" id="XsY-qu-rvt"/>
                 <outlet property="view" destination="Vtf-YC-WQo" id="4jm-ax-3Le"/>
             </connections>
         </placeholder>
@@ -52,7 +54,7 @@
                         <constraint firstItem="PwL-IY-T5r" firstAttribute="centerX" secondItem="2v3-ee-JsK" secondAttribute="centerX" id="u7H-wb-yw8"/>
                     </constraints>
                 </view>
-                <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="2uE-eo-Fms" customClass="Sign">
+                <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="  Name" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="2uE-eo-Fms" customClass="Sign">
                     <rect key="frame" x="24" y="273" width="345" height="60"/>
                     <constraints>
                         <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="345" id="Ki4-PY-9IK"/>
@@ -63,7 +65,7 @@
                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
                     <textInputTraits key="textInputTraits"/>
                 </textField>
-                <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="E0q-Iy-76U" customClass="Sign">
+                <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" placeholder="  Password" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="E0q-Iy-76U" customClass="Sign">
                     <rect key="frame" x="24" y="363" width="345" height="60"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="60" id="AbS-UM-gzM"/>
@@ -81,7 +83,7 @@
                         <constraint firstAttribute="width" relation="lessThanOrEqual" constant="345" id="eiM-US-1OS"/>
                     </constraints>
                     <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="filled" title="Create Account" cornerStyle="medium">
+                    <buttonConfiguration key="configuration" style="filled" title="Log In" cornerStyle="medium">
                         <fontDescription key="titleFontDescription" type="boldSystem" pointSize="16"/>
                         <directionalEdgeInsets key="contentInsets" top="12" leading="12" bottom="12" trailing="12"/>
                         <color key="baseForegroundColor" systemColor="labelColor"/>
