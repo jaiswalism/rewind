@@ -38,6 +38,21 @@ class OnboardingScreenViewController: UIViewController {
             loginVC.modalPresentationStyle = .fullScreen
             self.present(loginVC, animated: true, completion: nil)
         
+        // 1. Mark onboarding as complete so the app will skip it next time.
+        UserDefaults.standard.set(true, forKey: "onboardingCompleted")
+
+        // 2. Instantiate the SignupViewController.
+        let signupViewController = SignupViewController()
+
+        // 3. Transition to the new view controller.
+        guard let window = view.window else { return }
+
+        window.rootViewController = signupViewController
+        UIView.transition(with: window,
+                          duration: 0.3,
+                          options: .transitionCrossDissolve,
+                          animations: nil,
+                          completion: nil)
     }
 
     /*

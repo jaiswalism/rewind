@@ -1,29 +1,27 @@
 //
-//  SignupViewController.swift
+//  OTPVerifyViewController.swift
 //  Rewind
 //
-//  Created by Shyam on 06/11/25.
+//  Created by Shyam on 07/11/25.
 //
 
 import UIKit
 
-class SignupViewController: UIViewController {
+class OTPVerifyViewController: UIViewController {
 
-    
-    @IBOutlet var nameInput: UITextField!
-    @IBOutlet var emailPhoneField: UITextField!
-    @IBOutlet var passwordField: UITextField!
+    @IBOutlet var otpInput1: UITextField!
+    @IBOutlet var otpInput2: UITextField!
+    @IBOutlet var otpInput3: UITextField!
+    @IBOutlet var otpInput4: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        let fields = [nameInput, emailPhoneField, passwordField]
-            fields.forEach { $0?.styleRoundedInput() }
-
-            passwordField.enablePasswordToggle()
+        let fields = [otpInput1, otpInput2, otpInput3, otpInput4]
+        fields.forEach { $0?.styleRoundedInput() }
     }
-    
+
 
     /*
     // MARK: - Navigation
