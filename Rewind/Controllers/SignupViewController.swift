@@ -24,15 +24,9 @@ class SignupViewController: UIViewController {
             passwordField.enablePasswordToggle()
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    @IBAction func signInButton(_ sender: Any) { //  // Navigate to  // Navigate to LoginViewController (XIB-based)
+        let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
+        loginVC.modalPresentationStyle = .fullScreen
+        present(loginVC, animated: true, completion: nil)
     }
-    */
-
 }
