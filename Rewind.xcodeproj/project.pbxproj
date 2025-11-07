@@ -14,6 +14,14 @@
 		5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65B2EBD0CD5005020AA /* Assets.xcassets */; };
 		5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65E2EBD0CD5005020AA /* LaunchScreen.storyboard */; };
 		5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F6612EBD0CD5005020AA /* Onboarding.storyboard */; };
+		523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */; };
+		523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */; };
+		523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */; };
+		523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */; };
+		523BF2512EBE63B2003F7696 /* OnboardingAgeViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2502EBE63B2003F7696 /* OnboardingAgeViewController.xib */; };
+		523BF2522EBE63B2003F7696 /* OnboardingAgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF24F2EBE63B2003F7696 /* OnboardingAgeViewController.swift */; };
+		523BF2552EBE63C9003F7696 /* OnboardingProfHelpViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2542EBE63C9003F7696 /* OnboardingProfHelpViewController.xib */; };
+		523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2532EBE63C9003F7696 /* OnboardingProfHelpViewController.swift */; };
 		523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D762EBD1EAA00DB875D /* LoginViewController.swift */; };
 		523E8D792EBD1EAA00DB875D /* LoginViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D772EBD1EAA00DB875D /* LoginViewController.xib */; };
 		523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */; };
@@ -54,6 +62,14 @@
 		5214F6632EBD0CD5005020AA /* Rewind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Rewind.entitlements; sourceTree = "<group>"; };
 		5214F6652EBD0CD5005020AA /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		5214F6682EBD0CD5005020AA /* Rewind.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Rewind.xcdatamodel; sourceTree = "<group>"; };
+		523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthGoalViewController.swift; sourceTree = "<group>"; };
+		523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingHealthGoalViewController.xib; sourceTree = "<group>"; };
+		523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGenderViewController.swift; sourceTree = "<group>"; };
+		523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingGenderViewController.xib; sourceTree = "<group>"; };
+		523BF24F2EBE63B2003F7696 /* OnboardingAgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingAgeViewController.swift; sourceTree = "<group>"; };
+		523BF2502EBE63B2003F7696 /* OnboardingAgeViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingAgeViewController.xib; sourceTree = "<group>"; };
+		523BF2532EBE63C9003F7696 /* OnboardingProfHelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfHelpViewController.swift; sourceTree = "<group>"; };
+		523BF2542EBE63C9003F7696 /* OnboardingProfHelpViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingProfHelpViewController.xib; sourceTree = "<group>"; };
 		523E8D762EBD1EAA00DB875D /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		523E8D772EBD1EAA00DB875D /* LoginViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LoginViewController.xib; sourceTree = "<group>"; };
 		523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupViewController.swift; sourceTree = "<group>"; };
@@ -111,12 +127,8 @@
 		5214F6562EBD0CD5005020AA /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
-				5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */,
-				523E8D762EBD1EAA00DB875D /* LoginViewController.swift */,
-				523E8D7E2EBD1FB400DB875D /* ForgotPasswordViewController.swift */,
-				523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */,
-				523E8DD62EBD4DFB00DB875D /* ResetPasswordViewController.swift */,
-				52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */,
+				523BF2462EBE6326003F7696 /* Authentication */,
+				523BF2452EBE62FB003F7696 /* Onboarding */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -168,6 +180,10 @@
 			isa = PBXGroup;
 			children = (
 				5214F6612EBD0CD5005020AA /* Onboarding.storyboard */,
+				523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */,
+				523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */,
+				523BF2502EBE63B2003F7696 /* OnboardingAgeViewController.xib */,
+				523BF2542EBE63C9003F7696 /* OnboardingProfHelpViewController.xib */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -180,6 +196,30 @@
 				523E8D772EBD1EAA00DB875D /* LoginViewController.xib */,
 				523E8D7B2EBD1F9A00DB875D /* SignupViewController.xib */,
 				523E8DD72EBD4DFB00DB875D /* ResetPasswordViewController.xib */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		523BF2452EBE62FB003F7696 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */,
+				523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */,
+				523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */,
+				523BF24F2EBE63B2003F7696 /* OnboardingAgeViewController.swift */,
+				523BF2532EBE63C9003F7696 /* OnboardingProfHelpViewController.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		523BF2462EBE6326003F7696 /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				523E8D762EBD1EAA00DB875D /* LoginViewController.swift */,
+				523E8D7E2EBD1FB400DB875D /* ForgotPasswordViewController.swift */,
+				523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */,
+				523E8DD62EBD4DFB00DB875D /* ResetPasswordViewController.swift */,
+				52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */,
 			);
 			path = Authentication;
 			sourceTree = "<group>";
@@ -346,11 +386,15 @@
 			files = (
 				523E8D812EBD1FB400DB875D /* ForgotPasswordViewController.xib in Resources */,
 				523E8D792EBD1EAA00DB875D /* LoginViewController.xib in Resources */,
+				523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */,
+				523BF2552EBE63C9003F7696 /* OnboardingProfHelpViewController.xib in Resources */,
+				523BF2512EBE63B2003F7696 /* OnboardingAgeViewController.xib in Resources */,
 				52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */,
 				523E8D7D2EBD1F9A00DB875D /* SignupViewController.xib in Resources */,
 				5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */,
 				523E8DD82EBD4DFB00DB875D /* ResetPasswordViewController.xib in Resources */,
 				5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */,
+				523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */,
 				5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -378,13 +422,17 @@
 			files = (
 				523E8DD92EBD4DFB00DB875D /* ResetPasswordViewController.swift in Sources */,
 				523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */,
+				523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */,
 				523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */,
 				52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */,
 				5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
+				523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */,
 				5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */,
 				523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */,
 				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
+				523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */,
+				523BF2522EBE63B2003F7696 /* OnboardingAgeViewController.swift in Sources */,
 				52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
