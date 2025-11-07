@@ -18,6 +18,8 @@ class ResetPasswordViewController: UIViewController {
         // Do any additional setup after loading the view.
         let fields = [passwordField, confirmPasswordField]
             fields.forEach { $0?.styleRoundedInput() }
+        passwordField.enablePasswordToggle()
+        confirmPasswordField.enablePasswordToggle()
     }
 
 
