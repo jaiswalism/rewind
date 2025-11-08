@@ -22,6 +22,16 @@
 		523BF2522EBE63B2003F7696 /* OnboardingAgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF24F2EBE63B2003F7696 /* OnboardingAgeViewController.swift */; };
 		523BF2552EBE63C9003F7696 /* OnboardingProfHelpViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2542EBE63C9003F7696 /* OnboardingProfHelpViewController.xib */; };
 		523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2532EBE63C9003F7696 /* OnboardingProfHelpViewController.swift */; };
+		523BF26B2EBE6AFC003F7696 /* CommunityFeedViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF26A2EBE6AFC003F7696 /* CommunityFeedViewController.xib */; };
+		523BF26C2EBE6AFC003F7696 /* CommunityFeedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2692EBE6AFC003F7696 /* CommunityFeedViewController.swift */; };
+		523BF2702EBE6B36003F7696 /* CreatePostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF26E2EBE6B36003F7696 /* CreatePostViewController.swift */; };
+		523BF2712EBE6B36003F7696 /* CreatePostViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF26F2EBE6B36003F7696 /* CreatePostViewController.xib */; };
+		523BF2742EBE6B59003F7696 /* GoalsListViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2732EBE6B59003F7696 /* GoalsListViewController.xib */; };
+		523BF2752EBE6B59003F7696 /* GoalsListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2722EBE6B59003F7696 /* GoalsListViewController.swift */; };
+		523BF2782EBE6B87003F7696 /* AddGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2762EBE6B87003F7696 /* AddGoalViewController.swift */; };
+		523BF2792EBE6B87003F7696 /* AddGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2772EBE6B87003F7696 /* AddGoalViewController.xib */; };
+		523BF27C2EBE6B94003F7696 /* EditGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF27B2EBE6B94003F7696 /* EditGoalViewController.xib */; };
+		523BF27D2EBE6B94003F7696 /* EditGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF27A2EBE6B94003F7696 /* EditGoalViewController.swift */; };
 		523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D762EBD1EAA00DB875D /* LoginViewController.swift */; };
 		523E8D792EBD1EAA00DB875D /* LoginViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D772EBD1EAA00DB875D /* LoginViewController.xib */; };
 		523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */; };
@@ -70,6 +80,16 @@
 		523BF2502EBE63B2003F7696 /* OnboardingAgeViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingAgeViewController.xib; sourceTree = "<group>"; };
 		523BF2532EBE63C9003F7696 /* OnboardingProfHelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfHelpViewController.swift; sourceTree = "<group>"; };
 		523BF2542EBE63C9003F7696 /* OnboardingProfHelpViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingProfHelpViewController.xib; sourceTree = "<group>"; };
+		523BF2692EBE6AFC003F7696 /* CommunityFeedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityFeedViewController.swift; sourceTree = "<group>"; };
+		523BF26A2EBE6AFC003F7696 /* CommunityFeedViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CommunityFeedViewController.xib; sourceTree = "<group>"; };
+		523BF26E2EBE6B36003F7696 /* CreatePostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePostViewController.swift; sourceTree = "<group>"; };
+		523BF26F2EBE6B36003F7696 /* CreatePostViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CreatePostViewController.xib; sourceTree = "<group>"; };
+		523BF2722EBE6B59003F7696 /* GoalsListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsListViewController.swift; sourceTree = "<group>"; };
+		523BF2732EBE6B59003F7696 /* GoalsListViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = GoalsListViewController.xib; sourceTree = "<group>"; };
+		523BF2762EBE6B87003F7696 /* AddGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGoalViewController.swift; sourceTree = "<group>"; };
+		523BF2772EBE6B87003F7696 /* AddGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AddGoalViewController.xib; sourceTree = "<group>"; };
+		523BF27A2EBE6B94003F7696 /* EditGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditGoalViewController.swift; sourceTree = "<group>"; };
+		523BF27B2EBE6B94003F7696 /* EditGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = EditGoalViewController.xib; sourceTree = "<group>"; };
 		523E8D762EBD1EAA00DB875D /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
 		523E8D772EBD1EAA00DB875D /* LoginViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LoginViewController.xib; sourceTree = "<group>"; };
 		523E8D7A2EBD1F9A00DB875D /* SignupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupViewController.swift; sourceTree = "<group>"; };
@@ -127,6 +147,9 @@
 		5214F6562EBD0CD5005020AA /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				523BF2662EBE6AD9003F7696 /* Goals */,
+				523BF2652EBE6AD2003F7696 /* Community */,
+				523BF2632EBE6704003F7696 /* Journals */,
 				523BF2462EBE6326003F7696 /* Authentication */,
 				523BF2452EBE62FB003F7696 /* Onboarding */,
 			);
@@ -155,6 +178,9 @@
 		5214F6592EBD0CD5005020AA /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				523BF2672EBE6AE1003F7696 /* Goals */,
+				523BF2682EBE6AE1003F7696 /* Community */,
+				523BF2642EBE670E003F7696 /* Journals */,
 				523E8D692EBD147F00DB875D /* Shared */,
 				5214F6752EBD0D11005020AA /* Authentication */,
 				5214F6742EBD0D05005020AA /* Onboarding */,
@@ -222,6 +248,58 @@
 				52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */,
 			);
 			path = Authentication;
+			sourceTree = "<group>";
+		};
+		523BF2632EBE6704003F7696 /* Journals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Journals;
+			sourceTree = "<group>";
+		};
+		523BF2642EBE670E003F7696 /* Journals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Journals;
+			sourceTree = "<group>";
+		};
+		523BF2652EBE6AD2003F7696 /* Community */ = {
+			isa = PBXGroup;
+			children = (
+				523BF2692EBE6AFC003F7696 /* CommunityFeedViewController.swift */,
+				523BF26E2EBE6B36003F7696 /* CreatePostViewController.swift */,
+			);
+			path = Community;
+			sourceTree = "<group>";
+		};
+		523BF2662EBE6AD9003F7696 /* Goals */ = {
+			isa = PBXGroup;
+			children = (
+				523BF2722EBE6B59003F7696 /* GoalsListViewController.swift */,
+				523BF2762EBE6B87003F7696 /* AddGoalViewController.swift */,
+				523BF27A2EBE6B94003F7696 /* EditGoalViewController.swift */,
+			);
+			path = Goals;
+			sourceTree = "<group>";
+		};
+		523BF2672EBE6AE1003F7696 /* Goals */ = {
+			isa = PBXGroup;
+			children = (
+				523BF2732EBE6B59003F7696 /* GoalsListViewController.xib */,
+				523BF2772EBE6B87003F7696 /* AddGoalViewController.xib */,
+				523BF27B2EBE6B94003F7696 /* EditGoalViewController.xib */,
+			);
+			path = Goals;
+			sourceTree = "<group>";
+		};
+		523BF2682EBE6AE1003F7696 /* Community */ = {
+			isa = PBXGroup;
+			children = (
+				523BF26A2EBE6AFC003F7696 /* CommunityFeedViewController.xib */,
+				523BF26F2EBE6B36003F7696 /* CreatePostViewController.xib */,
+			);
+			path = Community;
 			sourceTree = "<group>";
 		};
 		523E8D692EBD147F00DB875D /* Shared */ = {
@@ -389,12 +467,17 @@
 				523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */,
 				523BF2552EBE63C9003F7696 /* OnboardingProfHelpViewController.xib in Resources */,
 				523BF2512EBE63B2003F7696 /* OnboardingAgeViewController.xib in Resources */,
+				523BF2792EBE6B87003F7696 /* AddGoalViewController.xib in Resources */,
 				52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */,
+				523BF2712EBE6B36003F7696 /* CreatePostViewController.xib in Resources */,
+				523BF27C2EBE6B94003F7696 /* EditGoalViewController.xib in Resources */,
 				523E8D7D2EBD1F9A00DB875D /* SignupViewController.xib in Resources */,
 				5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */,
 				523E8DD82EBD4DFB00DB875D /* ResetPasswordViewController.xib in Resources */,
 				5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */,
 				523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */,
+				523BF26B2EBE6AFC003F7696 /* CommunityFeedViewController.xib in Resources */,
+				523BF2742EBE6B59003F7696 /* GoalsListViewController.xib in Resources */,
 				5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -422,15 +505,20 @@
 			files = (
 				523E8DD92EBD4DFB00DB875D /* ResetPasswordViewController.swift in Sources */,
 				523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */,
+				523BF2702EBE6B36003F7696 /* CreatePostViewController.swift in Sources */,
 				523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */,
 				523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */,
 				52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */,
 				5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */,
+				523BF27D2EBE6B94003F7696 /* EditGoalViewController.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
 				523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */,
+				523BF2782EBE6B87003F7696 /* AddGoalViewController.swift in Sources */,
 				5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */,
+				523BF2752EBE6B59003F7696 /* GoalsListViewController.swift in Sources */,
 				523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */,
 				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
+				523BF26C2EBE6AFC003F7696 /* CommunityFeedViewController.swift in Sources */,
 				523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */,
 				523BF2522EBE63B2003F7696 /* OnboardingAgeViewController.swift in Sources */,
 				52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */,
