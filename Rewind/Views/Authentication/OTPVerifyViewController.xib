@@ -128,6 +128,9 @@ enter 4 digit code that mentioned in the email</string>
                         <color key="baseForegroundColor" systemColor="labelColor"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="verifyCodeButton:" destination="-1" eventType="touchUpInside" id="DQN-uA-qHt"/>
+                    </connections>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aLp-dY-YC1">
                     <rect key="frame" x="12" y="58" width="48" height="48"/>
