@@ -17,11 +17,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
+        
+//      Change this for testing a particular screen and change the controller file
+        var testing = false
+        let testScene = OnboardingGenderViewController()
 
         // Always show the Onboarding storyboard
-        let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
-        let onboardingViewController = onboardingStoryboard.instantiateInitialViewController()
-        window?.rootViewController = onboardingViewController
+        if(!testing){
+            let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
+            let onboardingViewController = onboardingStoryboard.instantiateInitialViewController()
+            window?.rootViewController = onboardingViewController
+        }else{
+            window?.rootViewController = testScene
+        }
 
         window?.makeKeyAndVisible()
     }

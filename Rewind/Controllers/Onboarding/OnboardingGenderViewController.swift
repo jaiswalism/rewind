@@ -8,6 +8,9 @@
 import UIKit
 
 class OnboardingGenderViewController: UIViewController {
+    
+    @IBOutlet var genderButtons: [UIButton]!
+    @IBOutlet weak var nextButton: UIButton!
 
     override func viewDidLoad() {
         super.viewDidLoad()
