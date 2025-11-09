@@ -82,11 +82,18 @@ class LoginViewController: UIViewController {
     
     @IBAction func signUpButton(_ sender: Any) {
         // Initialize the SignupViewController from its XIB file
-           let signupVC = SignupViewController(nibName: "SignupViewController", bundle: nil)
-           
-           // Present it full screen
-           signupVC.modalPresentationStyle = .fullScreen
-           self.present(signupVC, animated: true, completion: nil)
-       }
+        let signupVC = SignupViewController(nibName: "SignupViewController", bundle: nil)
+        
+        // Present it full screen
+        signupVC.modalPresentationStyle = .fullScreen
+        self.present(signupVC, animated: true, completion: nil)
     }
-
+    @IBAction func forgetPasswordButton(_ sender: Any) {
+        // Safely initialize ForgetPasswordViewController from its XIB
+        let forgetVC = ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil)
+        
+        // Present it full screen
+        forgetVC.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+        self.present(forgetVC, animated: true, completion: nil)
+    }
+}

@@ -18,15 +18,18 @@ class ForgotPasswordViewController: UIViewController {
         emailPhoneField.styleRoundedInput()
     }
 
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
-}
+    @IBAction func backButton(_ sender: Any) {
+        // Initialize the LoginViewController from its XIB
+             let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
+             
+             // Present it full screen
+             loginVC.modalPresentationStyle = .fullScreen
+             present(loginVC, animated: true, completion: nil)
+         }
+    @IBAction func sendOTPButton(_ sender: Any) {
+        // Navigate to OTPVerifyViewController (XIB)
+                let otpVC = OTPVerifyViewController(nibName: "OTPVerifyViewController", bundle: nil)
+                otpVC.modalPresentationStyle = .fullScreen
+                present(otpVC, animated: true, completion: nil)
+            }
+        }
