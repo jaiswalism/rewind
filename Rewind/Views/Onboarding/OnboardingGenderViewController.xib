@@ -26,8 +26,8 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QQs-ag-HC3">
                     <rect key="frame" x="166.66666666666666" y="80" width="60" height="28"/>
                     <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="1 of 4" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qfi-NE-Nru">
-                            <rect key="frame" x="11" y="5.6666666666666714" width="37.666666666666664" height="17"/>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2 of 4" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Qfi-NE-Nru">
+                            <rect key="frame" x="10" y="5.6666666666666714" width="40" height="17"/>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
                             <color key="textColor" name="colors/Blue&amp;Shades/blue-400"/>
                             <nil key="highlightedColor"/>
@@ -90,6 +90,9 @@ gender?</string>
                             <integer key="value" value="20"/>
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="genderButtonTapped:" destination="-1" eventType="touchUpInside" id="YMW-gl-Yhx"/>
+                    </connections>
                 </button>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="I am Male" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KGy-P8-mxv">
                     <rect key="frame" x="40" y="289" width="74" height="20"/>
@@ -120,6 +123,9 @@ gender?</string>
                             <integer key="value" value="20"/>
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="genderButtonTapped:" destination="-1" eventType="touchUpInside" id="vZb-Jz-OSe"/>
+                    </connections>
                 </button>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="I am Female" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bUX-PE-9Ml" userLabel="I am Female">
                     <rect key="frame" x="40" y="452" width="93" height="20"/>
@@ -153,6 +159,19 @@ gender?</string>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
                 </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XP3-BJ-6z7">
+                    <rect key="frame" x="12" y="60" width="48" height="48"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="48" id="7tb-zy-gds"/>
+                        <constraint firstAttribute="height" constant="48" id="nfn-fG-8Rl"/>
+                    </constraints>
+                    <state key="normal" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain">
+                        <imageReference key="image" image="chevron.backward" catalog="system" symbolScale="default"/>
+                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" weight="semibold"/>
+                        <color key="baseForegroundColor" name="colors/Primary/Light"/>
+                    </buttonConfiguration>
+                </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
             <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-400"/>
@@ -169,12 +188,14 @@ gender?</string>
                 <constraint firstItem="LPh-2e-Xsl" firstAttribute="leading" secondItem="ZzY-gy-E9k" secondAttribute="leading" constant="-16" id="NQj-Uo-5zf"/>
                 <constraint firstItem="KGy-P8-mxv" firstAttribute="top" secondItem="g4v-YH-Fh8" secondAttribute="top" constant="16" id="Tp0-ec-vCP"/>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="a3k-Sq-dbL" secondAttribute="trailing" constant="24" id="Vhe-4N-Ysl"/>
+                <constraint firstItem="XP3-BJ-6z7" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="60" id="YYr-VS-s1I"/>
                 <constraint firstItem="a3k-Sq-dbL" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="ZT9-gp-c6e"/>
                 <constraint firstItem="g4v-YH-Fh8" firstAttribute="leading" secondItem="GpJ-yw-Tzf" secondAttribute="leading" constant="-16" id="ZXy-RT-Rbc"/>
                 <constraint firstItem="LPh-2e-Xsl" firstAttribute="top" secondItem="g4v-YH-Fh8" secondAttribute="bottom" constant="8" id="bRb-wL-1gW"/>
                 <constraint firstItem="KGy-P8-mxv" firstAttribute="leading" secondItem="g4v-YH-Fh8" secondAttribute="leading" constant="16" id="fCw-6M-f5l"/>
                 <constraint firstItem="QQs-ag-HC3" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="80" id="fHB-CT-hMm"/>
                 <constraint firstItem="bUX-PE-9Ml" firstAttribute="leading" secondItem="LPh-2e-Xsl" secondAttribute="leading" constant="16" id="gGh-Gl-hxV"/>
+                <constraint firstItem="XP3-BJ-6z7" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="12" id="gmQ-Ue-vF4"/>
                 <constraint firstItem="a3k-Sq-dbL" firstAttribute="top" secondItem="QQs-ag-HC3" secondAttribute="bottom" constant="30" id="ltd-NT-PMq"/>
                 <constraint firstAttribute="bottom" secondItem="BVw-Fw-KWr" secondAttribute="bottom" constant="70" id="mIT-AS-Sj8"/>
                 <constraint firstItem="g4v-YH-Fh8" firstAttribute="top" secondItem="a3k-Sq-dbL" secondAttribute="bottom" constant="60" id="psF-zW-1wM"/>
@@ -185,6 +206,7 @@ gender?</string>
     </objects>
     <resources>
         <image name="arrow.right" catalog="system" width="128" height="95"/>
+        <image name="chevron.backward" catalog="system" width="97" height="128"/>
         <image name="illustrations/onboarding/Female Unselected" width="345" height="155"/>
         <image name="illustrations/onboarding/Female arrow" width="24" height="24"/>
         <image name="illustrations/onboarding/Male Unselected" width="345" height="155"/>
