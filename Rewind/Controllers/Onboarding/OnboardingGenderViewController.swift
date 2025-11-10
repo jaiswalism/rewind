@@ -113,4 +113,10 @@ class OnboardingGenderViewController: UIViewController {
     }
     */
 
-}
+    @IBAction func backButton(_ sender: Any) {
+        // Navigate back to OnboardingHealthGoalViewController (XIB)
+           let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+           goalVC.modalPresentationStyle = .fullScreen
+           present(goalVC, animated: true, completion: nil)
+       }
+   }
