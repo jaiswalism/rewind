@@ -14,7 +14,13 @@ class OnboardingProfHelpViewController: UIViewController {
 
         // Do any additional setup after loading the view.
     }
-
+    @IBAction func backButton(_ sender: Any) {
+        // Navigate back to OnboardingAgeViewController (XIB)
+                let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
+                ageVC.modalPresentationStyle = .fullScreen
+                present(ageVC, animated: true, completion: nil)
+    }
+    
 
     /*
     // MARK: - Navigation
