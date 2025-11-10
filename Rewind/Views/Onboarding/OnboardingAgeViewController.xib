@@ -6,12 +6,12 @@
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="OnboardingAgeViewController" customModule="Rewind" customModuleProvider="target">
             <connections>
+                <outlet property="collectionView" destination="QpJ-ac-kji" id="nvX-Kk-qqy"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
@@ -60,7 +60,7 @@ age?</string>
                         <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" weight="bold"/>
                         <fontDescription key="titleFontDescription" type="boldSystem" pointSize="16"/>
                         <directionalEdgeInsets key="contentInsets" top="12" leading="12" bottom="12" trailing="12"/>
-                        <color key="baseForegroundColor" systemColor="labelColor"/>
+                        <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
                 </button>
@@ -102,16 +102,32 @@ age?</string>
                         <color key="baseForegroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
                 </button>
+                <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="QpJ-ac-kji">
+                    <rect key="frame" x="0.0" y="278" width="393" height="160"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="160" id="bSR-DL-GC7"/>
+                    </constraints>
+                    <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="FTc-dt-RdW">
+                        <size key="itemSize" width="128" height="128"/>
+                        <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                        <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                        <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                    </collectionViewFlowLayout>
+                </collectionView>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
             <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-400"/>
             <constraints>
                 <constraint firstItem="gyZ-JS-fpK" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="4ZT-0h-BzZ"/>
+                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="QpJ-ac-kji" secondAttribute="trailing" id="DN0-DS-AJs"/>
                 <constraint firstAttribute="bottom" secondItem="gyZ-JS-fpK" secondAttribute="bottom" constant="70" id="M93-Ub-bJF"/>
                 <constraint firstItem="SBf-cl-RqH" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="P5n-9u-tem"/>
                 <constraint firstItem="gyZ-JS-fpK" firstAttribute="top" secondItem="Qbk-7t-0I4" secondAttribute="bottom" constant="20" id="RmL-PC-RwI"/>
+                <constraint firstItem="QpJ-ac-kji" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="VmZ-ex-3sA"/>
+                <constraint firstItem="QpJ-ac-kji" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="eFO-ib-Oyo"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="vT6-pK-sij" secondAttribute="trailing" constant="24" id="fbY-cv-ri2"/>
                 <constraint firstItem="RPA-VZ-ULZ" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="60" id="if4-5v-cMe"/>
+                <constraint firstItem="QpJ-ac-kji" firstAttribute="top" secondItem="vT6-pK-sij" secondAttribute="bottom" constant="65" id="kgI-Zw-rYb"/>
                 <constraint firstItem="SBf-cl-RqH" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="80" id="kwx-TB-6sh"/>
                 <constraint firstItem="RPA-VZ-ULZ" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="12" id="lMr-9G-Bqk"/>
                 <constraint firstItem="vT6-pK-sij" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="lOh-nH-wAf"/>
@@ -132,8 +148,5 @@ age?</string>
         <namedColor name="colors/Primary/Light">
             <color red="0.93725490570068359" green="0.93725490570068359" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
-        <systemColor name="labelColor">
-            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
     </resources>
 </document>
