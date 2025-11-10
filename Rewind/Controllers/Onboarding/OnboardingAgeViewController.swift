@@ -68,6 +68,21 @@ class OnboardingAgeViewController: UIViewController {
             }
         }
     }
+    @IBAction func preferNotToSay(_ sender: Any) {
+        let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
+        profhelpVC.modalPresentationStyle = .fullScreen
+        present(profhelpVC, animated: true, completion: nil)
+    }
+    @IBAction func backButton(_ sender: Any) {
+        let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
+        genderVC.modalPresentationStyle = .fullScreen
+        present(genderVC, animated: true, completion: nil)
+    }
+    @IBAction func nextButton(_ sender: Any) {
+        let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
+        profhelpVC.modalPresentationStyle = .fullScreen
+        present(profhelpVC, animated: true, completion: nil)
+    }
 }
 
 // MARK: - UICollectionViewDataSource
