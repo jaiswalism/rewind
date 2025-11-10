@@ -29,4 +29,10 @@ class SignupViewController: UIViewController {
         loginVC.modalPresentationStyle = .fullScreen
         present(loginVC, animated: true, completion: nil)
     }
-}
+    @IBAction func createAccountButton(_ sender: Any) {
+        // Navigate to OnboardingHealthGoalViewController (XIB)
+                let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                goalVC.modalPresentationStyle = .fullScreen
+                self.present(goalVC, animated: true, completion: nil)
+            }
+        }
