@@ -113,4 +113,22 @@ class OnboardingGenderViewController: UIViewController {
     }
     */
 
+    @IBAction func backButton(_ sender: Any) {
+        // Navigate back to OnboardingHealthGoalViewController (XIB)
+           let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+           goalVC.modalPresentationStyle = .fullScreen
+           present(goalVC, animated: true, completion: nil)
+       }
+    @IBAction func nextButton(_ sender: Any) {
+        // Navigate to OnboardingGenderViewController (XIB)
+                let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
+                ageVC.modalPresentationStyle = .fullScreen
+                present(ageVC, animated: true, completion: nil)
+            }
+    @IBAction func preferNotToSay(_ sender: Any) {
+        let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
+        ageVC.modalPresentationStyle = .fullScreen
+        present(ageVC, animated: true, completion: nil)
+    }
 }
+

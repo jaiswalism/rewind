@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -74,6 +74,9 @@ gender?</string>
                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="nextButton:" destination="-1" eventType="touchUpInside" id="PL7-dx-Ozo"/>
+                    </connections>
                 </button>
                 <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g4v-YH-Fh8" userLabel="MaleBtn">
                     <rect key="frame" x="24" y="273" width="345" height="155"/>
@@ -157,6 +160,9 @@ gender?</string>
                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="preferNotToSay:" destination="-1" eventType="touchUpInside" id="iK7-lg-gvc"/>
+                    </connections>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XP3-BJ-6z7">
                     <rect key="frame" x="12" y="60" width="48" height="48"/>
@@ -170,6 +176,9 @@ gender?</string>
                         <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" weight="semibold"/>
                         <color key="baseForegroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="backButton:" destination="-1" eventType="touchUpInside" id="P2G-N0-rZd"/>
+                    </connections>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
