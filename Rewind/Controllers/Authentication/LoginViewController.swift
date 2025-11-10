@@ -96,4 +96,10 @@ class LoginViewController: UIViewController {
         forgetVC.modalPresentationStyle = UIModalPresentationStyle.fullScreen
         self.present(forgetVC, animated: true, completion: nil)
     }
-}
+    @IBAction func loginButton(_ sender: Any) {
+        // Navigate to OnboardingHealthGoalViewController (XIB)
+                let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                goalVC.modalPresentationStyle = .fullScreen
+                self.present(goalVC, animated: true, completion: nil)
+            }
+        }
