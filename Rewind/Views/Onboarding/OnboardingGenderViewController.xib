@@ -74,6 +74,9 @@ gender?</string>
                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="nextButton:" destination="-1" eventType="touchUpInside" id="PL7-dx-Ozo"/>
+                    </connections>
                 </button>
                 <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g4v-YH-Fh8" userLabel="MaleBtn">
                     <rect key="frame" x="24" y="273" width="345" height="155"/>
@@ -157,6 +160,9 @@ gender?</string>
                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="preferNotToSay:" destination="-1" eventType="touchUpInside" id="iK7-lg-gvc"/>
+                    </connections>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XP3-BJ-6z7">
                     <rect key="frame" x="12" y="60" width="48" height="48"/>
