@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		52050B532EC1896900C0C46D /* AgeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52050B522EC1896900C0C46D /* AgeCell.swift */; };
 		5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5214F65A2EBD0CD5005020AA /* AppDelegate.swift */; };
 		5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5214F6622EBD0CD5005020AA /* OnboardingScreenViewController.swift */; };
 		5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 5214F6642EBD0CD5005020AA /* Rewind.xcdatamodeld */; };
@@ -41,7 +40,8 @@
 		523E8D812EBD1FB400DB875D /* ForgotPasswordViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8D7F2EBD1FB400DB875D /* ForgotPasswordViewController.xib */; };
 		523E8DD82EBD4DFB00DB875D /* ResetPasswordViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523E8DD72EBD4DFB00DB875D /* ResetPasswordViewController.xib */; };
 		523E8DD92EBD4DFB00DB875D /* ResetPasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523E8DD62EBD4DFB00DB875D /* ResetPasswordViewController.swift */; };
-		525970772EC18F860012E644 /* AgePickerLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525970762EC18F860012E644 /* AgePickerLayout.swift */; };
+		5259707B2EC1A1FC0012E644 /* AgePickerLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525970792EC1A1FC0012E644 /* AgePickerLayout.swift */; };
+		5259707C2EC1A1FC0012E644 /* AgeCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525970782EC1A1FC0012E644 /* AgeCell.swift */; };
 		52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */; };
 		52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */; };
 		52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */; };
@@ -65,7 +65,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		52050B522EC1896900C0C46D /* AgeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeCell.swift; sourceTree = "<group>"; };
 		5214F65A2EBD0CD5005020AA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		5214F65B2EBD0CD5005020AA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5214F65C2EBD0CD5005020AA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -101,7 +100,8 @@
 		523E8D7F2EBD1FB400DB875D /* ForgotPasswordViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ForgotPasswordViewController.xib; sourceTree = "<group>"; };
 		523E8DD62EBD4DFB00DB875D /* ResetPasswordViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetPasswordViewController.swift; sourceTree = "<group>"; };
 		523E8DD72EBD4DFB00DB875D /* ResetPasswordViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ResetPasswordViewController.xib; sourceTree = "<group>"; };
-		525970762EC18F860012E644 /* AgePickerLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgePickerLayout.swift; sourceTree = "<group>"; };
+		525970782EC1A1FC0012E644 /* AgeCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgeCell.swift; sourceTree = "<group>"; };
+		525970792EC1A1FC0012E644 /* AgePickerLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgePickerLayout.swift; sourceTree = "<group>"; };
 		52A84E2A2EB9531100D47157 /* Rewind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rewind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A84E442EB9531200D47157 /* RewindTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RewindTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		52A84E4E2EB9531200D47157 /* RewindUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RewindUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -313,6 +313,15 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		5259707A2EC1A1FC0012E644 /* AgeScroller */ = {
+			isa = PBXGroup;
+			children = (
+				525970782EC1A1FC0012E644 /* AgeCell.swift */,
+				525970792EC1A1FC0012E644 /* AgePickerLayout.swift */,
+			);
+			path = AgeScroller;
+			sourceTree = "<group>";
+		};
 		52A84E212EB9531100D47157 = {
 			isa = PBXGroup;
 			children = (
@@ -337,8 +346,7 @@
 			isa = PBXGroup;
 			children = (
 				52CCF6BA2EBD521D00FADBEB /* Extensions */,
-				52050B522EC1896900C0C46D /* AgeCell.swift */,
-				525970762EC18F860012E644 /* AgePickerLayout.swift */,
+				5259707A2EC1A1FC0012E644 /* AgeScroller */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -522,9 +530,9 @@
 				523BF2782EBE6B87003F7696 /* AddGoalViewController.swift in Sources */,
 				5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */,
 				523BF2752EBE6B59003F7696 /* GoalsListViewController.swift in Sources */,
-				52050B532EC1896900C0C46D /* AgeCell.swift in Sources */,
 				523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */,
-				525970772EC18F860012E644 /* AgePickerLayout.swift in Sources */,
+				5259707B2EC1A1FC0012E644 /* AgePickerLayout.swift in Sources */,
+				5259707C2EC1A1FC0012E644 /* AgeCell.swift in Sources */,
 				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
 				523BF26C2EBE6AFC003F7696 /* CommunityFeedViewController.swift in Sources */,
 				523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */,
