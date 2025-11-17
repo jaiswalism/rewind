@@ -1,12 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13142" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12042"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JournalDetailViewViewController" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JournalDetailViewViewController" customModule="Rewind" customModuleProvider="target">
             <connections>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
@@ -15,8 +17,63 @@
         <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
             <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2Kx-pM-UBd" userLabel="Back Button">
+                    <rect key="frame" x="22" y="65" width="48" height="48"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="48" id="dsw-M5-pHA"/>
+                        <constraint firstAttribute="width" constant="48" id="rlb-Jv-hbB"/>
+                    </constraints>
+                    <state key="normal" title="Button"/>
+                    <buttonConfiguration key="configuration" style="plain" image="chevron.backward" catalog="system">
+                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" weight="semibold"/>
+                        <color key="baseForegroundColor" name="colors/Primary/Light"/>
+                    </buttonConfiguration>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Zan-r8-ASL">
+                    <rect key="frame" x="15" y="163" width="345" height="100.33333333333331"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="345" id="17w-7K-aPj"/>
+                    </constraints>
+                    <string key="text">Feeling Bad 
+Again!</string>
+                    <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
+                    <color key="textColor" name="colors/Primary/Light"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="27" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Muv-J8-CjQ">
+                    <rect key="frame" x="15" y="283.33333333333331" width="345" height="142.33333333333331"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="345" id="u5V-nx-oMs"/>
+                    </constraints>
+                    <string key="text">I just felt aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus vel lectus non quam pretium sagittis.
+
+Gravida nunc non varius. Sed gravida ex turpis, bibendum aliquet arcu fringilla in.</string>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
+            <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-400"/>
+            <constraints>
+                <constraint firstItem="2Kx-pM-UBd" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="22" id="46p-ry-14C"/>
+                <constraint firstItem="Muv-J8-CjQ" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="ICp-rq-x4H"/>
+                <constraint firstItem="2Kx-pM-UBd" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="65" id="Iu9-Yl-PHW"/>
+                <constraint firstItem="Muv-J8-CjQ" firstAttribute="top" secondItem="Zan-r8-ASL" secondAttribute="bottom" constant="20" id="WNo-jf-vg5"/>
+                <constraint firstItem="Zan-r8-ASL" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="fca-um-XRe"/>
+                <constraint firstItem="Zan-r8-ASL" firstAttribute="top" secondItem="2Kx-pM-UBd" secondAttribute="bottom" constant="50" id="kjG-mt-aK4"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="140"/>
         </view>
     </objects>
+    <resources>
+        <image name="chevron.backward" catalog="system" width="97" height="128"/>
+        <namedColor name="colors/Blue&amp;Shades/blue-400">
+            <color red="0.38431376218795776" green="0.37647059559822083" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="colors/Primary/Light">
+            <color red="0.93725490570068359" green="0.93725490570068359" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
 </document>
