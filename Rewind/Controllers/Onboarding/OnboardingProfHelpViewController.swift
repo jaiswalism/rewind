@@ -20,8 +20,18 @@ class OnboardingProfHelpViewController: UIViewController {
                 ageVC.modalPresentationStyle = .fullScreen
                 present(ageVC, animated: true, completion: nil)
     }
+    @IBAction func yesButton(_ sender: Any) {
+        let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
+            homePetsVC.modalPresentationStyle = .fullScreen
+            present(homePetsVC, animated: true, completion: nil)
+    }
     
-
+    @IBAction func noButton(_ sender: Any) {
+        let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
+            homePetsVC.modalPresentationStyle = .fullScreen
+            present(homePetsVC, animated: true, completion: nil)
+    }
+    
     /*
     // MARK: - Navigation
 

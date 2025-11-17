@@ -80,6 +80,9 @@
                                 <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                                 <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                             </buttonConfiguration>
+                            <connections>
+                                <action selector="yesButton:" destination="-1" eventType="touchUpInside" id="4k1-Y5-wM4"/>
+                            </connections>
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="khd-KK-xHr" userLabel="NextBtn">
                             <rect key="frame" x="190" y="0.0" width="130" height="56"/>
@@ -97,6 +100,9 @@
                                 <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                                 <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                             </buttonConfiguration>
+                            <connections>
+                                <action selector="noButton:" destination="-1" eventType="touchUpInside" id="qy4-bP-dbe"/>
+                            </connections>
                         </button>
                     </subviews>
                 </stackView>
