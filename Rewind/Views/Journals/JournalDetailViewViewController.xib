@@ -42,14 +42,14 @@ Again!</string>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="27" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Muv-J8-CjQ">
-                    <rect key="frame" x="15" y="283.33333333333331" width="345" height="142.33333333333331"/>
+                    <rect key="frame" x="15" y="283.33333333333331" width="345" height="191"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="345" id="u5V-nx-oMs"/>
                     </constraints>
                     <string key="text">I just felt aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus vel lectus non quam pretium sagittis.
 
 Gravida nunc non varius. Sed gravida ex turpis, bibendum aliquet arcu fringilla in.</string>
-                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="20"/>
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
                 </label>
