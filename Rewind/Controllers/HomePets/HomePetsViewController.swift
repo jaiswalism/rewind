@@ -8,22 +8,42 @@
 import UIKit
 
 class HomePetsViewController: UIViewController {
+    
+    // MARK: - Properties
+    private let customTabBar = CustomTabBar()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        setupCustomTabBar()
     }
-
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    
+    // MARK: - Setup
+    private func setupCustomTabBar() {
+        customTabBar.delegate = self
+        customTabBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(customTabBar)
+        
+        // Position tab bar at the bottom with safe area
+        NSLayoutConstraint.activate([
+            customTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customTabBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0),
+            customTabBar.heightAnchor.constraint(equalToConstant: 85)
+        ])
     }
-    */
+}
 
+// MARK: - CustomTabBarDelegate
+extension HomePetsViewController: CustomTabBarDelegate {
+    func tabBar(_ tabBar: CustomTabBar, didSelectItemAt index: Int) {
+        // Handle tab selection
+        print("Selected tab at index: \(index)")
+        
+        // You can add navigation logic here based on the index:
+        // 0: Journal
+        // 1: Goals
+        // 2: Home (Paw)
+        // 3: Care Corner
+        // 4: Community
+    }
 }
