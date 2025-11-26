@@ -19,6 +19,10 @@ class JournalsHomeViewController: UIViewController {
         let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
             self.navigationController?.pushViewController(vc, animated: true)
     }
+    @IBAction func viewJournals(_ sender: Any) {
+        let vc = MyJournalsListViewController(nibName: "MyJournalsListViewController", bundle: nil)
+            navigationController?.pushViewController(vc, animated: true)
+    }
     
     /*
     // MARK: - Navigation

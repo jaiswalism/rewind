@@ -78,6 +78,9 @@
                         <color key="baseForegroundColor" name="colors/Primary/Light"/>
                         <color key="baseBackgroundColor" name="colors/Primary/Normal :active"/>
                     </buttonConfiguration>
+                    <connections>
+                        <action selector="viewJournals:" destination="-1" eventType="touchUpInside" id="MN2-O3-y0P"/>
+                    </connections>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
