@@ -85,6 +85,7 @@
 		52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */; };
 		B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */; };
 		B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */; };
+		B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */; };
 		B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */; };
 		B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */; };
 		B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */; };
@@ -191,6 +192,7 @@
 		52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OTPVerifyViewController.xib; sourceTree = "<group>"; };
 		B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareCornerViewController.swift; sourceTree = "<group>"; };
 		B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingExerciseViewController.swift; sourceTree = "<group>"; };
+		B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationViewController.swift; sourceTree = "<group>"; };
 		B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
 		B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
@@ -441,6 +443,7 @@
 				529C881C2EC3A7A800DA9890 /* ActivityCompletedViewController.swift */,
 				B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */,
 				B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */,
+				B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */,
 			);
 			path = "Care Corner";
 			sourceTree = "<group>";
@@ -768,6 +771,7 @@
 				529C880F2EC3A75300DA9890 /* CareCornerHomeViewController.swift in Sources */,
 				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
 				523BF26C2EBE6AFC003F7696 /* CommunityFeedViewController.swift in Sources */,
+				B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */,
 				529C88072EC3A5EC00DA9890 /* MyJournalsListViewController.swift in Sources */,
 				529C88132EC3A76200DA9890 /* ActivitySetupViewController.swift in Sources */,
 				523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */,

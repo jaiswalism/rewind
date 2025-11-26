@@ -208,11 +208,9 @@ class BreathingExerciseViewController: UIViewController {
     }
     
     @objc private func startExerciseTapped() {
-        print("Starting exercise for \(selectedMinutes):\(String(format: "%02d", selectedSeconds))")
-        // Navigate to actual breathing exercise screen
-        let alert = UIAlertController(title: "Exercise Starting", message: "Duration: \(selectedMinutes) min \(selectedSeconds) sec", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        let totalSeconds = (selectedMinutes * 60) + selectedSeconds
+        let animationVC = BreathingAnimationViewController(durationInSeconds: totalSeconds)
+        navigationController?.pushViewController(animationVC, animated: true)
     }
     
     @objc private func minutesSwipedUp() {
