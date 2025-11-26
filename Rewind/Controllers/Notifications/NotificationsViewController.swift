@@ -111,58 +111,108 @@ class NotificationsViewController: UIViewController {
     private let contentView = UIView()
     private let stackView = UIStackView()
 
-    private let backButton = UIButton(type: .system)
-    private let titleLabel = UILabel()
-    private let badgeLabel = UILabel()
+    // Fallback in-view back/close button (only shown when nav bar is absent/hidden)
+    private lazy var fallbackBackButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        btn.tintColor = .white
+        btn.addTarget(self, action: #selector(fallbackBackTapped), for: .touchUpInside)
+        btn.isHidden = true
+        return btn
+    }()
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Ensure the system navigation bar is visible so the default back button appears when this VC is pushed.
+        navigationController?.setNavigationBarHidden(false, animated: false)
+        // Ensure the back button tint is visible against the dark bar
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.barStyle = .black
+        // Debug: print navigation state
+        NSLog("[NotificationsVC] viewWillAppear - navigationController: %@", String(describing: navigationController))
+        NSLog("[NotificationsVC] viewWillAppear - isNavigationBarHidden: %d", navigationController?.isNavigationBarHidden ?? false)
+        NSLog("[NotificationsVC] viewWillAppear - nav stack count: %d", navigationController?.viewControllers.count ?? 0)
+        NSLog("[NotificationsVC] viewWillAppear - hidesBackButton: %d", navigationItem.hidesBackButton)
+        // If we're pushed and not the root, hide the in-view header so the system nav bar/back shows cleanly
+        if let nav = navigationController, nav.viewControllers.firstIndex(of: self) ?? 0 > 0 {
+            // Nothing to toggle; relying on system navigation bar for title/back.
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: false)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.barStyle = .black
+        navigationItem.hidesBackButton = false
+
+        // Sync in-view header visibility again after appearance
+        if let nav = navigationController, nav.viewControllers.firstIndex(of: self) ?? 0 > 0 {
+            // Nothing to toggle; relying on system navigation bar for title/back.
+        } else {
+            // Nothing to toggle; relying on system navigation bar for title/back.
+        }
+        // Debug: print navigation state after appear
+        NSLog("[NotificationsVC] viewDidAppear - navigationController: %@", String(describing: navigationController))
+        NSLog("[NotificationsVC] viewDidAppear - isNavigationBarHidden: %d", navigationController?.isNavigationBarHidden ?? false)
+        NSLog("[NotificationsVC] viewDidAppear - nav stack count: %d", navigationController?.viewControllers.count ?? 0)
+        NSLog("[NotificationsVC] viewDidAppear - hidesBackButton: %d", navigationItem.hidesBackButton)
+
+        // Show fallback back button when system nav bar is not available or hidden
+        let navBarHidden = navigationController?.isNavigationBarHidden ?? true
+        let hasNavController = (navigationController != nil)
+        fallbackBackButton.isHidden = hasNavController && !navBarHidden
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         view.backgroundColor = UIColor(red: 84/255, green: 72/255, blue: 233/255, alpha: 1)
-        setupNavigationHeader()
+        // Add fallback back button to view hierarchy (kept hidden unless needed)
+        view.addSubview(fallbackBackButton)
+        NSLayoutConstraint.activate([
+            fallbackBackButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12),
+            fallbackBackButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            fallbackBackButton.widthAnchor.constraint(equalToConstant: 36),
+            fallbackBackButton.heightAnchor.constraint(equalToConstant: 36)
+        ])
+
+        // No in-view header; rely on UINavigationBar for title/back
         setupScrollStack()
         populateSampleContent()
+
+        // Title for system navigation bar (if present)
+        navigationItem.title = "Notifications"
+
+        // If this VC is presented modally or is the root of the nav stack, provide a close button.
+        // When pushed onto a nav stack (and not root) the system back button will be shown automatically.
+        if presentingViewController != nil || navigationController?.viewControllers.first === self {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(dismissTapped))
+        }
     }
 
-    private func setupNavigationHeader() {
-        backButton.translatesAutoresizingMaskIntoConstraints = false
-        let chevron = UIImage(systemName: "chevron.left")
-        backButton.setImage(chevron, for: .normal)
-        backButton.tintColor = UIColor.white.withAlphaComponent(0.95)
-        backButton.addTarget(self, action: #selector(backTapped), for: .touchUpInside)
-        view.addSubview(backButton)
+    @objc private func dismissTapped() {
+        if presentingViewController != nil {
+            dismiss(animated: true, completion: nil)
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
+    }
 
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.text = "Notifications"
-        titleLabel.font = UIFont.systemFont(ofSize: 34, weight: .bold)
-        titleLabel.textColor = .white
-        view.addSubview(titleLabel)
-
-        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        badgeLabel.backgroundColor = UIColor(red: 75/255, green: 66/255, blue: 185/255, alpha: 1)
-        badgeLabel.textColor = .white
-        badgeLabel.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-        badgeLabel.text = "+11"
-        badgeLabel.textAlignment = .center
-        badgeLabel.layer.cornerRadius = 14
-        badgeLabel.layer.masksToBounds = true
-        view.addSubview(badgeLabel)
-
-        let safe = view.safeAreaLayoutGuide
-        NSLayoutConstraint.activate([
-            backButton.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
-            backButton.topAnchor.constraint(equalTo: safe.topAnchor, constant: 12),
-            backButton.widthAnchor.constraint(equalToConstant: 36),
-            backButton.heightAnchor.constraint(equalToConstant: 36),
-
-            titleLabel.leadingAnchor.constraint(equalTo: backButton.leadingAnchor, constant: 12),
-            titleLabel.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 14),
-
-            badgeLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 12),
-            badgeLabel.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor, constant: -2),
-            badgeLabel.widthAnchor.constraint(equalToConstant: 44),
-            badgeLabel.heightAnchor.constraint(equalToConstant: 28)
-        ])
+    @objc private func fallbackBackTapped() {
+        // Mirror dismissTapped behavior for fallback button
+        if presentingViewController != nil {
+            dismiss(animated: true, completion: nil)
+        } else if navigationController != nil {
+            navigationController?.popViewController(animated: true)
+        } else {
+            // As a last resort try to dismiss
+            dismiss(animated: true, completion: nil)
+        }
     }
 
     private func setupScrollStack() {
@@ -180,7 +230,8 @@ class NotificationsViewController: UIViewController {
 
         let safe = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 18),
+            // Pin top to safe area (below nav bar when present)
+            scrollView.topAnchor.constraint(equalTo: safe.topAnchor, constant: 18),
             scrollView.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
             scrollView.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
             scrollView.bottomAnchor.constraint(equalTo: safe.bottomAnchor),
@@ -249,9 +300,5 @@ class NotificationsViewController: UIViewController {
         bottomPad.translatesAutoresizingMaskIntoConstraints = false
         bottomPad.heightAnchor.constraint(equalToConstant: 36).isActive = true
         stackView.addArrangedSubview(bottomPad)
-    }
-
-    @objc private func backTapped() {
-        navigationController?.popViewController(animated: true)
     }
 }

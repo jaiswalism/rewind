@@ -100,7 +100,6 @@ class SettingsViewController: UIViewController {
     private let generalSettingsIcon: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.image = UIImage(systemName: "face.smiling")
         imageView.tintColor = .white
         imageView.contentMode = .scaleAspectFit
         return imageView
@@ -142,7 +141,6 @@ class SettingsViewController: UIViewController {
     private let logOutHeaderIcon: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.image = UIImage(systemName: "face.smiling")
         imageView.tintColor = .white
         imageView.contentMode = .scaleAspectFit
         return imageView
@@ -402,6 +400,29 @@ class SettingsViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
+        // If we're embedded in a navigation controller and not the root VC, pop.
+        if let nav = navigationController {
+            if let index = nav.viewControllers.firstIndex(of: self), index > 0 {
+                nav.popViewController(animated: true)
+                return
+            }
+        }
+        
+        // If presented modally, dismiss.
+        if presentingViewController != nil {
+            dismiss(animated: true, completion: nil)
+            return
+        }
+        
+        // If contained in another controller with its own navigation controller, try popping there.
+        if let parentNav = parent?.navigationController {
+            if let index = parentNav.viewControllers.firstIndex(of: self), index > 0 {
+                parentNav.popViewController(animated: true)
+                return
+            }
+        }
+        
+        // Fallback: attempt to pop on any available navigation controller.
         navigationController?.popViewController(animated: true)
     }
     
