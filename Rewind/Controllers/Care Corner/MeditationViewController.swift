@@ -240,11 +240,8 @@ class MeditationViewController: UIViewController {
     
     @objc private func startExerciseTapped() {
         let totalSeconds = (selectedMinutes * 60) + selectedSeconds
-        print("Starting meditation for \(totalSeconds) seconds with sound: \(selectedSound)")
-        // Navigate to meditation session screen
-        let alert = UIAlertController(title: "Meditation Starting", message: "Duration: \(selectedMinutes) min \(selectedSeconds) sec\nSound: \(selectedSound)", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        let sessionVC = MeditationSessionViewController(durationInSeconds: totalSeconds, soundName: selectedSound)
+        navigationController?.pushViewController(sessionVC, animated: true)
     }
     
     @objc private func soundButtonTapped() {
