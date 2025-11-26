@@ -8,7 +8,7 @@ import UIKit
 
 class CustomTabBar: UIView {
     
-    weak var parentViewController: UIViewController?
+    weak var hostViewController: UIViewController?
     
     private let containerView = UIView()
     private var buttons: [UIButton] = []
@@ -28,7 +28,7 @@ class CustomTabBar: UIView {
     private let centerIconColor = UIColor(red: 0.48, green: 0.52, blue: 0.82, alpha: 1.0)
     
     // Tab items: journal, goals, home (paw), care, community
-    private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.3"]
+    private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.2"]
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -126,7 +126,7 @@ class CustomTabBar: UIView {
     
     // FIX: Replaced pushViewController logic with setViewControllers to reset the stack
     private func handleNavigation(for index: Int) {
-        guard let parentVC = parentViewController else { return }
+        guard let parentVC = hostViewController else { return }
         
         let targetVC: UIViewController
         switch index {

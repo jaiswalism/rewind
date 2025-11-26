@@ -204,7 +204,7 @@ class CareCornerViewController: UIViewController {
     }
     
     private func setupCustomTabBar() {
-        customTabBar.parentViewController = self
+        customTabBar.hostViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
         customTabBar.selectTab(at: 3) // Select Care Corner tab
         view.addSubview(customTabBar)
