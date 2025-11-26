@@ -297,11 +297,12 @@ class BreathingAnimationViewController: UIViewController {
     private func exerciseCompleted() {
         stopAllAnimations()
         
-        let alert = UIAlertController(title: "Great Job!", message: "You've completed your breathing exercise.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Done", style: .default) { [weak self] _ in
-            self?.navigationController?.popToRootViewController(animated: true)
-        })
-        present(alert, animated: true)
+        // Calculate duration in minutes
+        let totalMinutes = (remainingSeconds / 60) + 1
+        let durationString = "\(totalMinutes)M"
+        
+        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: totalMinutes * 20)
+        navigationController?.pushViewController(completedVC, animated: true)
     }
     
     // MARK: - Actions

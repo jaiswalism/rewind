@@ -298,11 +298,12 @@ class MeditationSessionViewController: UIViewController {
     private func meditationCompleted() {
         stopTimer()
         
-        let alert = UIAlertController(title: "Well Done!", message: "You've completed your meditation session.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Done", style: .default) { [weak self] _ in
-            self?.navigationController?.popToRootViewController(animated: true)
-        })
-        present(alert, animated: true)
+        // Calculate duration in minutes
+        let completedMinutes = totalSeconds / 60
+        let durationString = "\(completedMinutes)M"
+        
+        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: completedMinutes * 20)
+        navigationController?.pushViewController(completedVC, animated: true)
     }
     
     private func stopTimer() {
@@ -352,7 +353,15 @@ class MeditationSessionViewController: UIViewController {
         let alert = UIAlertController(title: "Complete Early?", message: "You've meditated for \(formatElapsedTime()). Would you like to complete now?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Complete", style: .default) { [weak self] _ in
-            self?.navigationController?.popToRootViewController(animated: true)
+            guard let self = self else { return }
+            
+            // Calculate elapsed time
+            let elapsedSeconds = self.totalSeconds - self.remainingSeconds
+            let elapsedMinutes = max(1, elapsedSeconds / 60) // At least 1 minute
+            let durationString = "\(elapsedMinutes)M"
+            
+            let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: elapsedMinutes * 20)
+            self.navigationController?.pushViewController(completedVC, animated: true)
         })
         present(alert, animated: true)
     }
