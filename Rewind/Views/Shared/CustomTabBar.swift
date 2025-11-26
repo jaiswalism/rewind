@@ -66,21 +66,10 @@ class CustomTabBar: UIView {
         button.tag = index
         button.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
         
-        let config = UIImage.SymbolConfiguration(pointSize: index == 2 ? centerIconSize : regularIconSize, weight: .medium)
+        let config = UIImage.SymbolConfiguration(pointSize: index == 2 ? centerIconSize : regularIconSize, weight: .semibold)
         let image = UIImage(systemName: iconName, withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = index == 2 ? centerIconColor : iconColor
-        
-        // Center button gets special styling
-        if index == 2 {
-            button.backgroundColor = centerButtonColor
-            button.layer.cornerRadius = centerButtonSize / 2
-            button.layer.shadowColor = UIColor.black.cgColor
-            button.layer.shadowOffset = CGSize(width: 0, height: 2)
-            button.layer.shadowRadius = 6
-            button.layer.shadowOpacity = 0.2
-            button.layer.masksToBounds = false
-        }
+        button.tintColor = iconColor
         
         return button
     }
@@ -104,29 +93,33 @@ class CustomTabBar: UIView {
         for (index, button) in buttons.enumerated() {
             let xPosition = buttonSpacing * CGFloat(index) + (buttonSpacing / 2)
             
-            if index == 2 {
-                // Center button (elevated)
-                button.frame = CGRect(
-                    x: xPosition - (centerButtonSize / 2),
-                    y: (tabBarHeight - centerButtonSize) / 2 - 10, // Elevated above bar
-                    width: centerButtonSize,
-                    height: centerButtonSize
-                )
-            } else {
-                // Regular buttons
-                let buttonSize: CGFloat = 48
-                button.frame = CGRect(
-                    x: xPosition - (buttonSize / 2),
-                    y: (tabBarHeight - buttonSize) / 2,
-                    width: buttonSize,
-                    height: buttonSize
-                )
-            }
+            // All buttons same size now
+            let buttonSize: CGFloat = 48
+            button.frame = CGRect(
+                x: xPosition - (buttonSize / 2),
+                y: (tabBarHeight - buttonSize) / 2,
+                width: buttonSize,
+                height: buttonSize
+            )
         }
     }
     
     @objc private func tabButtonTapped(_ sender: UIButton) {
         let index = sender.tag
+        
+        // Add haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        
+        // Animate button press
+        UIView.animate(withDuration: 0.1, animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = .identity
+            }
+        }
+        
         selectedIndex = index
         updateButtonStates()
         handleNavigation(for: index)
@@ -150,8 +143,15 @@ class CustomTabBar: UIView {
             // Goals
             print("Goals tapped")
         case 2:
-            // Home (Paw) - already here
-            print("Home tapped")
+            // Home (Paw)
+            let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
+            if let navController = parentVC.navigationController {
+                navController.pushViewController(homePetsVC, animated: true)
+            } else {
+                let navController = UINavigationController(rootViewController: homePetsVC)
+                navController.modalPresentationStyle = .fullScreen
+                parentVC.present(navController, animated: true)
+            }
         case 3:
             // Care Corner
             print("Care Corner tapped")
@@ -165,13 +165,16 @@ class CustomTabBar: UIView {
     
     private func updateButtonStates() {
         for (index, button) in buttons.enumerated() {
-            // Remove highlight effect - all buttons stay at full opacity
-            button.alpha = 1.0
+            let isSelected = index == selectedIndex
             
-            // Optional: Add subtle scale animation for selected button
-            UIView.animate(withDuration: 0.2) {
-                button.transform = index == self.selectedIndex ? CGAffineTransform(scaleX: 1.1, y: 1.1) : .identity
+            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+                // All buttons - scale and opacity
+                button.transform = isSelected ? CGAffineTransform(scaleX: 1.2, y: 1.2) : .identity
+                button.alpha = isSelected ? 1.0 : 0.5
             }
+            
+            // Update tint color for better visibility
+            button.tintColor = isSelected ? iconColor : iconColor.withAlphaComponent(0.5)
         }
     }
     

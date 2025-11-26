@@ -82,6 +82,9 @@
 		52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */; };
 		52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */; };
 		52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */; };
+		B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */; };
+		B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */; };
+		B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -182,6 +185,9 @@
 		52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Style.swift"; sourceTree = "<group>"; };
 		52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerifyViewController.swift; sourceTree = "<group>"; };
 		52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OTPVerifyViewController.xib; sourceTree = "<group>"; };
+		B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
+		B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
+		B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -403,6 +409,9 @@
 		523E8D692EBD147F00DB875D /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */,
+				B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */,
+				B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -724,6 +733,9 @@
 				529C88022EC3A5DB00DA9890 /* AddTextJournalViewController.swift in Sources */,
 				523BF27D2EBE6B94003F7696 /* EditGoalViewController.swift in Sources */,
 				529C87FA2EC3A5BB00DA9890 /* NewJournalTypeViewController.swift in Sources */,
+				B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */,
+				B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */,
+				B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */,
 				529C87EB2EC3A4F100DA9890 /* SettingsViewController.swift in Sources */,
 				529C87F72EC3A5AC00DA9890 /* JournalsHomeViewController.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
