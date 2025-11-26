@@ -23,12 +23,12 @@ class HomePetsViewController: UIViewController {
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(customTabBar)
         
-        // Position tab bar at the bottom with safe area
+        // Position tab bar at the very bottom of the screen
         NSLayoutConstraint.activate([
             customTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customTabBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0),
-            customTabBar.heightAnchor.constraint(equalToConstant: 85)
+            customTabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 10),
+            customTabBar.heightAnchor.constraint(equalToConstant: 110)
         ])
     }
 }

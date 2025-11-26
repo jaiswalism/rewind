@@ -165,11 +165,12 @@ class CustomTabBar: UIView {
     
     private func updateButtonStates() {
         for (index, button) in buttons.enumerated() {
-            if index == 2 {
-                // Center button always has white background
-                button.alpha = index == selectedIndex ? 1.0 : 0.7
-            } else {
-                button.alpha = index == selectedIndex ? 1.0 : 0.6
+            // Remove highlight effect - all buttons stay at full opacity
+            button.alpha = 1.0
+            
+            // Optional: Add subtle scale animation for selected button
+            UIView.animate(withDuration: 0.2) {
+                button.transform = index == self.selectedIndex ? CGAffineTransform(scaleX: 1.1, y: 1.1) : .identity
             }
         }
     }
