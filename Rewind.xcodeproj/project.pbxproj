@@ -14,6 +14,9 @@
 		5214F66E2EBD0CD5005020AA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65B2EBD0CD5005020AA /* Assets.xcassets */; };
 		5214F6702EBD0CD5005020AA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F65E2EBD0CD5005020AA /* LaunchScreen.storyboard */; };
 		5214F6722EBD0CD5005020AA /* Onboarding.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5214F6612EBD0CD5005020AA /* Onboarding.storyboard */; };
+		521E27C92ED6755E00ADF5C9 /* DateCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521E27C82ED6755E00ADF5C9 /* DateCollectionViewCell.swift */; };
+		521F7C722ED67993000BB2DA /* JournalTimelineCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 521F7C712ED67993000BB2DA /* JournalTimelineCell.xib */; };
+		521F7C732ED67993000BB2DA /* JournalTimelineCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7C702ED67993000BB2DA /* JournalTimelineCell.swift */; };
 		523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */; };
 		523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */; };
 		523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */; };
@@ -108,6 +111,9 @@
 		5214F6632EBD0CD5005020AA /* Rewind.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Rewind.entitlements; sourceTree = "<group>"; };
 		5214F6652EBD0CD5005020AA /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		5214F6682EBD0CD5005020AA /* Rewind.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Rewind.xcdatamodel; sourceTree = "<group>"; };
+		521E27C82ED6755E00ADF5C9 /* DateCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateCollectionViewCell.swift; sourceTree = "<group>"; };
+		521F7C702ED67993000BB2DA /* JournalTimelineCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalTimelineCell.swift; sourceTree = "<group>"; };
+		521F7C712ED67993000BB2DA /* JournalTimelineCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JournalTimelineCell.xib; sourceTree = "<group>"; };
 		523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthGoalViewController.swift; sourceTree = "<group>"; };
 		523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingHealthGoalViewController.xib; sourceTree = "<group>"; };
 		523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGenderViewController.swift; sourceTree = "<group>"; };
@@ -513,6 +519,9 @@
 			children = (
 				52CCF6BA2EBD521D00FADBEB /* Extensions */,
 				5259707A2EC1A1FC0012E644 /* AgeScroller */,
+				521E27C82ED6755E00ADF5C9 /* DateCollectionViewCell.swift */,
+				521F7C702ED67993000BB2DA /* JournalTimelineCell.swift */,
+				521F7C712ED67993000BB2DA /* JournalTimelineCell.xib */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -651,6 +660,7 @@
 				529C880E2EC3A75300DA9890 /* CareCornerHomeViewController.xib in Resources */,
 				523BF2512EBE63B2003F7696 /* OnboardingAgeViewController.xib in Resources */,
 				523BF2792EBE6B87003F7696 /* AddGoalViewController.xib in Resources */,
+				521F7C722ED67993000BB2DA /* JournalTimelineCell.xib in Resources */,
 				529C881E2EC3A7A800DA9890 /* ActivityCompletedViewController.xib in Resources */,
 				52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */,
 				523BF2712EBE6B36003F7696 /* CreatePostViewController.xib in Resources */,
@@ -706,6 +716,7 @@
 				523E8D7C2EBD1F9A00DB875D /* SignupViewController.swift in Sources */,
 				523BF2702EBE6B36003F7696 /* CreatePostViewController.swift in Sources */,
 				523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */,
+				521F7C732ED67993000BB2DA /* JournalTimelineCell.swift in Sources */,
 				529C87F32EC3A51100DA9890 /* ReferralViewController.swift in Sources */,
 				523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */,
 				52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */,
@@ -725,6 +736,7 @@
 				523BF2752EBE6B59003F7696 /* GoalsListViewController.swift in Sources */,
 				529C880B2EC3A5FE00DA9890 /* JournalDetailViewViewController.swift in Sources */,
 				529C88172EC3A78800DA9890 /* BreathingPlayerViewController.swift in Sources */,
+				521E27C92ED6755E00ADF5C9 /* DateCollectionViewCell.swift in Sources */,
 				529C87DF2EC3A49700DA9890 /* HomePetsViewController.swift in Sources */,
 				529C87E62EC3A4D500DA9890 /* NotificationsViewController.swift in Sources */,
 				523E8D782EBD1EAA00DB875D /* LoginViewController.swift in Sources */,
