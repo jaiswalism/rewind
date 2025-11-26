@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
-        <capability name="Image references" minToolsVersion="12.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -13,8 +12,6 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="NewJournalTypeViewController" customModule="Rewind" customModuleProvider="target">
             <connections>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
-                <outletCollection property="cardButtons" destination="zZV-OV-utp" collectionClass="NSMutableArray" id="wHh-GF-QBp"/>
-                <outletCollection property="cardButtons" destination="VHV-kX-yPV" collectionClass="NSMutableArray" id="MDT-2F-VnD"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
@@ -22,18 +19,6 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rdE-VJ-rK8" userLabel="Back Button">
-                    <rect key="frame" x="22" y="65" width="48" height="48"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="48" id="FJZ-eY-67t"/>
-                        <constraint firstAttribute="height" constant="48" id="QOe-Kp-G5t"/>
-                    </constraints>
-                    <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="plain" image="chevron.backward" catalog="system">
-                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" weight="semibold"/>
-                        <color key="baseForegroundColor" name="colors/Primary/Light"/>
-                    </buttonConfiguration>
-                </button>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="New Mental Health Journal" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qXZ-2c-eff">
                     <rect key="frame" x="24" y="158" width="345" height="105.33333333333331"/>
                     <constraints>
@@ -59,7 +44,7 @@
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
                     <connections>
-                        <action selector="cardTapped:" destination="-1" eventType="touchUpInside" id="fqr-K0-oal"/>
+                        <action selector="voiceButton:" destination="-1" eventType="touchUpInside" id="wJF-FW-d4K"/>
                     </connections>
                 </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="L5g-1l-Qad" userLabel="Microphone">
@@ -111,9 +96,6 @@
                             <integer key="value" value="20"/>
                         </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
-                    <connections>
-                        <action selector="cardTapped:" destination="-1" eventType="touchUpInside" id="phz-qY-RmR"/>
-                    </connections>
                 </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="R9h-q5-onU" userLabel="Microphone">
                     <rect key="frame" x="40" y="542.33333333333337" width="55" height="55"/>
@@ -149,45 +131,24 @@
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
                 </label>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="KR5-MU-kBx">
-                    <rect key="frame" x="24" y="746" width="345" height="56"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="345" id="BUT-5D-fVn"/>
-                        <constraint firstAttribute="width" relation="lessThanOrEqual" constant="345" id="Cd4-9Y-sTu"/>
-                        <constraint firstAttribute="height" constant="56" id="ozT-Pr-heN"/>
-                    </constraints>
-                    <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="filled" imagePlacement="trailing" title="Create Journal" imagePadding="16" cornerStyle="capsule">
-                        <imageReference key="image" image="plus" catalog="system" symbolScale="default"/>
-                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" weight="black"/>
-                        <fontDescription key="titleFontDescription" type="system" weight="heavy" pointSize="18"/>
-                        <directionalEdgeInsets key="contentInsets" top="12" leading="12" bottom="12" trailing="12"/>
-                        <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
-                        <color key="baseBackgroundColor" name="colors/Primary/Light"/>
-                    </buttonConfiguration>
-                </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
             <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-400"/>
             <constraints>
                 <constraint firstItem="dgj-y8-cmA" firstAttribute="leading" secondItem="VHV-kX-yPV" secondAttribute="leading" constant="16" id="2Mb-oj-ExE"/>
-                <constraint firstItem="qXZ-2c-eff" firstAttribute="top" secondItem="rdE-VJ-rK8" secondAttribute="bottom" constant="45" id="3Yx-kF-lo0"/>
                 <constraint firstItem="qXZ-2c-eff" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="4af-Z2-tvN"/>
                 <constraint firstItem="TMF-KO-RUk" firstAttribute="leading" secondItem="VHV-kX-yPV" secondAttribute="leading" constant="16" id="5PX-44-GU2"/>
-                <constraint firstItem="rdE-VJ-rK8" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="22" id="7Ug-22-RSb"/>
                 <constraint firstItem="w8c-wW-5kp" firstAttribute="leading" secondItem="zZV-OV-utp" secondAttribute="leading" constant="16" id="Az0-4p-zHk"/>
                 <constraint firstItem="dgj-y8-cmA" firstAttribute="top" secondItem="TMF-KO-RUk" secondAttribute="bottom" constant="10" id="DbY-x1-od2"/>
                 <constraint firstItem="R9h-q5-onU" firstAttribute="top" secondItem="VHV-kX-yPV" secondAttribute="top" constant="20" id="Dx8-qM-3mZ"/>
                 <constraint firstItem="5nj-HX-eRq" firstAttribute="leading" secondItem="zZV-OV-utp" secondAttribute="leading" constant="16" id="Liy-Lm-lKT"/>
                 <constraint firstItem="VHV-kX-yPV" firstAttribute="trailing" secondItem="dgj-y8-cmA" secondAttribute="trailing" constant="16" id="OB1-ON-62o"/>
-                <constraint firstAttribute="bottom" secondItem="KR5-MU-kBx" secondAttribute="bottom" constant="50" id="UMD-eV-78d"/>
+                <constraint firstItem="qXZ-2c-eff" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" constant="40" id="VHh-Ws-M70"/>
                 <constraint firstItem="TMF-KO-RUk" firstAttribute="top" secondItem="R9h-q5-onU" secondAttribute="bottom" constant="20" id="Vu0-rl-xIZ"/>
                 <constraint firstItem="L5g-1l-Qad" firstAttribute="leading" secondItem="zZV-OV-utp" secondAttribute="leading" constant="16" id="Ycc-pW-Vwo"/>
                 <constraint firstItem="zZV-OV-utp" firstAttribute="trailing" secondItem="w8c-wW-5kp" secondAttribute="trailing" constant="16" id="abP-9C-KuF"/>
-                <constraint firstItem="rdE-VJ-rK8" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="65" id="bCd-Wq-6Dd"/>
                 <constraint firstItem="zZV-OV-utp" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="cJd-q8-XAx"/>
                 <constraint firstItem="L5g-1l-Qad" firstAttribute="top" secondItem="zZV-OV-utp" secondAttribute="top" constant="20" id="hCB-iP-CVk"/>
-                <constraint firstItem="KR5-MU-kBx" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="hTq-5P-thR"/>
                 <constraint firstItem="VHV-kX-yPV" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="jhD-XI-W8s"/>
                 <constraint firstItem="VHV-kX-yPV" firstAttribute="top" secondItem="zZV-OV-utp" secondAttribute="bottom" constant="45" id="nND-9b-6VO"/>
                 <constraint firstItem="zZV-OV-utp" firstAttribute="top" secondItem="qXZ-2c-eff" secondAttribute="bottom" constant="20" id="o6G-c0-S7E"/>
@@ -199,10 +160,8 @@
         </view>
     </objects>
     <resources>
-        <image name="chevron.backward" catalog="system" width="97" height="128"/>
         <image name="icons/microphone.fill" width="16.48539924621582" height="26.439599990844727"/>
         <image name="icons/square.text.square.fill" width="21.569799423217773" height="21.225500106811523"/>
-        <image name="plus" catalog="system" width="128" height="113"/>
         <namedColor name="colors/Blue&amp;Shades/blue-300">
             <color red="0.48627454042434692" green="0.47843140363693237" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
