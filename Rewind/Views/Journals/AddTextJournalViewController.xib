@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -32,18 +32,6 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="iMM-iL-0LL">
                     <rect key="frame" x="0.0" y="65" width="393" height="48"/>
                     <subviews>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0dt-yM-RkG" userLabel="Back Button">
-                            <rect key="frame" x="22" y="0.0" width="48" height="48"/>
-                            <constraints>
-                                <constraint firstAttribute="width" constant="48" id="IOZ-YC-Vfx"/>
-                                <constraint firstAttribute="height" constant="48" id="ixr-M0-FxS"/>
-                            </constraints>
-                            <state key="normal" title="Button"/>
-                            <buttonConfiguration key="configuration" style="plain" image="chevron.backward" catalog="system">
-                                <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="pointSize" pointSize="24" weight="semibold"/>
-                                <color key="baseForegroundColor" name="colors/Primary/Light"/>
-                            </buttonConfiguration>
-                        </button>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Add New Journal" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ISl-7g-Ynw">
                             <rect key="frame" x="101.33333333333333" y="9.6666666666666732" width="190.66666666666669" height="28.666666666666671"/>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="24"/>
@@ -54,10 +42,8 @@
                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <constraints>
                         <constraint firstItem="ISl-7g-Ynw" firstAttribute="centerY" secondItem="iMM-iL-0LL" secondAttribute="centerY" id="4w2-4H-e07"/>
-                        <constraint firstItem="0dt-yM-RkG" firstAttribute="centerY" secondItem="iMM-iL-0LL" secondAttribute="centerY" id="dME-9x-sjz"/>
                         <constraint firstItem="ISl-7g-Ynw" firstAttribute="centerX" secondItem="iMM-iL-0LL" secondAttribute="centerX" id="m3M-UV-Tar"/>
                         <constraint firstAttribute="height" constant="48" id="tQm-b0-zrT"/>
-                        <constraint firstItem="0dt-yM-RkG" firstAttribute="leading" secondItem="iMM-iL-0LL" secondAttribute="leading" constant="22" id="yBg-7D-huS"/>
                     </constraints>
                 </view>
                 <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4oM-cq-vkQ">
@@ -291,7 +277,6 @@
     <resources>
         <image name="arrow.up" catalog="system" width="118" height="128"/>
         <image name="camera" catalog="system" width="128" height="93"/>
-        <image name="chevron.backward" catalog="system" width="97" height="128"/>
         <image name="illustrations/emotions/happy" width="64" height="64"/>
         <image name="illustrations/emotions/neutral" width="64" height="64"/>
         <image name="illustrations/emotions/sad" width="64" height="64"/>

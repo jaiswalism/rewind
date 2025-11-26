@@ -72,11 +72,13 @@ class VoiceJournalViewController: UIViewController {
     
     @IBAction func closeButtonTapped(_ sender: UIButton) {
         // Handle close/cancel logic
-        dismiss(animated: true, completion: nil)
+        navigationController?.popViewController(animated: true)
     }
     
     @IBAction func checkButtonTapped(_ sender: UIButton) {
         // Handle save/finish logic
+        let vc = MyJournalsListViewController(nibName: "MyJournalsListViewController", bundle: nil)
+            navigationController?.pushViewController(vc, animated: true)
     }
     
     // MARK: - State Management
