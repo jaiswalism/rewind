@@ -15,7 +15,11 @@ class JournalsHomeViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
 
-
+    @IBAction func addJournal(_ sender: Any) {
+        let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
+            self.navigationController?.pushViewController(vc, animated: true)
+    }
+    
     /*
     // MARK: - Navigation
 
