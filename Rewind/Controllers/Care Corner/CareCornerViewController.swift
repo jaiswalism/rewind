@@ -254,7 +254,7 @@ class CareCornerViewController: UIViewController {
     }
     
     @objc private func meditationTapped() {
-        print("Meditation tapped")
-        // Navigate to meditation
+        let meditationVC = MeditationViewController()
+        navigationController?.pushViewController(meditationVC, animated: true)
     }
 }

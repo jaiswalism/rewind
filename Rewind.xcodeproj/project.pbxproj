@@ -86,6 +86,7 @@
 		B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */; };
 		B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */; };
 		B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */; };
+		B28393B42ED7605C0038EC3B /* MeditationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B32ED7605C0038EC3B /* MeditationViewController.swift */; };
 		B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */; };
 		B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */; };
 		B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */; };
@@ -193,6 +194,7 @@
 		B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareCornerViewController.swift; sourceTree = "<group>"; };
 		B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingExerciseViewController.swift; sourceTree = "<group>"; };
 		B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationViewController.swift; sourceTree = "<group>"; };
+		B28393B32ED7605C0038EC3B /* MeditationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationViewController.swift; sourceTree = "<group>"; };
 		B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
 		B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
@@ -444,6 +446,7 @@
 				B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */,
 				B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */,
 				B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */,
+				B28393B32ED7605C0038EC3B /* MeditationViewController.swift */,
 			);
 			path = "Care Corner";
 			sourceTree = "<group>";
@@ -753,6 +756,7 @@
 				529C87F72EC3A5AC00DA9890 /* JournalsHomeViewController.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
 				529C87EF2EC3A50000DA9890 /* ProfileViewController.swift in Sources */,
+				B28393B42ED7605C0038EC3B /* MeditationViewController.swift in Sources */,
 				523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */,
 				529C881A2EC3A79900DA9890 /* MeditationPlayerViewController.swift in Sources */,
 				523BF2782EBE6B87003F7696 /* AddGoalViewController.swift in Sources */,
