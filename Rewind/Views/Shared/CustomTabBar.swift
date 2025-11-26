@@ -154,7 +154,14 @@ class CustomTabBar: UIView {
             }
         case 3:
             // Care Corner
-            print("Care Corner tapped")
+            let careCornerVC = CareCornerViewController()
+            if let navController = parentVC.navigationController {
+                navController.pushViewController(careCornerVC, animated: true)
+            } else {
+                let navController = UINavigationController(rootViewController: careCornerVC)
+                navController.modalPresentationStyle = .fullScreen
+                parentVC.present(navController, animated: true)
+            }
         case 4:
             // Community
             print("Community tapped")

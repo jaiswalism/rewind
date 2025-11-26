@@ -83,6 +83,12 @@
 		52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */; };
 		52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */; };
 		52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */; };
+		B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */; };
+		B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */; };
+		B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */; };
+		B28393B42ED7605C0038EC3B /* MeditationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B32ED7605C0038EC3B /* MeditationViewController.swift */; };
+		B28393B62ED7616A0038EC3B /* MeditationSessionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B52ED7616A0038EC3B /* MeditationSessionViewController.swift */; };
+		B28393B82ED7633A0038EC3B /* ExerciseCompletedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B72ED7633A0038EC3B /* ExerciseCompletedViewController.swift */; };
 		B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */; };
 		B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */; };
 		B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */; };
@@ -187,6 +193,12 @@
 		52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Style.swift"; sourceTree = "<group>"; };
 		52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerifyViewController.swift; sourceTree = "<group>"; };
 		52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OTPVerifyViewController.xib; sourceTree = "<group>"; };
+		B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareCornerViewController.swift; sourceTree = "<group>"; };
+		B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingExerciseViewController.swift; sourceTree = "<group>"; };
+		B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationViewController.swift; sourceTree = "<group>"; };
+		B28393B32ED7605C0038EC3B /* MeditationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationViewController.swift; sourceTree = "<group>"; };
+		B28393B52ED7616A0038EC3B /* MeditationSessionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionViewController.swift; sourceTree = "<group>"; };
+		B28393B72ED7633A0038EC3B /* ExerciseCompletedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseCompletedViewController.swift; sourceTree = "<group>"; };
 		B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
 		B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
@@ -435,6 +447,12 @@
 				529C88142EC3A78800DA9890 /* BreathingPlayerViewController.swift */,
 				529C88182EC3A79900DA9890 /* MeditationPlayerViewController.swift */,
 				529C881C2EC3A7A800DA9890 /* ActivityCompletedViewController.swift */,
+				B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */,
+				B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */,
+				B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */,
+				B28393B32ED7605C0038EC3B /* MeditationViewController.swift */,
+				B28393B52ED7616A0038EC3B /* MeditationSessionViewController.swift */,
+				B28393B72ED7633A0038EC3B /* ExerciseCompletedViewController.swift */,
 			);
 			path = "Care Corner";
 			sourceTree = "<group>";
@@ -733,6 +751,8 @@
 				523E8D802EBD1FB400DB875D /* ForgotPasswordViewController.swift in Sources */,
 				52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */,
 				5214F6692EBD0CD5005020AA /* AppDelegate.swift in Sources */,
+				B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */,
+				B28393B82ED7633A0038EC3B /* ExerciseCompletedViewController.swift in Sources */,
 				529C88022EC3A5DB00DA9890 /* AddTextJournalViewController.swift in Sources */,
 				523BF27D2EBE6B94003F7696 /* EditGoalViewController.swift in Sources */,
 				529C87FA2EC3A5BB00DA9890 /* NewJournalTypeViewController.swift in Sources */,
@@ -743,10 +763,12 @@
 				529C87F72EC3A5AC00DA9890 /* JournalsHomeViewController.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,
 				529C87EF2EC3A50000DA9890 /* ProfileViewController.swift in Sources */,
+				B28393B42ED7605C0038EC3B /* MeditationViewController.swift in Sources */,
 				523BF2562EBE63C9003F7696 /* OnboardingProfHelpViewController.swift in Sources */,
 				529C881A2EC3A79900DA9890 /* MeditationPlayerViewController.swift in Sources */,
 				523BF2782EBE6B87003F7696 /* AddGoalViewController.swift in Sources */,
 				5214F66B2EBD0CD5005020AA /* Rewind.xcdatamodeld in Sources */,
+				B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */,
 				529C87E32EC3A4AB00DA9890 /* MarketplaceViewController.swift in Sources */,
 				523BF2752EBE6B59003F7696 /* GoalsListViewController.swift in Sources */,
 				529C880B2EC3A5FE00DA9890 /* JournalDetailViewViewController.swift in Sources */,
@@ -760,9 +782,11 @@
 				529C880F2EC3A75300DA9890 /* CareCornerHomeViewController.swift in Sources */,
 				5214F66C2EBD0CD5005020AA /* SceneDelegate.swift in Sources */,
 				523BF26C2EBE6AFC003F7696 /* CommunityFeedViewController.swift in Sources */,
+				B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */,
 				529C88072EC3A5EC00DA9890 /* MyJournalsListViewController.swift in Sources */,
 				529C88132EC3A76200DA9890 /* ActivitySetupViewController.swift in Sources */,
 				523BF24E2EBE639E003F7696 /* OnboardingGenderViewController.swift in Sources */,
+				B28393B62ED7616A0038EC3B /* MeditationSessionViewController.swift in Sources */,
 				523BF2522EBE63B2003F7696 /* OnboardingAgeViewController.swift in Sources */,
 				521F7C7B2ED6D3C3000BB2DA /* PaddedLabel.swift in Sources */,
 				52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */,
