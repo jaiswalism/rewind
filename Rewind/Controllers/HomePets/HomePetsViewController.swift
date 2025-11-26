@@ -19,7 +19,7 @@ class HomePetsViewController: UIViewController {
     
     // MARK: - Setup
     private func setupCustomTabBar() {
-        customTabBar.delegate = self
+        customTabBar.parentViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(customTabBar)
         
@@ -30,20 +30,5 @@ class HomePetsViewController: UIViewController {
             customTabBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 0),
             customTabBar.heightAnchor.constraint(equalToConstant: 85)
         ])
-    }
-}
-
-// MARK: - CustomTabBarDelegate
-extension HomePetsViewController: CustomTabBarDelegate {
-    func tabBar(_ tabBar: CustomTabBar, didSelectItemAt index: Int) {
-        // Handle tab selection
-        print("Selected tab at index: \(index)")
-        
-        // You can add navigation logic here based on the index:
-        // 0: Journal
-        // 1: Goals
-        // 2: Home (Paw)
-        // 3: Care Corner
-        // 4: Community
     }
 }

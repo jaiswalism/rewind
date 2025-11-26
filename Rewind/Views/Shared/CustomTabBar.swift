@@ -7,13 +7,9 @@
 
 import UIKit
 
-protocol CustomTabBarDelegate: AnyObject {
-    func tabBar(_ tabBar: CustomTabBar, didSelectItemAt index: Int)
-}
-
 class CustomTabBar: UIView {
     
-    weak var delegate: CustomTabBarDelegate?
+    weak var parentViewController: UIViewController?
     
     private let containerView = UIView()
     private var buttons: [UIButton] = []
@@ -133,7 +129,38 @@ class CustomTabBar: UIView {
         let index = sender.tag
         selectedIndex = index
         updateButtonStates()
-        delegate?.tabBar(self, didSelectItemAt: index)
+        handleNavigation(for: index)
+    }
+    
+    private func handleNavigation(for index: Int) {
+        guard let parentVC = parentViewController else { return }
+        
+        switch index {
+        case 0:
+            // Journal
+            let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
+            if let navController = parentVC.navigationController {
+                navController.pushViewController(journalsVC, animated: true)
+            } else {
+                let navController = UINavigationController(rootViewController: journalsVC)
+                navController.modalPresentationStyle = .fullScreen
+                parentVC.present(navController, animated: true)
+            }
+        case 1:
+            // Goals
+            print("Goals tapped")
+        case 2:
+            // Home (Paw) - already here
+            print("Home tapped")
+        case 3:
+            // Care Corner
+            print("Care Corner tapped")
+        case 4:
+            // Community
+            print("Community tapped")
+        default:
+            break
+        }
     }
     
     private func updateButtonStates() {
