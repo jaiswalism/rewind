@@ -31,4 +31,25 @@ class HomePetsViewController: UIViewController {
             customTabBar.heightAnchor.constraint(equalToConstant: 110)
         ])
     }
+    @IBAction func buttontaped(_ sender: Any) {
+        let settingsVC = SettingsViewController()
+        if let navController = navigationController {
+            navController.pushViewController(settingsVC, animated: true)
+        } else {
+            let navController = UINavigationController(rootViewController: settingsVC)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true)
+        }
+    }
+    
+    @IBAction func settingsProfile(_ sender: Any) {
+        let settingsVC = SettingsViewController()
+        if let navController = navigationController {
+            navController.pushViewController(settingsVC, animated: true)
+        } else {
+            let navController = UINavigationController(rootViewController: settingsVC)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true)
+        }
+    }
 }
