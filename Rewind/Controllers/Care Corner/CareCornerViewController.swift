@@ -249,8 +249,8 @@ class CareCornerViewController: UIViewController {
     }
     
     @objc private func breathingTapped() {
-        print("Breathing Exercise tapped")
-        // Navigate to breathing exercise
+        let breathingVC = BreathingExerciseViewController()
+        navigationController?.pushViewController(breathingVC, animated: true)
     }
     
     @objc private func meditationTapped() {
