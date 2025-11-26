@@ -9,6 +9,7 @@ import UIKit
 
 class NotificationsViewController: UIViewController {
 
+    @IBOutlet var tag: UILabel!
     override func viewDidLoad() {
         super.viewDidLoad()
 

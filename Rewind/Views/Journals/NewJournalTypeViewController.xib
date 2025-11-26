@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -50,7 +50,7 @@
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="L5g-1l-Qad" userLabel="Microphone">
                     <rect key="frame" x="40" y="303.33333333333331" width="55" height="55"/>
                     <subviews>
-                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icons/microphone.fill" translatesAutoresizingMaskIntoConstraints="NO" id="0Os-bR-L3B">
+                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="microphone.fill" translatesAutoresizingMaskIntoConstraints="NO" id="0Os-bR-L3B">
                             <rect key="frame" x="16" y="13" width="23" height="29"/>
                         </imageView>
                     </subviews>
@@ -163,8 +163,8 @@
         </view>
     </objects>
     <resources>
-        <image name="icons/microphone.fill" width="16.48539924621582" height="26.439599990844727"/>
         <image name="icons/square.text.square.fill" width="21.569799423217773" height="21.225500106811523"/>
+        <image name="microphone.fill" width="16.48539924621582" height="26.439599990844727"/>
         <namedColor name="colors/Blue&amp;Shades/blue-300">
             <color red="0.48627454042434692" green="0.47843140363693237" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
