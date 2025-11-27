@@ -19,6 +19,8 @@
 		521F7C732ED67993000BB2DA /* JournalTimelineCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7C702ED67993000BB2DA /* JournalTimelineCell.swift */; };
 		521F7C7B2ED6D3C3000BB2DA /* PaddedLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7C7A2ED6D3C3000BB2DA /* PaddedLabel.swift */; };
 		521F7CAA2ED7B121000BB2DA /* CommunityPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CA92ED7B121000BB2DA /* CommunityPostView.swift */; };
+		521F7CBE2ED7CA89000BB2DA /* CommentSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CBD2ED7CA89000BB2DA /* CommentSheetViewController.swift */; };
+		521F7CC02ED7CE66000BB2DA /* CommentTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CBF2ED7CE66000BB2DA /* CommentTableViewCell.swift */; };
 		523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */; };
 		523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */; };
 		523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */; };
@@ -127,6 +129,8 @@
 		521F7C712ED67993000BB2DA /* JournalTimelineCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = JournalTimelineCell.xib; sourceTree = "<group>"; };
 		521F7C7A2ED6D3C3000BB2DA /* PaddedLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddedLabel.swift; sourceTree = "<group>"; };
 		521F7CA92ED7B121000BB2DA /* CommunityPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityPostView.swift; sourceTree = "<group>"; };
+		521F7CBD2ED7CA89000BB2DA /* CommentSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentSheetViewController.swift; sourceTree = "<group>"; };
+		521F7CBF2ED7CE66000BB2DA /* CommentTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentTableViewCell.swift; sourceTree = "<group>"; };
 		523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthGoalViewController.swift; sourceTree = "<group>"; };
 		523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingHealthGoalViewController.xib; sourceTree = "<group>"; };
 		523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGenderViewController.swift; sourceTree = "<group>"; };
@@ -390,6 +394,8 @@
 				523BF2692EBE6AFC003F7696 /* CommunityFeedViewController.swift */,
 				521F7CA92ED7B121000BB2DA /* CommunityPostView.swift */,
 				523BF26E2EBE6B36003F7696 /* CreatePostViewController.swift */,
+				521F7CBD2ED7CA89000BB2DA /* CommentSheetViewController.swift */,
+				521F7CBF2ED7CE66000BB2DA /* CommentTableViewCell.swift */,
 			);
 			path = Community;
 			sourceTree = "<group>";
@@ -763,6 +769,8 @@
 				B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */,
 				B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */,
 				B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */,
+				521F7CBE2ED7CA89000BB2DA /* CommentSheetViewController.swift in Sources */,
+				521F7CC02ED7CE66000BB2DA /* CommentTableViewCell.swift in Sources */,
 				529C87EB2EC3A4F100DA9890 /* SettingsViewController.swift in Sources */,
 				529C87F72EC3A5AC00DA9890 /* JournalsHomeViewController.swift in Sources */,
 				5214F66A2EBD0CD5005020AA /* OnboardingScreenViewController.swift in Sources */,

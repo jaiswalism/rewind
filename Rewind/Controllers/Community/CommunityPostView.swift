@@ -155,7 +155,27 @@ class CommunityPostView: UIView {
     }
     
     @objc private func commentButtonTapped(sender: UIButton) {
-        print("Comment button tapped for post by \(profileName). Host ViewController should now present the comment sheet.")
+        guard let presentingVC = self.parentViewController else {
+            print("ERROR: Could not find presenting view controller to show comment sheet.")
+            return
+        }
+
+        let commentVC = CommentSheetViewController()
+        
+        // Set up presentation style for a modal sheet
+        if #available(iOS 15.0, *) {
+            // Use modern sheet presentation if available
+            if let sheet = commentVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()] // Allow dragging between medium and full screen
+                sheet.largestUndimmedDetentIdentifier = .medium
+                sheet.prefersScrollingExpandsWhenScrolledToEdge = false
+            }
+        } else {
+            // Fallback for older versions
+            commentVC.modalPresentationStyle = .pageSheet
+        }
+        
+        presentingVC.present(commentVC, animated: true, completion: nil)
         
         // Animate button press
         UIView.animate(withDuration: 0.1, animations: {
