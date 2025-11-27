@@ -13,6 +13,7 @@ class ExerciseCompletedViewController: UIViewController {
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.backgroundColor = .clear
         scrollView.showsVerticalScrollIndicator = false
         return scrollView
     }()
@@ -20,6 +21,7 @@ class ExerciseCompletedViewController: UIViewController {
     private let contentView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .clear 
         return view
     }()
     
@@ -46,6 +48,7 @@ class ExerciseCompletedViewController: UIViewController {
         return label
     }()
     
+    // Custom Badge for Duration
     private let durationBadge: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -76,6 +79,17 @@ class ExerciseCompletedViewController: UIViewController {
         return label
     }()
     
+    // Stack View to horizontally center the icon and label within the badge
+    private let durationStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        return stackView
+    }()
+    
+    // Custom Badge for Paws
     private let pawsBadge: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -96,27 +110,30 @@ class ExerciseCompletedViewController: UIViewController {
         return label
     }()
     
+    // Background Illustration
     private let illustrationImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.backgroundColor = .clear
+        imageView.contentMode = .scaleAspectFill
+        // Use the asset name confirmed by the user
+        imageView.image = UIImage(named: "illustrations/careCorner/ExCompleteBottomBG")
+        imageView.clipsToBounds = true
         return imageView
     }()
     
+    // Main action button (at the bottom)
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Back to Care Corner", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        button.setTitleColor(UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 1.0), for: .normal)
+        button.setTitleColor(UIColor(named: "colors/Primary/Dark"), for: .normal)
         button.backgroundColor = .white
         button.layer.cornerRadius = 28
         return button
     }()
     
     // MARK: - Properties
-    private var gradientLayer: CAGradientLayer?
     private let duration: String
     private let pawsEarned: Int
     
@@ -136,64 +153,82 @@ class ExerciseCompletedViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Initial Nav Bar Hide (Optional, but good practice)
+        self.navigationController?.setNavigationBarHidden(true, animated: false)
+        
         setupUI()
         setupActions()
         updateLabels()
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        gradientLayer?.frame = view.bounds
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Aggressively hide the navigation bar to remove the system-generated chevron
+        self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
     // MARK: - Setup
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.4, green: 0.45, blue: 0.95, alpha: 1.0)
+        // Set main background color
+        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
         
-        // Add gradient background
-        let gradient = CAGradientLayer()
-        gradient.frame = view.bounds
-        gradient.colors = [
-            UIColor(red: 0.35, green: 0.4, blue: 0.9, alpha: 1.0).cgColor,
-            UIColor(red: 0.45, green: 0.5, blue: 1.0, alpha: 1.0).cgColor
-        ]
-        gradient.locations = [0.0, 1.0]
-        view.layer.insertSublayer(gradient, at: 0)
-        gradientLayer = gradient
+        // 1. ADD ILLUSTRATION FIRST to the main view (static background)
+        view.insertSubview(illustrationImageView, at: 0)
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
+        // 2. ADD MAIN ACTION BUTTON to the main view (pinned bottom)
+        view.addSubview(backButton)
+        
+        // 3. ADD CONTENT ELEMENTS to the contentView (layered on top)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
+        
+        // Assemble duration badge using the Stack View
+        durationStackView.addArrangedSubview(durationIcon)
+        durationStackView.addArrangedSubview(durationLabel)
+        durationBadge.addSubview(durationStackView)
         contentView.addSubview(durationBadge)
-        durationBadge.addSubview(durationIcon)
-        durationBadge.addSubview(durationLabel)
-        contentView.addSubview(pawsBadge)
+        
+        // Assemble paws badge
         pawsBadge.addSubview(pawsLabel)
-        contentView.addSubview(illustrationImageView)
-        view.addSubview(backButton)
+        contentView.addSubview(pawsBadge)
         
         setupConstraints()
     }
-    
+
     private func setupConstraints() {
+        let safeArea = view.safeAreaLayoutGuide
+        
+        // Constraints for the primary screen structure
         NSLayoutConstraint.activate([
-            // Scroll View
+            // --- Static Illustration Constraints (FIXED HEIGHT) ---
+            illustrationImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            illustrationImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            illustrationImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // FINAL MODIFIED: Fixed height to 480 points to position it correctly below the badges
+            illustrationImageView.heightAnchor.constraint(equalToConstant: 480),
+
+            // --- Scroll View ---
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            // Stop scrolling area above the main action button
             scrollView.bottomAnchor.constraint(equalTo: backButton.topAnchor, constant: -20),
             
-            // Content View
+            // --- Content View (Sets the overall size for scrollable content) ---
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -20),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
+            // --- Content Elements (Relative to safeArea/contentView top) ---
+
             // Title
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 80),
+            titleLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 40),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 30),
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -30),
@@ -205,21 +240,14 @@ class ExerciseCompletedViewController: UIViewController {
             subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
             
             // Duration Badge
-            durationBadge.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 24),
+            durationBadge.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
             durationBadge.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             durationBadge.heightAnchor.constraint(equalToConstant: 44),
             durationBadge.widthAnchor.constraint(equalToConstant: 200),
             
-            // Duration Icon
-            durationIcon.leadingAnchor.constraint(equalTo: durationBadge.leadingAnchor, constant: 16),
-            durationIcon.centerYAnchor.constraint(equalTo: durationBadge.centerYAnchor),
-            durationIcon.widthAnchor.constraint(equalToConstant: 20),
-            durationIcon.heightAnchor.constraint(equalToConstant: 20),
-            
-            // Duration Label
-            durationLabel.leadingAnchor.constraint(equalTo: durationIcon.trailingAnchor, constant: 8),
-            durationLabel.centerYAnchor.constraint(equalTo: durationBadge.centerYAnchor),
-            durationLabel.trailingAnchor.constraint(lessThanOrEqualTo: durationBadge.trailingAnchor, constant: -16),
+            // FIXED ALIGNMENT: Center the stack view inside the badge
+            durationStackView.centerXAnchor.constraint(equalTo: durationBadge.centerXAnchor),
+            durationStackView.centerYAnchor.constraint(equalTo: durationBadge.centerYAnchor),
             
             // Paws Badge
             pawsBadge.topAnchor.constraint(equalTo: durationBadge.bottomAnchor, constant: 12),
@@ -231,15 +259,8 @@ class ExerciseCompletedViewController: UIViewController {
             pawsLabel.centerXAnchor.constraint(equalTo: pawsBadge.centerXAnchor),
             pawsLabel.centerYAnchor.constraint(equalTo: pawsBadge.centerYAnchor),
             
-            // Illustration
-            illustrationImageView.topAnchor.constraint(equalTo: pawsBadge.bottomAnchor, constant: 20),
-            illustrationImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            illustrationImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            illustrationImageView.heightAnchor.constraint(equalToConstant: 400),
-            illustrationImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
-            
-            // Back Button
-            backButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            // --- Main Action Button (Pinned to main view's safe area) ---
+            backButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -30),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             backButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             backButton.heightAnchor.constraint(equalToConstant: 56)
@@ -257,17 +278,19 @@ class ExerciseCompletedViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
-        // Navigate back to Care Corner (pop to root or specific view controller)
+        // Navigate back to Care Corner (pop to CareCornerViewController)
         if let navigationController = navigationController {
-            // Find Care Corner in the navigation stack
-            for viewController in navigationController.viewControllers {
+            for viewController in navigationController.viewControllers.reversed() {
                 if viewController is CareCornerViewController {
                     navigationController.popToViewController(viewController, animated: true)
                     return
                 }
             }
-            // If not found, pop to root
+            // If CareCornerViewController is not found, pop to root
             navigationController.popToRootViewController(animated: true)
+        } else {
+             // If presented modally, dismiss
+            self.dismiss(animated: true, completion: nil)
         }
     }
 }

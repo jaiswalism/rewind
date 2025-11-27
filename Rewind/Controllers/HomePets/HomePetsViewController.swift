@@ -19,7 +19,7 @@ class HomePetsViewController: UIViewController {
     
     // MARK: - Setup
     private func setupCustomTabBar() {
-        customTabBar.parentViewController = self
+        customTabBar.hostViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(customTabBar)
         
@@ -32,11 +32,12 @@ class HomePetsViewController: UIViewController {
         ])
     }
     @IBAction func buttontaped(_ sender: Any) {
-        let settingsVC = SettingsViewController()
+        // Present NotificationsViewController instead of Settings
+        let notificationsVC = NotificationsViewController()
         if let navController = navigationController {
-            navController.pushViewController(settingsVC, animated: true)
+            navController.pushViewController(notificationsVC, animated: true)
         } else {
-            let navController = UINavigationController(rootViewController: settingsVC)
+            let navController = UINavigationController(rootViewController: notificationsVC)
             navController.modalPresentationStyle = .fullScreen
             present(navController, animated: true)
         }

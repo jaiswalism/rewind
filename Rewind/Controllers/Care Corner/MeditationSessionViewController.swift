@@ -95,14 +95,27 @@ class MeditationSessionViewController: UIViewController {
         button.layer.cornerRadius = 28
         return button
     }()
+
+    // Background image that should cover the whole screen
+    private let backgroundImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        // use asset catalog name
+        iv.image = UIImage(named: "illustrations/careCorner/meditationBgPattern")
+        return iv
+    }()
     
     // MARK: - Properties
-    private var gradientLayer: CAGradientLayer?
-    private var isPlaying = false
-    private var timer: Timer?
-    private var remainingSeconds: Int
-    private var totalSeconds: Int
-    private let soundName: String
+    // Note: gradient layer removed; using color asset + background image
+     private var isPlaying = false
+    // Ensure we only auto-start once when the screen first appears
+    private var hasStartedAutomatically = false
+     private var timer: Timer?
+     private var remainingSeconds: Int
+     private var totalSeconds: Int
+     private let soundName: String
     
     // MARK: - Init
     init(durationInSeconds: Int, soundName: String) {
@@ -130,9 +143,7 @@ class MeditationSessionViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        gradientLayer?.frame = view.bounds
-        
-        // Only setup layers once
+        // Only setup progress layers once (after layout so container bounds are valid)
         if progressBackgroundLayer.superlayer == nil {
             setupProgressLayers()
         }
@@ -142,121 +153,149 @@ class MeditationSessionViewController: UIViewController {
         super.viewDidAppear(animated)
         // Initialize progress to show full circle
         updateProgress()
+        
+        // Auto-start the timer the first time the screen appears
+        if !hasStartedAutomatically {
+            hasStartedAutomatically = true
+            isPlaying = true
+
+            // Update play/pause button to show pause
+            let config = UIImage.SymbolConfiguration(pointSize: 40, weight: .bold)
+            let pauseImage = UIImage(systemName: "pause.fill", withConfiguration: config)
+            playPauseButton.setImage(pauseImage, for: .normal)
+
+            // Hide the "Complete Early" button while playing
+            completeEarlyButton.isHidden = true
+
+            // Start the timer
+            startTimer()
+            updateProgress()
+        }
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Stop timer when navigating away to avoid background execution
+        stopTimer()
+    }
+
+    deinit {
+        stopTimer()
+    }
+
     // MARK: - Setup
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.4, green: 0.45, blue: 0.95, alpha: 1.0)
+        // Use the color asset 'blue-400' as the base background color (fallback provided)
+        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? UIColor(red: 0.4, green: 0.45, blue: 0.95, alpha: 1.0)
         
-        // Add gradient background
-        let gradient = CAGradientLayer()
-        gradient.frame = view.bounds
-        gradient.colors = [
-            UIColor(red: 0.35, green: 0.4, blue: 0.9, alpha: 1.0).cgColor,
-            UIColor(red: 0.45, green: 0.5, blue: 1.0, alpha: 1.0).cgColor
-        ]
-        gradient.locations = [0.0, 1.0]
-        view.layer.insertSublayer(gradient, at: 0)
-        gradientLayer = gradient
-        
-        view.addSubview(backButton)
-        view.addSubview(titleLabel)
-        view.addSubview(progressContainer)
-        progressContainer.addSubview(playPauseButton)
-        view.addSubview(timerLabel)
-        view.addSubview(soundLabel)
-        soundLabel.addSubview(speakerIcon)
-        view.addSubview(completeEarlyButton)
-        
-        setupConstraints()
-    }
-    
-    private func setupConstraints() {
+        // Add full-screen background image behind everything
+        view.addSubview(backgroundImageView)
         NSLayoutConstraint.activate([
-            // Back Button
-            backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
-            backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            backButton.widthAnchor.constraint(equalToConstant: 44),
-            backButton.heightAnchor.constraint(equalToConstant: 44),
-            
-            // Title
-            titleLabel.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 40),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // Progress Container
-            progressContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            progressContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -60),
-            progressContainer.widthAnchor.constraint(equalToConstant: 200),
-            progressContainer.heightAnchor.constraint(equalToConstant: 200),
-            
-            // Play/Pause Button
-            playPauseButton.centerXAnchor.constraint(equalTo: progressContainer.centerXAnchor),
-            playPauseButton.centerYAnchor.constraint(equalTo: progressContainer.centerYAnchor),
-            playPauseButton.widthAnchor.constraint(equalToConstant: 80),
-            playPauseButton.heightAnchor.constraint(equalToConstant: 80),
-            
-            // Timer Label
-            timerLabel.topAnchor.constraint(equalTo: progressContainer.bottomAnchor, constant: 40),
-            timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // Sound Label
-            soundLabel.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 30),
-            soundLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            soundLabel.heightAnchor.constraint(equalToConstant: 40),
-            soundLabel.widthAnchor.constraint(equalToConstant: 240),
-            
-            // Speaker Icon
-            speakerIcon.leadingAnchor.constraint(equalTo: soundLabel.leadingAnchor, constant: 16),
-            speakerIcon.centerYAnchor.constraint(equalTo: soundLabel.centerYAnchor),
-            speakerIcon.widthAnchor.constraint(equalToConstant: 20),
-            speakerIcon.heightAnchor.constraint(equalToConstant: 20),
-            
-            // Complete Early Button
-            completeEarlyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
-            completeEarlyButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            completeEarlyButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            completeEarlyButton.heightAnchor.constraint(equalToConstant: 56)
+            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-    }
+         
+         view.addSubview(backButton)
+         view.addSubview(titleLabel)
+         view.addSubview(progressContainer)
+         progressContainer.addSubview(playPauseButton)
+         view.addSubview(timerLabel)
+         view.addSubview(soundLabel)
+         soundLabel.addSubview(speakerIcon)
+         view.addSubview(completeEarlyButton)
+         
+         setupConstraints()
+     }
     
-    private func setupProgressLayers() {
-        let center = CGPoint(x: progressContainer.bounds.midX, y: progressContainer.bounds.midY)
-        let radius: CGFloat = 90
-        let startAngle = -CGFloat.pi / 2
-        let endAngle = startAngle + (2 * CGFloat.pi)
-        
-        let circularPath = UIBezierPath(
-            arcCenter: center,
-            radius: radius,
-            startAngle: startAngle,
-            endAngle: endAngle,
-            clockwise: true
-        )
-        
-        // Background layer
-        progressBackgroundLayer.path = circularPath.cgPath
-        progressBackgroundLayer.strokeColor = UIColor.white.withAlphaComponent(0.2).cgColor
-        progressBackgroundLayer.lineWidth = 12
-        progressBackgroundLayer.fillColor = UIColor.clear.cgColor
-        progressBackgroundLayer.lineCap = .round
-        
-        // Progress layer
-        progressLayer.path = circularPath.cgPath
-        progressLayer.strokeColor = UIColor.white.withAlphaComponent(0.8).cgColor
-        progressLayer.lineWidth = 12
-        progressLayer.fillColor = UIColor.clear.cgColor
-        progressLayer.lineCap = .round
-        progressLayer.strokeEnd = 0
-        
-        progressContainer.layer.addSublayer(progressBackgroundLayer)
-        progressContainer.layer.addSublayer(progressLayer)
-    }
-    
-    private func setupActions() {
-        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        playPauseButton.addTarget(self, action: #selector(playPauseTapped), for: .touchUpInside)
-        completeEarlyButton.addTarget(self, action: #selector(completeEarlyTapped), for: .touchUpInside)
-    }
+     private func setupConstraints() {
+         NSLayoutConstraint.activate([
+            // Background image constraints are set in setupUI (so image sits behind everything)
+             // Back Button
+             backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
+             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+             backButton.widthAnchor.constraint(equalToConstant: 44),
+             backButton.heightAnchor.constraint(equalToConstant: 44),
+             
+             // Title
+             titleLabel.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 40),
+             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+             // Progress Container
+             progressContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+             progressContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -60),
+             progressContainer.widthAnchor.constraint(equalToConstant: 200),
+             progressContainer.heightAnchor.constraint(equalToConstant: 200),
+             
+             // Play/Pause Button
+             playPauseButton.centerXAnchor.constraint(equalTo: progressContainer.centerXAnchor),
+             playPauseButton.centerYAnchor.constraint(equalTo: progressContainer.centerYAnchor),
+             playPauseButton.widthAnchor.constraint(equalToConstant: 80),
+             playPauseButton.heightAnchor.constraint(equalToConstant: 80),
+             
+             // Timer Label
+             timerLabel.topAnchor.constraint(equalTo: progressContainer.bottomAnchor, constant: 40),
+             timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+             
+             // Sound Label
+             soundLabel.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 30),
+             soundLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+             soundLabel.heightAnchor.constraint(equalToConstant: 40),
+             soundLabel.widthAnchor.constraint(equalToConstant: 240),
+             
+             // Speaker Icon
+             speakerIcon.leadingAnchor.constraint(equalTo: soundLabel.leadingAnchor, constant: 16),
+             speakerIcon.centerYAnchor.constraint(equalTo: soundLabel.centerYAnchor),
+             speakerIcon.widthAnchor.constraint(equalToConstant: 20),
+             speakerIcon.heightAnchor.constraint(equalToConstant: 20),
+             
+             // Complete Early Button
+             completeEarlyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+             completeEarlyButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+             completeEarlyButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+             completeEarlyButton.heightAnchor.constraint(equalToConstant: 56)
+         ])
+     }
+     
+     private func setupProgressLayers() {
+         let center = CGPoint(x: progressContainer.bounds.midX, y: progressContainer.bounds.midY)
+         let radius: CGFloat = 90
+         let startAngle = -CGFloat.pi / 2
+         let endAngle = startAngle + (2 * CGFloat.pi)
+         
+         let circularPath = UIBezierPath(
+             arcCenter: center,
+             radius: radius,
+             startAngle: startAngle,
+             endAngle: endAngle,
+             clockwise: true
+         )
+         
+         // Background layer
+         progressBackgroundLayer.path = circularPath.cgPath
+         progressBackgroundLayer.strokeColor = UIColor.white.withAlphaComponent(0.2).cgColor
+         progressBackgroundLayer.lineWidth = 12
+         progressBackgroundLayer.fillColor = UIColor.clear.cgColor
+         progressBackgroundLayer.lineCap = .round
+         
+         // Progress layer
+         progressLayer.path = circularPath.cgPath
+         progressLayer.strokeColor = UIColor.white.withAlphaComponent(0.8).cgColor
+         progressLayer.lineWidth = 12
+         progressLayer.fillColor = UIColor.clear.cgColor
+         progressLayer.lineCap = .round
+         progressLayer.strokeEnd = 0
+         
+         progressContainer.layer.addSublayer(progressBackgroundLayer)
+         progressContainer.layer.addSublayer(progressLayer)
+     }
+     
+     private func setupActions() {
+         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+         playPauseButton.addTarget(self, action: #selector(playPauseTapped), for: .touchUpInside)
+         completeEarlyButton.addTarget(self, action: #selector(completeEarlyTapped), for: .touchUpInside)
+     }
     
     // MARK: - Timer
     private func startTimer() {

@@ -19,7 +19,7 @@ class JournalsHomeViewController: UIViewController {
     
     // MARK: - Setup
     private func setupCustomTabBar() {
-        customTabBar.parentViewController = self
+        customTabBar.hostViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(customTabBar)
         

@@ -12,10 +12,11 @@ class OnboardingHealthGoalViewController: UIViewController {
     @IBOutlet var optionButtons: [UIButton]!
     @IBOutlet weak var nextButton: UIButton!
     
-    let selectedColor = UIColor(named: "colors/Blue&Shades/blue-100")
     let unselectedColor = UIColor(named: "colors/Primary/Light")
     let nextButtonEnabledColor = UIColor(named: "colors/Primary/Light")
     let nextButtonDisabledColor = UIColor.systemGray4
+    let selectedBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-300")
+    let selectedTextColor: UIColor = .white
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,17 +62,20 @@ class OnboardingHealthGoalViewController: UIViewController {
         
         if button.isSelected {
             // --- SELECTED STATE ---
-            config?.background.backgroundColor = selectedColor
             
+            config?.background.backgroundColor = selectedBackgroundColor
+            
+            config?.attributedTitle?.foregroundColor = selectedTextColor
+            
+            button.layer.borderColor = UIColor.white.cgColor
             button.layer.shadowColor = UIColor.black.cgColor
             button.layer.shadowOpacity = 0.3
             button.layer.shadowOffset = CGSize(width: 0, height: 4)
             button.layer.shadowRadius = 5
-            
             button.layer.masksToBounds = false
 
         } else {
-            // --- NORMAL STATE ---
+            // --- NORMAL STATE (Unselected) ---
             
             config?.background.backgroundColor = unselectedColor
             

@@ -2,14 +2,13 @@
 //  CustomTabBar.swift
 //  Rewind
 //
-//  Created by Kiro
 //
 
 import UIKit
 
 class CustomTabBar: UIView {
     
-    weak var parentViewController: UIViewController?
+    weak var hostViewController: UIViewController?
     
     private let containerView = UIView()
     private var buttons: [UIButton] = []
@@ -29,7 +28,7 @@ class CustomTabBar: UIView {
     private let centerIconColor = UIColor(red: 0.48, green: 0.52, blue: 0.82, alpha: 1.0)
     
     // Tab items: journal, goals, home (paw), care, community
-    private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.3"]
+    private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.2"]
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -125,48 +124,34 @@ class CustomTabBar: UIView {
         handleNavigation(for: index)
     }
     
+    // FIX: Replaced pushViewController logic with setViewControllers to reset the stack
     private func handleNavigation(for index: Int) {
-        guard let parentVC = parentViewController else { return }
+        guard let parentVC = hostViewController else { return }
         
+        let targetVC: UIViewController
         switch index {
         case 0:
-            // Journal
-            let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
-            if let navController = parentVC.navigationController {
-                navController.pushViewController(journalsVC, animated: true)
-            } else {
-                let navController = UINavigationController(rootViewController: journalsVC)
-                navController.modalPresentationStyle = .fullScreen
-                parentVC.present(navController, animated: true)
-            }
+            targetVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
         case 1:
-            // Goals
-            print("Goals tapped")
+            targetVC = GoalsListViewController(nibName: "GoalsListViewController", bundle: nil)
         case 2:
-            // Home (Paw)
-            let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
-            if let navController = parentVC.navigationController {
-                navController.pushViewController(homePetsVC, animated: true)
-            } else {
-                let navController = UINavigationController(rootViewController: homePetsVC)
-                navController.modalPresentationStyle = .fullScreen
-                parentVC.present(navController, animated: true)
-            }
+            targetVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
         case 3:
-            // Care Corner
-            let careCornerVC = CareCornerViewController()
-            if let navController = parentVC.navigationController {
-                navController.pushViewController(careCornerVC, animated: true)
-            } else {
-                let navController = UINavigationController(rootViewController: careCornerVC)
-                navController.modalPresentationStyle = .fullScreen
-                parentVC.present(navController, animated: true)
-            }
+            targetVC = CareCornerViewController()
         case 4:
-            // Community
-            print("Community tapped")
+            targetVC = CommunityFeedViewController(nibName: "CommunityFeedViewController", bundle: nil)
         default:
-            break
+            return
+        }
+        
+        if let navController = parentVC.navigationController {
+            // Core Fix: Reset the navigation stack to ONLY the target screen.
+            navController.setViewControllers([targetVC], animated: true)
+        } else {
+            // Fallback for modal presentation
+            let navController = UINavigationController(rootViewController: targetVC)
+            navController.modalPresentationStyle = .fullScreen
+            parentVC.present(navController, animated: true)
         }
     }
     
