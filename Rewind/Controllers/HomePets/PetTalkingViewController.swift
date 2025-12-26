@@ -20,12 +20,14 @@ class PetTalkingViewController: UIViewController {
         button.setImage(image, for: .normal)
         button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
         button.backgroundColor = UIColor.clear
-        button.configuration?.contentInsets = NSDirectionalEdgeInsets(
-            top: 8,
-            leading: 16,
-            bottom: 8,
-            trailing: 16
-        )
+        
+        // Make sure the button is interactive
+        button.isUserInteractionEnabled = true
+        button.isEnabled = true
+        
+        // Add padding for better touch area
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        
         return button
     }()
     
@@ -114,6 +116,9 @@ class PetTalkingViewController: UIViewController {
         print("PetTalkingViewController appeared") // Debug log
         print("Back button frame: \(backButton.frame)")
         print("Back button superview: \(backButton.superview != nil)")
+        print("Back button isUserInteractionEnabled: \(backButton.isUserInteractionEnabled)")
+        print("Back button isEnabled: \(backButton.isEnabled)")
+        print("Navigation controller: \(navigationController != nil)")
         startBlobAnimation()
     }
     
@@ -153,10 +158,11 @@ class PetTalkingViewController: UIViewController {
         // Hide navigation bar to match app style
         navigationController?.setNavigationBarHidden(true, animated: false)
         
-        view.addSubview(backButton)
+        // Add views in correct order (back button last to be on top)
         view.addSubview(animatedBlobContainer)
         view.addSubview(transcriptionLabel)
         view.addSubview(micButton)
+        view.addSubview(backButton) // Add back button last so it's on top
         
         // Add blob elements to container
         animatedBlobContainer.addSubview(outerBlob)
@@ -495,7 +501,13 @@ class PetTalkingViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
-        print("Back button tapped") // Debug log
+        print("🔙 Back button tapped - starting navigation") // Debug log
+        
+        // Stop recording if active
+        if isRecording {
+            print("🔙 Stopping recording before navigation")
+            stopRecording()
+        }
         
         // Add haptic feedback
         let generator = UIImpactFeedbackGenerator(style: .light)
@@ -512,8 +524,10 @@ class PetTalkingViewController: UIViewController {
         
         // Navigate back
         if let navController = navigationController {
+            print("🔙 Using navigation controller to pop")
             navController.popViewController(animated: true)
         } else {
+            print("🔙 No navigation controller, using dismiss")
             dismiss(animated: true)
         }
     }
