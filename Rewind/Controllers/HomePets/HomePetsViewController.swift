@@ -55,6 +55,7 @@ class HomePetsViewController: UIViewController {
     }
     
     @IBAction func micButtonTapped(_ sender: Any) {
+        print("Mic button tapped - navigating to PetTalkingViewController") // Debug log
         let petTalkingVC = PetTalkingViewController()
         if let navController = navigationController {
             navController.pushViewController(petTalkingVC, animated: true)

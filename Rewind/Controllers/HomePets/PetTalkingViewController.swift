@@ -13,8 +13,17 @@ class PetTalkingViewController: UIViewController {
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let image = UIImage(systemName: "chevron.left", withConfiguration: config)
+        button.setImage(image, for: .normal)
         button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
+        button.backgroundColor = UIColor.clear
+        button.configuration?.contentInsets = NSDirectionalEdgeInsets(
+            top: 8,
+            leading: 16,
+            bottom: 8,
+            trailing: 16
+        )
         return button
     }()
     
@@ -24,8 +33,16 @@ class PetTalkingViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("PetTalkingViewController loaded") // Debug log
         setupUI()
         setupActions()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("PetTalkingViewController appeared") // Debug log
+        print("Back button frame: \(backButton.frame)")
+        print("Back button superview: \(backButton.superview != nil)")
     }
     
     override func viewDidLayoutSubviews() {
@@ -58,11 +75,11 @@ class PetTalkingViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Back Button
+            // Back Button - larger touch area
             backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            backButton.widthAnchor.constraint(equalToConstant: 44),
-            backButton.heightAnchor.constraint(equalToConstant: 44)
+            backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            backButton.widthAnchor.constraint(equalToConstant: 50),
+            backButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
     
@@ -72,6 +89,26 @@ class PetTalkingViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
+        print("Back button tapped") // Debug log
+        
+        // Add haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+        
+        // Animate button press
+        UIView.animate(withDuration: 0.1, animations: {
+            self.backButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.backButton.transform = .identity
+            }
+        }
+        
+        // Navigate back
+        if let navController = navigationController {
+            navController.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 }
