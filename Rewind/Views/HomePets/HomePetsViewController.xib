@@ -120,6 +120,9 @@ Aviral</string>
                                 <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                                 <color key="baseBackgroundColor" name="colors/Primary/Light"/>
                             </buttonConfiguration>
+                            <connections>
+                                <action selector="micButtonTapped:" destination="-1" eventType="touchUpInside" id="mic-action-connection"/>
+                            </connections>
                         </button>
                     </subviews>
                     <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-300"/>

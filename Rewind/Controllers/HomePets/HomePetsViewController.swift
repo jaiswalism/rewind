@@ -53,4 +53,15 @@ class HomePetsViewController: UIViewController {
             present(navController, animated: true)
         }
     }
+    
+    @IBAction func micButtonTapped(_ sender: Any) {
+        let petTalkingVC = PetTalkingViewController()
+        if let navController = navigationController {
+            navController.pushViewController(petTalkingVC, animated: true)
+        } else {
+            let navController = UINavigationController(rootViewController: petTalkingVC)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true)
+        }
+    }
 }
