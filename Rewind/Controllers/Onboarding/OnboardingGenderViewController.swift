@@ -66,14 +66,16 @@ class OnboardingGenderViewController: UIViewController {
     private func updateGenderButtonAppearance(for button: UIButton) {
         
         var config = button.configuration ?? .filled()
-        config.background.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-300")
         
+        // Change unselected background color to something lighter/different as requested
+        config.background.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-200") // Lighter shade
+        
+        // Restore images (I mistakenly removed them thinking they were unwanted symbols)
         if button.tag == 1 {
             config.background.image = button.isSelected ? maleSelectedImage : maleUnselectedImage
         } else if button.tag == 2 {
             config.background.image = button.isSelected ? femaleSelectedImage : femaleUnselectedImage
         }
-        
         config.background.imageContentMode = .scaleToFill
         
         if button.isSelected {
@@ -83,6 +85,11 @@ class OnboardingGenderViewController: UIViewController {
         }
 
         button.configuration = config
+        
+        // Attempt to adjust spacing if in a StackView
+        if let stackView = button.superview as? UIStackView {
+            stackView.spacing = 30 // Increase spacing (default might be lower) 
+        }
     }
     
     private func applySelectedStyle(to button: UIButton) {

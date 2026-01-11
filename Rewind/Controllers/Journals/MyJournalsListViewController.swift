@@ -9,7 +9,7 @@ import UIKit
 
 class MyJournalsListViewController: UIViewController {
 
-    @IBOutlet weak var backButton: UIButton!
+    var backButton: UIButton!
     @IBOutlet weak var dateCollectionView: UICollectionView!
     @IBOutlet weak var timelineTableView: UITableView!
     @IBOutlet weak var titleLabel: UILabel!
@@ -30,6 +30,16 @@ class MyJournalsListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupBackButton()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    func setupBackButton() {
+        GlassBackButton.add(to: self, action: #selector(backButtonTapped(_:)))
     }
     
     func setupUI() {
@@ -62,9 +72,55 @@ class MyJournalsListViewController: UIViewController {
         timelineTableView.rowHeight = UITableView.automaticDimension
         timelineTableView.estimatedRowHeight = 180.0
         timelineTableView.backgroundColor = UIColor(named: "colors/Primary/Dark")
+        
+        setupFloatingActionButton()
     }
     
-    @IBAction func backButtonTapped(_ sender: Any) {
+    // MARK: - Floating Action Button
+    private func setupFloatingActionButton() {
+        let fab = UIButton(type: .system)
+        fab.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Icon
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+        let plusImage = UIImage(systemName: "plus", withConfiguration: config)
+        fab.setImage(plusImage, for: .normal)
+        fab.tintColor = .white
+        
+        // Style
+        fab.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") // Use app theme color
+        fab.layer.cornerRadius = 28 // Half of 56 width
+        
+        // Shadow
+        fab.layer.shadowColor = UIColor.black.cgColor
+        fab.layer.shadowOpacity = 0.3
+        fab.layer.shadowOffset = CGSize(width: 0, height: 4)
+        fab.layer.shadowRadius = 5
+        
+        // Action
+        fab.addTarget(self, action: #selector(fabTapped), for: .touchUpInside)
+        
+        view.addSubview(fab)
+        
+        // Constraints
+        NSLayoutConstraint.activate([
+            fab.widthAnchor.constraint(equalToConstant: 56),
+            fab.heightAnchor.constraint(equalToConstant: 56),
+            fab.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            fab.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24)
+        ])
+    }
+    
+    @objc private func fabTapped() {
+        // Navigate to New Journal Type selection or directly to Add Journal
+        let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
+        
+        // If the user wants to keep ONLY the plus button, ensuring no other navigation happens from other places.
+        // Assuming this is the primary entry point now.
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    @objc func backButtonTapped(_ sender: Any) {
         navigationController?.popViewController(animated: true)
     }
 }

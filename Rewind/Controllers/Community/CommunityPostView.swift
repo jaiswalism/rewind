@@ -61,9 +61,21 @@ class CommunityPostView: UIView {
     private let cardView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-300")
-        view.layer.cornerRadius = 20
+        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.2) // Semi-transparent based
+        view.layer.cornerRadius = 24 // Increased radius
         view.clipsToBounds = true
+        
+        // Border
+        view.layer.borderWidth = 1.0
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
+        
+        return view
+    }()
+    
+    private let blurView: UIVisualEffectView = {
+        let blur = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        let view = UIVisualEffectView(effect: blur)
+        view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
     
@@ -73,7 +85,7 @@ class CommunityPostView: UIView {
         stack.axis = .vertical
         stack.spacing = 15
         stack.isLayoutMarginsRelativeArrangement = true
-        stack.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        stack.layoutMargins = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         return stack
     }()
     
@@ -97,8 +109,25 @@ class CommunityPostView: UIView {
     private func setupViews() {
         translatesAutoresizingMaskIntoConstraints = false
         
+        // Shadow for the card itself
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.2
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 8
+        
         addSubview(cardView)
+        
+        // Insert blur into cardView
+        cardView.addSubview(blurView)
         cardView.addSubview(innerStack)
+        
+        // Constraints for blur to fill card
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: cardView.topAnchor),
+            blurView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor),
+            blurView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor)
+        ])
         
         // Populate the stack view
         innerStack.addArrangedSubview(createUserHeader())

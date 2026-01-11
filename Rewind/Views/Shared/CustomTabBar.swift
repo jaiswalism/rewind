@@ -6,6 +6,15 @@
 
 import UIKit
 
+//
+//  CustomTabBar.swift
+//  Rewind
+//
+//
+//
+
+import UIKit
+
 class CustomTabBar: UIView {
     
     weak var hostViewController: UIViewController?
@@ -15,17 +24,11 @@ class CustomTabBar: UIView {
     private var selectedIndex: Int = 2 // Default to center (paw icon)
     
     // Tab bar configuration
-    private let tabBarHeight: CGFloat = 70
-    private let tabBarCornerRadius: CGFloat = 35
-    private let centerButtonSize: CGFloat = 65
-    private let regularIconSize: CGFloat = 28
-    private let centerIconSize: CGFloat = 32
+    private let tabBarHeight: CGFloat = 80 // Increased height for floating effect
+    private let tabBarCornerRadius: CGFloat = 40
     
-    // Colors matching the image - lighter semi-transparent purple
-    private let tabBarColor = UIColor(red: 0.48, green: 0.52, blue: 0.82, alpha: 0.85) // Lighter semi-transparent purple
-    private let centerButtonColor = UIColor.white
-    private let iconColor = UIColor.white
-    private let centerIconColor = UIColor(red: 0.48, green: 0.52, blue: 0.82, alpha: 1.0)
+    // Centers the bar horizontally with padding
+    private let horizontalPadding: CGFloat = 24
     
     // Tab items: journal, goals, home (paw), care, community
     private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.2"]
@@ -43,20 +46,44 @@ class CustomTabBar: UIView {
     private func setupView() {
         backgroundColor = .clear
         
-        // Setup container with rounded corners
-        containerView.backgroundColor = tabBarColor
+        // --- Premium Glass Container ---
+        containerView.backgroundColor = .clear
         containerView.layer.cornerRadius = tabBarCornerRadius
-        containerView.layer.masksToBounds = true
+        containerView.layer.masksToBounds = true // Clip blur and background
+        
+        // Glassmorphism Blur
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.frame = containerView.bounds // Will be updated in layoutSubviews
+        blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        blurView.isUserInteractionEnabled = false
+        containerView.addSubview(blurView)
+        
+        // Semi-transparent overlay for tint
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.2)
+        overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        containerView.addSubview(overlayView)
+        
+        // Border for definition
+        containerView.layer.borderWidth = 1.0
+        containerView.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
         addSubview(containerView)
         
         // Create tab buttons
         for (index, iconName) in tabIcons.enumerated() {
             let button = createTabButton(iconName: iconName, index: index)
             buttons.append(button)
-            containerView.addSubview(button)
+            addSubview(button) // Buttons are added effectively above the container visually via layout
         }
         
-        // Highlight the center button initially
+        // Shadow for the Floating Effect
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.3
+        layer.shadowOffset = CGSize(width: 0, height: 10)
+        layer.shadowRadius = 20
+        
         updateButtonStates()
     }
     
@@ -65,10 +92,30 @@ class CustomTabBar: UIView {
         button.tag = index
         button.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
         
-        let config = UIImage.SymbolConfiguration(pointSize: index == 2 ? centerIconSize : regularIconSize, weight: .semibold)
+        let isCenter = index == 2
+        let pointSize: CGFloat = isCenter ? 28 : 22
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
         let image = UIImage(systemName: iconName, withConfiguration: config)
+        
         button.setImage(image, for: .normal)
-        button.tintColor = iconColor
+        button.tintColor = .white
+        
+        // Add a subtle background glow/circle for buttons (optional, visible on selection)
+        let indicatorView = UIView()
+        indicatorView.tag = 99 // Identifier for the indicator
+        indicatorView.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        indicatorView.layer.cornerRadius = 25
+        indicatorView.isUserInteractionEnabled = false
+        indicatorView.isHidden = true // Hidden by default
+        indicatorView.translatesAutoresizingMaskIntoConstraints = false
+        button.insertSubview(indicatorView, at: 0)
+        
+        NSLayoutConstraint.activate([
+            indicatorView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            indicatorView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
+            indicatorView.widthAnchor.constraint(equalToConstant: 50),
+            indicatorView.heightAnchor.constraint(equalToConstant: 50)
+        ])
         
         return button
     }
@@ -76,27 +123,28 @@ class CustomTabBar: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        // Layout container with minimal padding for wider look
-        let horizontalPadding: CGFloat = 15
+        // Floating Frame
+        let containerWidth = bounds.width - (horizontalPadding * 2)
         containerView.frame = CGRect(
             x: horizontalPadding,
             y: 0,
-            width: bounds.width - (horizontalPadding * 2),
+            width: containerWidth,
             height: tabBarHeight
         )
         
-        // Layout buttons
+        // Layout buttons evenly spaced within the container frame
         let buttonCount = CGFloat(buttons.count)
-        let buttonSpacing = containerView.bounds.width / buttonCount
+        let availableWidth = containerView.frame.width - 20 // 10pt padding inside container
+        let buttonSpacing = availableWidth / buttonCount
+        let startX = containerView.frame.minX + 10 // Start after inner padding
         
         for (index, button) in buttons.enumerated() {
-            let xPosition = buttonSpacing * CGFloat(index) + (buttonSpacing / 2)
+            let xPosition = startX + (buttonSpacing * CGFloat(index)) + (buttonSpacing / 2)
+            let buttonSize: CGFloat = 60
             
-            // All buttons same size now
-            let buttonSize: CGFloat = 48
             button.frame = CGRect(
                 x: xPosition - (buttonSize / 2),
-                y: (tabBarHeight - buttonSize) / 2,
+                y: (tabBarHeight - buttonSize) / 2, // Vertically centered in bar
                 width: buttonSize,
                 height: buttonSize
             )
@@ -106,25 +154,14 @@ class CustomTabBar: UIView {
     @objc private func tabButtonTapped(_ sender: UIButton) {
         let index = sender.tag
         
-        // Add haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .medium)
+        let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
-        
-        // Animate button press
-        UIView.animate(withDuration: 0.1, animations: {
-            sender.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                sender.transform = .identity
-            }
-        }
         
         selectedIndex = index
         updateButtonStates()
         handleNavigation(for: index)
     }
     
-    // FIX: Replaced pushViewController logic with setViewControllers to reset the stack
     private func handleNavigation(for index: Int) {
         guard let parentVC = hostViewController else { return }
         
@@ -144,14 +181,13 @@ class CustomTabBar: UIView {
             return
         }
         
+        // Navigation Logic
         if let navController = parentVC.navigationController {
-            // Core Fix: Reset the navigation stack to ONLY the target screen.
-            navController.setViewControllers([targetVC], animated: true)
+            navController.setViewControllers([targetVC], animated: false) // Instant switch for tabs usually
         } else {
-            // Fallback for modal presentation
             let navController = UINavigationController(rootViewController: targetVC)
             navController.modalPresentationStyle = .fullScreen
-            parentVC.present(navController, animated: true)
+            parentVC.present(navController, animated: false)
         }
     }
     
@@ -159,14 +195,17 @@ class CustomTabBar: UIView {
         for (index, button) in buttons.enumerated() {
             let isSelected = index == selectedIndex
             
-            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
-                // All buttons - scale and opacity
-                button.transform = isSelected ? CGAffineTransform(scaleX: 1.2, y: 1.2) : .identity
-                button.alpha = isSelected ? 1.0 : 0.5
+            // Animate Icon Scale
+            UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.5, options: .curveEaseInOut) {
+                button.transform = isSelected ? CGAffineTransform(scaleX: 1.1, y: 1.1) : .identity
+                button.alpha = isSelected ? 1.0 : 0.6
+                
+                // Show/Hide custom indicator
+                if let indicator = button.viewWithTag(99) {
+                    indicator.isHidden = !isSelected
+                    indicator.alpha = isSelected ? 1.0 : 0.0
+                }
             }
-            
-            // Update tint color for better visibility
-            button.tintColor = isSelected ? iconColor : iconColor.withAlphaComponent(0.5)
         }
     }
     
