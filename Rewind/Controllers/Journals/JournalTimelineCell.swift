@@ -27,10 +27,30 @@ class JournalTimelineCell: UITableViewCell {
         // Match the background colour of the tableView (colors/Primary/Dark)
         contentView.backgroundColor = UIColor(named: "colors/Primary/Dark")
         
-        // Card styling
+        // Card styling - Glassmorphism
+        cardView.backgroundColor = .clear
         cardView.layer.cornerRadius = 16
         cardView.clipsToBounds = true
         
+        // Add Blur Effect
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark) // Or .light depending on theme
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.frame = cardView.bounds
+        blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        blurView.layer.cornerRadius = 16
+        blurView.clipsToBounds = true
+        
+        // Insert blur view at the bottom of the cardView's subviews
+        cardView.insertSubview(blurView, at: 0)
+        
+        // Add a subtle border for better glass definition
+        cardView.layer.borderWidth = 1.0
+        cardView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
+        
+        // Text Styling
+        entryTextLabel.font = .systemFont(ofSize: 16, weight: .light) // Distinct weight/size
+        entryTextLabel.textColor = .white.withAlphaComponent(0.9)
+
         // Time circle styling
         timeCircle.layer.cornerRadius = timeCircle.bounds.height / 2
         

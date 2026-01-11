@@ -11,8 +11,19 @@ class NewJournalTypeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupBackButton()
     }
-    @IBAction func backButton(_ sender: Any) {
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func setupBackButton() {
+        GlassBackButton.add(to: self, action: #selector(backButtonTapped))
+    }
+
+    @objc func backButtonTapped() {
         navigationController?.popViewController(animated: true)
     }
     @IBAction func voiceButton(_ sender: Any) {

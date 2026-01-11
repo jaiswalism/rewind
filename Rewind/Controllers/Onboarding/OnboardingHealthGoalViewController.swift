@@ -81,7 +81,7 @@ class OnboardingHealthGoalViewController: UIViewController {
             
             button.layer.shadowOpacity = 0
             
-            config?.attributedTitle?.foregroundColor = .black
+            config?.attributedTitle?.foregroundColor = UIColor(named: "colors/Primary/Dark") // Dark text on Light background
         }
         
         button.configuration = config

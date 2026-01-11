@@ -28,6 +28,20 @@ class VoiceJournalViewController: UIViewController {
         super.viewDidLoad()
         setupInitialState()
         setupWaveform()
+        setupBackButton()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    private func setupBackButton() {
+        GlassBackButton.add(to: self, action: #selector(backButtonTapped))
+    }
+
+    @objc func backButtonTapped() {
+        navigationController?.popViewController(animated: true)
     }
     
     // MARK: - Setup

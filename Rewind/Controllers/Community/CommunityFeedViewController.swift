@@ -42,6 +42,9 @@ class CommunityFeedViewController: UIViewController {
     private var profileBar: UIView!
     private var tagsView: UIView!
     
+    // Gradient Layer Property
+    private var gradientLayer: CAGradientLayer?
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,52 +68,98 @@ class CommunityFeedViewController: UIViewController {
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // FIX: Update gradient frame to match current view bounds (handling safe areas/resizing)
+        gradientLayer?.frame = view.bounds
+    }
+    
     // MARK: - Setup
     private func setupUI() {
-        // Set overall background color
-        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+        // --- 1. Premium Gradient Background (Lighter) ---
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = view.bounds
+        self.gradientLayer = gradientLayer // Store reference
+        // Lighter Gradient using named colors
+        let startColor = UIColor(named: "colors/Blue&Shades/blue-300")?.cgColor ?? UIColor.systemBlue.cgColor
+        let endColor = UIColor(named: "colors/Blue&Shades/blue-500")?.cgColor ?? UIColor.blue.cgColor
         
-        // 1. Initialize properties
+        gradientLayer.colors = [startColor, endColor]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        view.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // --- 2. Initialize properties ---
         profileBar = createProfileBar()
         tagsView = createTagsView()
         
-        // 2. Add structural components to view hierarchy
-        view.addSubview(fixedHeaderView)
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentStackView)
+        // --- 3. Glassmorphic Header ---
+        setupGlassHeader()
         
-        // 3. Add header content to fixed container
+        // --- 4. Add components to view hierarchy ---
+        scrollView.backgroundColor = .clear // FIX: Ensure transparent
+        scrollView.alwaysBounceVertical = true
+        view.addSubview(scrollView)
+        
+        scrollView.addSubview(contentStackView)
+        view.addSubview(fixedHeaderView)
+        
+        // Add header content
         fixedHeaderView.addSubview(profileBar)
         fixedHeaderView.addSubview(tagsView)
 
-        // 4. Apply all constraints
+        // --- 5. Apply Constraints ---
         setupConstraints()
+    }
+    
+    private func setupGlassHeader() {
+        fixedHeaderView.backgroundColor = .clear
+        
+        // Add Blur
+        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        let blurView = UIVisualEffectView(effect: blurEffect)
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        fixedHeaderView.insertSubview(blurView, at: 0)
+        
+        // Add minimal border
+        let borderView = UIView()
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        borderView.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        fixedHeaderView.addSubview(borderView)
+        
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: fixedHeaderView.topAnchor),
+            blurView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor),
+            blurView.leadingAnchor.constraint(equalTo: fixedHeaderView.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: fixedHeaderView.trailingAnchor),
+            
+            borderView.heightAnchor.constraint(equalToConstant: 1),
+            borderView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor),
+            borderView.leadingAnchor.constraint(equalTo: fixedHeaderView.leadingAnchor),
+            borderView.trailingAnchor.constraint(equalTo: fixedHeaderView.trailingAnchor)
+        ])
     }
     
     private func setupConstraints() {
         let safeArea = view.safeAreaLayoutGuide
         
-        // --- Fixed Header Constraints (Pinned to Safe Area Top) ---
+        // --- Fixed Header Constraints ---
         NSLayoutConstraint.activate([
-            fixedHeaderView.topAnchor.constraint(equalTo: safeArea.topAnchor),
+            fixedHeaderView.topAnchor.constraint(equalTo: view.topAnchor),
             fixedHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             fixedHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
         
         // --- Fixed Header Internal Constraints ---
         NSLayoutConstraint.activate([
-            // Profile Bar
-            profileBar.topAnchor.constraint(equalTo: fixedHeaderView.topAnchor, constant: 0),
+            profileBar.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 5),
             profileBar.leadingAnchor.constraint(equalTo: fixedHeaderView.leadingAnchor),
             profileBar.trailingAnchor.constraint(equalTo: fixedHeaderView.trailingAnchor),
             
-            // Tags View (Below Profile Bar)
-            tagsView.topAnchor.constraint(equalTo: profileBar.bottomAnchor, constant: 15),
+            tagsView.topAnchor.constraint(equalTo: profileBar.bottomAnchor, constant: 10),
             tagsView.leadingAnchor.constraint(equalTo: fixedHeaderView.leadingAnchor),
             tagsView.trailingAnchor.constraint(equalTo: fixedHeaderView.trailingAnchor),
-            
-            // FIX: Explicitly add 25pt of padding/space below the tags
-            tagsView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor, constant: -25),
+            tagsView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor, constant: -15),
         ])
         
         // --- Custom Tab Bar Constraints ---
@@ -122,24 +171,26 @@ class CommunityFeedViewController: UIViewController {
             customTabBar.heightAnchor.constraint(equalToConstant: 110)
         ])
         
-        // --- Scroll View Constraints (Starts below fixed header) ---
+        // --- Scroll View Constraints (Full Screen) ---
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: customTabBar.topAnchor) // Frame ends just above tab bar
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        // --- Content Stack View Constraints (Critical for scrolling) ---
+        // --- Content Stack View Constraints ---
         NSLayoutConstraint.activate([
             contentStackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentStackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentStackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentStackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            
-            // This ensures the scrollable area expands to include the bottom spacer, allowing the last post to clear the floating bar.
             contentStackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
         ])
+        
+        // Adjust padding to ensure first post is visible below header
+        contentStackView.layoutMargins = UIEdgeInsets(top: 180, left: 0, bottom: 100, right: 0) // Increased Top + Bottom padding for TabBar
+        contentStackView.isLayoutMarginsRelativeArrangement = true
     }
     
     private func setupCustomTabBar() {
@@ -357,7 +408,8 @@ class CommunityFeedViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
         
         // Apply "colors/Primary/Darker" color
-        config.baseBackgroundColor = UIColor(named: "colors/Primary/Darker")
+        // Apply lighter color as requested (blue-500)
+        config.baseBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
         config.baseForegroundColor = UIColor(named: "colors/Primary/Light")
         config.cornerStyle = .capsule
         
