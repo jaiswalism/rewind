@@ -96,6 +96,9 @@
 		B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */; };
 		B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */; };
 		B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */; };
+		DF53E40EAF544CF8B980C0A4 /* BehaviorPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AB456DE13E4F5094716431 /* BehaviorPolicy.swift */; };
+		FEE41B46D8EE4AEEB07F12ED /* PenguinView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40E894E4AB74126AE96F1B6 /* PenguinView.swift */; };
+		4703A2D867694F1EA5DB101E /* PenguinTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4703A2D867694F1EA5DB101D /* PenguinTestView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -210,6 +213,9 @@
 		B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
 		B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialLoginButton.swift; sourceTree = "<group>"; };
+		B9AB456DE13E4F5094716431 /* BehaviorPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorPolicy.swift; sourceTree = "<group>"; };
+		B40E894E4AB74126AE96F1B6 /* PenguinView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PenguinView.swift; sourceTree = "<group>"; };
+		4703A2D867694F1EA5DB101D /* PenguinTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PenguinTestView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -437,6 +443,9 @@
 				B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */,
 				B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */,
 				B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */,
+				B9AB456DE13E4F5094716431 /* BehaviorPolicy.swift */,
+				B40E894E4AB74126AE96F1B6 /* PenguinView.swift */,
+				4703A2D867694F1EA5DB101D /* PenguinTestView.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -773,6 +782,9 @@
 				B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */,
 				B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */,
 				B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */,
+				DF53E40EAF544CF8B980C0A4 /* BehaviorPolicy.swift in Sources */,
+				FEE41B46D8EE4AEEB07F12ED /* PenguinView.swift in Sources */,
+				4703A2D867694F1EA5DB101E /* PenguinTestView.swift in Sources */,
 				521F7CBE2ED7CA89000BB2DA /* CommentSheetViewController.swift in Sources */,
 				521F7CC02ED7CE66000BB2DA /* CommentTableViewCell.swift in Sources */,
 				529C87EB2EC3A4F100DA9890 /* SettingsViewController.swift in Sources */,
