@@ -15,27 +15,18 @@ class PetTalkingViewController: UIViewController {
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-        let image = UIImage(systemName: "chevron.left", withConfiguration: symbolConfig)
-        
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            config.image = image
-            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
-            config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
-            button.configuration = config
-        } else {
-            button.setImage(image, for: .normal)
-            button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
-            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        }
-        
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        let image = UIImage(systemName: "chevron.left", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
         button.backgroundColor = UIColor.clear
         
         // Make sure the button is interactive
         button.isUserInteractionEnabled = true
         button.isEnabled = true
+        
+        // Add padding for better touch area
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         
         return button
     }()

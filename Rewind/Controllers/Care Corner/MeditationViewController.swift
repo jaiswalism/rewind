@@ -68,39 +68,19 @@ class MeditationViewController: UIViewController {
     private let soundButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("  SOUND: CHIRPING BIRDS", for: .normal)
+        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 0.8)
+        button.layer.cornerRadius = 20
+        button.contentHorizontalAlignment = .center
         
         // Add speaker icon
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         let speakerImage = UIImage(systemName: "speaker.wave.2.fill", withConfiguration: config)
-        
-        if #available(iOS 15.0, *) {
-            var configuration = UIButton.Configuration.filled()
-            configuration.baseBackgroundColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 0.8)
-            configuration.baseForegroundColor = .white
-            configuration.title = "  SOUND: CHIRPING BIRDS"
-            configuration.image = speakerImage
-            configuration.imagePadding = 8
-            configuration.imagePlacement = .leading
-            // configuration.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
-            
-            // Re-apply font locally since Configuration ignores global titleLabel font sometimes w/o AttributedString container
-            var container = AttributeContainer()
-            container.font = UIFont.boldSystemFont(ofSize: 13)
-            configuration.attributedTitle = AttributedString("  SOUND: CHIRPING BIRDS", attributes: container)
-            
-            button.configuration = configuration
-        } else {
-            button.setTitle("  SOUND: CHIRPING BIRDS", for: .normal)
-            button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-            button.setTitleColor(.white, for: .normal)
-            button.backgroundColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 0.8)
-            button.setImage(speakerImage, for: .normal)
-            button.tintColor = .white
-            button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 0)
-        }
-        
-        button.layer.cornerRadius = 20
-        // button.contentHorizontalAlignment = .center // Not needed with configuration typically, but handled
+        button.setImage(speakerImage, for: .normal)
+        button.tintColor = .white
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 0)
         
         return button
     }()
@@ -328,18 +308,6 @@ class MeditationViewController: UIViewController {
     }
     
     private func updateSoundButton() {
-        let title = "  SOUND: \(selectedSound.uppercased())"
-        if #available(iOS 15.0, *) {
-            if var config = soundButton.configuration {
-                var container = AttributeContainer()
-                container.font = UIFont.boldSystemFont(ofSize: 13)
-                config.attributedTitle = AttributedString(title, attributes: container)
-                soundButton.configuration = config
-            } else {
-                soundButton.setTitle(title, for: .normal)
-            }
-        } else {
-            soundButton.setTitle(title, for: .normal)
-        }
+        soundButton.setTitle("  SOUND: \(selectedSound.uppercased())", for: .normal)
     }
 }
