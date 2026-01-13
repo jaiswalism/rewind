@@ -196,7 +196,7 @@ class CommunityFeedViewController: UIViewController {
     private func setupCustomTabBar() {
         customTabBar.hostViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
-        customTabBar.selectTab(at: 4) // Select Community tab (index 4)
+        customTabBar.selectTab(at: 3) // Select Community tab (index 3)
     }
 
     // MARK: - Content Population

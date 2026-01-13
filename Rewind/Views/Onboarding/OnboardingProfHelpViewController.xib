@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -71,11 +71,7 @@
                                 <constraint firstAttribute="width" constant="130" id="cXB-ln-CSQ"/>
                             </constraints>
                             <state key="normal" title="Button"/>
-                            <buttonConfiguration key="configuration" style="filled" imagePlacement="trailing" title="Yes" imagePadding="12" cornerStyle="capsule">
-                                <imageReference key="image" image="checkmark" catalog="system" variableValue="0.0"/>
-                                <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="font" weight="semibold">
-                                    <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
-                                </preferredSymbolConfiguration>
+                            <buttonConfiguration key="configuration" style="filled" title="Yes" cornerStyle="capsule">
                                 <fontDescription key="titleFontDescription" type="system" weight="semibold" pointSize="18"/>
                                 <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                                 <color key="baseBackgroundColor" name="colors/Primary/Light"/>
@@ -91,11 +87,7 @@
                                 <constraint firstAttribute="width" constant="130" id="mTw-jH-hVt"/>
                             </constraints>
                             <state key="normal" title="Button"/>
-                            <buttonConfiguration key="configuration" style="filled" imagePlacement="trailing" title="No" imagePadding="12" cornerStyle="capsule">
-                                <imageReference key="image" image="multiply" catalog="system" variableValue="0.0"/>
-                                <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" configurationType="font" weight="semibold">
-                                    <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
-                                </preferredSymbolConfiguration>
+                            <buttonConfiguration key="configuration" style="filled" title="No" cornerStyle="capsule">
                                 <fontDescription key="titleFontDescription" type="system" weight="semibold" pointSize="18"/>
                                 <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                                 <color key="baseBackgroundColor" name="colors/Primary/Light"/>
@@ -143,10 +135,8 @@
         </view>
     </objects>
     <resources>
-        <image name="checkmark" catalog="system" width="128" height="114"/>
         <image name="chevron.backward" catalog="system" width="97" height="128"/>
         <image name="illustrations/onboarding/Stress" width="286" height="286"/>
-        <image name="multiply" catalog="system" width="128" height="111"/>
         <namedColor name="colors/Blue&amp;Shades/blue-400">
             <color red="0.38431376218795776" green="0.37647059559822083" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

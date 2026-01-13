@@ -21,7 +21,7 @@ class CustomTabBar: UIView {
     
     private let containerView = UIView()
     private var buttons: [UIButton] = []
-    private var selectedIndex: Int = 2 // Default to center (paw icon)
+    private var selectedIndex: Int = 1 // Default to center (paw icon)
     
     // Tab bar configuration
     private let tabBarHeight: CGFloat = 80 // Increased height for floating effect
@@ -30,8 +30,8 @@ class CustomTabBar: UIView {
     // Centers the bar horizontally with padding
     private let horizontalPadding: CGFloat = 24
     
-    // Tab items: journal, goals, home (paw), care, community
-    private let tabIcons = ["doc.text", "chart.pie", "pawprint.fill", "brain.head.profile", "person.2"]
+    // Tab items: journal, home (paw), care, community
+    private let tabIcons = ["doc.text", "pawprint.fill", "brain.head.profile", "person.2"]
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -92,7 +92,7 @@ class CustomTabBar: UIView {
         button.tag = index
         button.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
         
-        let isCenter = index == 2
+        let isCenter = index == 1
         let pointSize: CGFloat = isCenter ? 28 : 22
         let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .semibold)
         let image = UIImage(systemName: iconName, withConfiguration: config)
@@ -170,12 +170,10 @@ class CustomTabBar: UIView {
         case 0:
             targetVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
         case 1:
-            targetVC = GoalsListViewController(nibName: "GoalsListViewController", bundle: nil)
-        case 2:
             targetVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
-        case 3:
+        case 2:
             targetVC = CareCornerViewController()
-        case 4:
+        case 3:
             targetVC = CommunityFeedViewController(nibName: "CommunityFeedViewController", bundle: nil)
         default:
             return
