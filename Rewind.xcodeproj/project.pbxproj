@@ -86,6 +86,7 @@
 		52CCF6BF2EBD526700FADBEB /* UITextField+Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */; };
 		52CCF6C22EBD62D000FADBEB /* OTPVerifyViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */; };
 		52CCF6C32EBD62D000FADBEB /* OTPVerifyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */; };
+		52D61AA02F16B7E100098095 /* JournalSuggestionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D61A9F2F16B7E100098095 /* JournalSuggestionPicker.swift */; };
 		B20E99292EFE409A00F3625B /* PetTalkingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E99282EFE409A00F3625B /* PetTalkingViewController.swift */; };
 		B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */; };
 		B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */; };
@@ -200,6 +201,7 @@
 		52CCF6BE2EBD526700FADBEB /* UITextField+Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextField+Style.swift"; sourceTree = "<group>"; };
 		52CCF6C02EBD62D000FADBEB /* OTPVerifyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPVerifyViewController.swift; sourceTree = "<group>"; };
 		52CCF6C12EBD62D000FADBEB /* OTPVerifyViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OTPVerifyViewController.xib; sourceTree = "<group>"; };
+		52D61A9F2F16B7E100098095 /* JournalSuggestionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalSuggestionPicker.swift; sourceTree = "<group>"; };
 		B20E99282EFE409A00F3625B /* PetTalkingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTalkingViewController.swift; sourceTree = "<group>"; };
 		B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareCornerViewController.swift; sourceTree = "<group>"; };
 		B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingExerciseViewController.swift; sourceTree = "<group>"; };
@@ -380,6 +382,7 @@
 		523BF2642EBE670E003F7696 /* Journals */ = {
 			isa = PBXGroup;
 			children = (
+				52D61A9F2F16B7E100098095 /* JournalSuggestionPicker.swift */,
 				529C87F52EC3A5AC00DA9890 /* JournalsHomeViewController.xib */,
 				529C87F92EC3A5BB00DA9890 /* NewJournalTypeViewController.xib */,
 				529C87FD2EC3A5C900DA9890 /* VoiceJournalViewController.xib */,
@@ -772,6 +775,7 @@
 				521F7CAA2ED7B121000BB2DA /* CommunityPostView.swift in Sources */,
 				B2C2E91A2ED6BFF9009AC9C3 /* SocialLoginButton.swift in Sources */,
 				B2C2E91B2ED6BFF9009AC9C3 /* CustomTabBar.swift in Sources */,
+				52D61AA02F16B7E100098095 /* JournalSuggestionPicker.swift in Sources */,
 				B2C2E91C2ED6BFF9009AC9C3 /* PrimaryButton.swift in Sources */,
 				521F7CBE2ED7CA89000BB2DA /* CommentSheetViewController.swift in Sources */,
 				521F7CC02ED7CE66000BB2DA /* CommentTableViewCell.swift in Sources */,

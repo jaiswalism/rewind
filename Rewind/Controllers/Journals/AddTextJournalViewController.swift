@@ -6,6 +6,10 @@
 //
 
 import UIKit
+import SwiftUI
+#if canImport(JournalingSuggestions)
+import JournalingSuggestions
+#endif
 
 class AddTextJournalViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
 
@@ -39,6 +43,8 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
             // Ensure all components start in the inactive/unfocused state
             // applyInactiveStyle(to: titleTextField) // Removed border based styling for glass
             // applyInactiveStyle(to: entryTextView)
+            
+            setupSuggestionsButton()
         }
         
         override func viewWillAppear(_ animated: Bool) {
@@ -269,5 +275,53 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
         // Pass the selected object to the new view controller.
     }
     */
+
+    // MARK: - Suggestions (iOS 17.2+)
+    
+    private func setupSuggestionsButton() {
+        if #available(iOS 17.2, *) {
+            print("Setup suggestions button: iOS 17.2+ detected")
+            // #if canImport(JournalingSuggestions) // Removed to allow Mock in Simulator
+            let picker = JournalSuggestionPicker { [weak self] completionText in
+                DispatchQueue.main.async {
+                    self?.handleSuggestionSelection(text: completionText)
+                }
+            }
+            
+            let hostingController = UIHostingController(rootView: picker)
+            addChild(hostingController)
+            
+            guard let suggestionsView = hostingController.view else {
+                print("Failed to get hosting view")
+                return
+            }
+            suggestionsView.translatesAutoresizingMaskIntoConstraints = false
+            suggestionsView.backgroundColor = UIColor.clear // Ensure transparent
+            view.addSubview(suggestionsView)
+            
+            NSLayoutConstraint.activate([
+                suggestionsView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+                suggestionsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+                suggestionsView.heightAnchor.constraint(equalToConstant: 44),
+                suggestionsView.widthAnchor.constraint(greaterThanOrEqualToConstant: 44) // Restored width constraint
+            ])
+            
+            hostingController.didMove(toParent: self)
+            // #endif
+        } else {
+            print("Suggestions not available: iOS < 17.2")
+        }
+    }
+    
+    private func handleSuggestionSelection(text: String) {
+        if entryTextView.text == "Tell us about your day..." {
+            entryTextView.text = text
+            entryTextView.textColor = .white.withAlphaComponent(0.9)
+        } else {
+            entryTextView.text.append("\n\n" + text)
+        }
+        
+        applyActiveStyle(to: entryTextView)
+    }
 
 }
