@@ -34,7 +34,7 @@ class CommunityPostView: UIView {
         let button = createActionButton(
             iconName: self.isLiked ? "heart.fill" : "heart",
             count: self.likeCount,
-            color: self.isLiked ? .systemRed : (UIColor(named: "colors/Primary/Light") ?? .white)
+            color: self.isLiked ? .systemRed : .white
         )
         button.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
         return button
@@ -44,7 +44,7 @@ class CommunityPostView: UIView {
         let button = createActionButton(
             iconName: "bubble.left.and.bubble.right.fill",
             count: self.commentCount,
-            color: UIColor(named: "colors/Primary/Light") ?? .white
+            color: .white
         )
         button.addTarget(self, action: #selector(commentButtonTapped), for: .touchUpInside)
         return button
@@ -61,7 +61,7 @@ class CommunityPostView: UIView {
     private let cardView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.2) // Semi-transparent based
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.1) // Semi-transparent based
         view.layer.cornerRadius = 24 // Increased radius
         view.clipsToBounds = true
         
@@ -168,7 +168,7 @@ class CommunityPostView: UIView {
         }
         
         let iconName = isLiked ? "heart.fill" : "heart"
-        let iconColor: UIColor = isLiked ? .systemRed : (UIColor(named: "colors/Primary/Light") ?? .white)
+        let iconColor: UIColor = isLiked ? .systemRed : .white
 
         let newConfig = createActionButtonConfig(iconName: iconName, count: likeCount, color: iconColor)
         sender.configuration = newConfig
@@ -296,12 +296,12 @@ class CommunityPostView: UIView {
         
         if isAnonymous {
             avatar.image = UIImage(systemName: "person.circle.fill")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: avatarSize, weight: .regular))
-            avatar.tintColor = UIColor(named: "colors/Primary/Light")
-            avatar.backgroundColor = .clear
+            avatar.tintColor = .white
+            avatar.backgroundColor = .clear // Transparent background for filled circle icon style OR update design
         } else {
             avatar.image = UIImage(systemName: "person.crop.circle.fill")
-            avatar.tintColor = UIColor(named: "colors/Primary/Light")
-            avatar.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+            avatar.tintColor = .white
+            avatar.backgroundColor = UIColor.white.withAlphaComponent(0.2)
             avatar.contentMode = .center
             avatar.layer.cornerRadius = avatarSize / 2
             avatar.clipsToBounds = true
@@ -321,12 +321,12 @@ class CommunityPostView: UIView {
         let nameLabel = UILabel()
         nameLabel.text = profileName
         nameLabel.font = .systemFont(ofSize: 16, weight: .bold)
-        nameLabel.textColor = UIColor(named: "colors/Primary/Light")
+        nameLabel.textColor = .white
         
         let timeLabel = UILabel()
         timeLabel.text = timestamp
         timeLabel.font = .systemFont(ofSize: 13, weight: .medium)
-        timeLabel.textColor = UIColor(named: "colors/Primary/Light")?.withAlphaComponent(0.6)
+        timeLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         
         infoStack.addArrangedSubview(nameLabel)
         infoStack.addArrangedSubview(timeLabel)
@@ -335,7 +335,7 @@ class CommunityPostView: UIView {
         let menuButton = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
         menuButton.setImage(UIImage(systemName: "ellipsis", withConfiguration: config), for: .normal)
-        menuButton.tintColor = UIColor(named: "colors/Primary/Light")?.withAlphaComponent(0.8)
+        menuButton.tintColor = UIColor.white.withAlphaComponent(0.8)
         menuButton.translatesAutoresizingMaskIntoConstraints = false
         
         // CONNECT ACTION
@@ -362,7 +362,7 @@ class CommunityPostView: UIView {
         let label = UILabel()
         label.text = postText
         label.font = .systemFont(ofSize: 16, weight: .regular)
-        label.textColor = UIColor(named: "colors/Primary/Light")
+        label.textColor = .white
         label.numberOfLines = 0
         return label
     }
@@ -565,14 +565,14 @@ class CommunityPostView: UIView {
         let titleText = "Share"
         var attributes = AttributeContainer()
         attributes.font = .systemFont(ofSize: 16, weight: .bold)
-        attributes.foregroundColor = UIColor(named: "colors/Primary/Light") ?? .white
+        attributes.foregroundColor = .white
         
         buttonConfig.attributedTitle = AttributedString(titleText, attributes: attributes)
         
         buttonConfig.imagePlacement = .leading
         buttonConfig.imagePadding = 5
         
-        buttonConfig.baseForegroundColor = UIColor(named: "colors/Primary/Light")
+        buttonConfig.baseForegroundColor = .white
         
         // Apply vertical inset for proper vertical alignment
         buttonConfig.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0)

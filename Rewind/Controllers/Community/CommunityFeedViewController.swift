@@ -81,8 +81,8 @@ class CommunityFeedViewController: UIViewController {
         gradientLayer.frame = view.bounds
         self.gradientLayer = gradientLayer // Store reference
         // Lighter Gradient using named colors
-        let startColor = UIColor(named: "colors/Blue&Shades/blue-300")?.cgColor ?? UIColor.systemBlue.cgColor
-        let endColor = UIColor(named: "colors/Blue&Shades/blue-500")?.cgColor ?? UIColor.blue.cgColor
+        let startColor = UIColor(named: "colors/Blue&Shades/blue-400")?.cgColor ?? UIColor.systemBlue.cgColor
+        let endColor = UIColor(named: "colors/Blue&Shades/blue-600")?.cgColor ?? UIColor.blue.cgColor
         
         gradientLayer.colors = [startColor, endColor]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
@@ -294,12 +294,12 @@ class CommunityFeedViewController: UIViewController {
         let nameLabel = UILabel()
         nameLabel.text = "Aviral Sharma"
         nameLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        nameLabel.textColor = UIColor(named: "colors/Primary/Light")
+        nameLabel.textColor = .white
         
         let countLabel = UILabel()
         countLabel.text = "25 Total Posts"
         countLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        countLabel.textColor = UIColor(named: "colors/Primary/Light")?.withAlphaComponent(0.8)
+        countLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         
         infoStack.addArrangedSubview(nameLabel)
         infoStack.addArrangedSubview(countLabel)
@@ -309,7 +309,7 @@ class CommunityFeedViewController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let plusImage = UIImage(systemName: "plus.circle.fill", withConfiguration: config)
         plusButton.setImage(plusImage, for: .normal)
-        plusButton.tintColor = UIColor(named: "colors/Primary/Light")
+        plusButton.tintColor = .white
         plusButton.translatesAutoresizingMaskIntoConstraints = false
         plusButton.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         view.addSubview(plusButton)
@@ -342,7 +342,7 @@ class CommunityFeedViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Browse By"
         label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = UIColor(named: "colors/Primary/Light")
+        label.textColor = .white
         view.addSubview(label)
         
         // Tags Scroll View (for horizontal scrolling tags)
@@ -409,8 +409,8 @@ class CommunityFeedViewController: UIViewController {
         
         // Apply "colors/Primary/Darker" color
         // Apply lighter color as requested (blue-500)
-        config.baseBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
-        config.baseForegroundColor = UIColor(named: "colors/Primary/Light")
+        config.baseBackgroundColor = UIColor.white.withAlphaComponent(0.2)
+        config.baseForegroundColor = .white
         config.cornerStyle = .capsule
         
         button.configuration = config
