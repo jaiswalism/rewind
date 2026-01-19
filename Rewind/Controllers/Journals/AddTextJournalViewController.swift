@@ -37,8 +37,7 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
             setupEmotionButtons()
             
             // Ensure all components start in the inactive/unfocused state
-            // applyInactiveStyle(to: titleTextField) // Removed border based styling for glass
-            // applyInactiveStyle(to: entryTextView)
+            setupSaveButton() // Add Save Button
         }
         
         override func viewWillAppear(_ animated: Bool) {
@@ -253,12 +252,87 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
             }
         }
         
+        // ... existing delegate methods ...
         @objc func textViewDidEndEditing(_ textView: UITextView) {
             applyInactiveStyle(to: textView)
             if textView.text.isEmpty {
                 textView.text = "Tell us about your day..."
                 textView.textColor = UIColor.white.withAlphaComponent(0.5)
             }
+        }
+        
+        // MARK: - Save Functionality
+        
+        private func setupSaveButton() {
+            let saveButton = UIButton(type: .system)
+            saveButton.translatesAutoresizingMaskIntoConstraints = false
+            
+            var config = UIButton.Configuration.filled()
+            config.title = "Save Entry"
+            config.baseBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+            config.baseForegroundColor = .white
+            config.cornerStyle = .capsule
+            saveButton.configuration = config
+            
+            saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+            
+            view.addSubview(saveButton)
+            
+            NSLayoutConstraint.activate([
+                saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+                saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                saveButton.widthAnchor.constraint(equalToConstant: 120),
+                saveButton.heightAnchor.constraint(equalToConstant: 50)
+            ])
+        }
+        
+        @objc private func saveButtonTapped() {
+            guard let title = titleTextField.text, !title.isEmpty,
+                  let content = entryTextView.text, content != "Tell us about your day...", !content.isEmpty else {
+                showAlert(title: "Missing Info", message: "Please enter a title and content.")
+                return
+            }
+            
+            // Determine mood from selected emotion button
+            // Assuming button tags 0...N correspond to specific moods
+            var moodTags: [String] = []
+            if let selectedButton = emotionButtons.first(where: { $0.isSelected }) {
+                // Map tag to mood string (example mapping)
+                switch selectedButton.tag {
+                case 0: moodTags.append("Happy")
+                case 1: moodTags.append("Calm")
+                case 2: moodTags.append("Sad")
+                case 3: moodTags.append("Angry")
+                case 4: moodTags.append("Anxious")
+                default: moodTags.append("Neutral")
+                }
+            }
+            
+            JournalService.shared.createJournal(
+                title: title,
+                content: content,
+                type: .text,
+                moodTags: moodTags,
+                voiceUrl: nil,
+                mediaUrls: nil,
+                transcription: nil
+            ) { [weak self] result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(_):
+                        print("Journal created successfully")
+                        self?.navigationController?.popViewController(animated: true)
+                    case .failure(let error):
+                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                    }
+                }
+            }
+        }
+        
+        private func showAlert(title: String, message: String) {
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
         }
     /*
     // MARK: - Navigation

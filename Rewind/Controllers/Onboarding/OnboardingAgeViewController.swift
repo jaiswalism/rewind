@@ -69,6 +69,8 @@ class OnboardingAgeViewController: UIViewController {
         }
     }
     @IBAction func preferNotToSay(_ sender: Any) {
+        OnboardingDataManager.shared.age = 25 // Default fallback
+        
         let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
         profhelpVC.modalPresentationStyle = .fullScreen
         present(profhelpVC, animated: true, completion: nil)
@@ -79,6 +81,8 @@ class OnboardingAgeViewController: UIViewController {
         present(genderVC, animated: true, completion: nil)
     }
     @IBAction func nextButton(_ sender: Any) {
+        OnboardingDataManager.shared.age = selectedAge
+        
         let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
         profhelpVC.modalPresentationStyle = .fullScreen
         present(profhelpVC, animated: true, completion: nil)

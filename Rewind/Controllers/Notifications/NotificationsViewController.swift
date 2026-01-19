@@ -7,12 +7,6 @@
 
 import UIKit
 
-struct NotificationItem {
-    let icon: UIImage?
-    let title: String
-    let subtitle: String
-}
-
 final class NotificationCardView: UIView {
     private let container = UIView()
     private let leftCircle = UIView()
@@ -63,6 +57,7 @@ final class NotificationCardView: UIView {
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         subtitleLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.9)
+        subtitleLabel.numberOfLines = 2
 
         container.addSubview(titleLabel)
         container.addSubview(subtitleLabel)
@@ -96,9 +91,18 @@ final class NotificationCardView: UIView {
     }
 
     func configure(with item: NotificationItem) {
-        iconImageView.image = item.icon?.withRenderingMode(.alwaysTemplate)
+        // Map type to icon
+        let iconName: String
+        switch item.type {
+        case "reminder": iconName = "bell.fill"
+        case "alert": iconName = "exclamationmark.triangle.fill"
+        case "info": iconName = "info.circle.fill"
+        default: iconName = "doc.text.fill"
+        }
+        
+        iconImageView.image = UIImage(systemName: iconName)?.withRenderingMode(.alwaysTemplate)
         titleLabel.text = item.title
-        subtitleLabel.text = item.subtitle
+        subtitleLabel.text = item.message
     }
 }
 
@@ -110,6 +114,7 @@ class NotificationsViewController: UIViewController {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     private let stackView = UIStackView()
+    private let refreshControl = UIRefreshControl()
 
     // Fallback in-view back/close button (only shown when nav bar is absent/hidden)
     private lazy var fallbackBackButton: UIButton = {
@@ -124,20 +129,10 @@ class NotificationsViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Ensure the system navigation bar is visible so the default back button appears when this VC is pushed.
         navigationController?.setNavigationBarHidden(false, animated: false)
-        // Ensure the back button tint is visible against the dark bar
         navigationController?.navigationBar.tintColor = .white
         navigationController?.navigationBar.barStyle = .black
-        // Debug: print navigation state
-        NSLog("[NotificationsVC] viewWillAppear - navigationController: %@", String(describing: navigationController))
-        NSLog("[NotificationsVC] viewWillAppear - isNavigationBarHidden: %d", navigationController?.isNavigationBarHidden ?? false)
-        NSLog("[NotificationsVC] viewWillAppear - nav stack count: %d", navigationController?.viewControllers.count ?? 0)
-        NSLog("[NotificationsVC] viewWillAppear - hidesBackButton: %d", navigationItem.hidesBackButton)
-        // If we're pushed and not the root, hide the in-view header so the system nav bar/back shows cleanly
-        if let nav = navigationController, nav.viewControllers.firstIndex(of: self) ?? 0 > 0 {
-            // Nothing to toggle; relying on system navigation bar for title/back.
-        }
+        fetchNotifications() // Fetch on appear
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -150,19 +145,6 @@ class NotificationsViewController: UIViewController {
         navigationController?.navigationBar.barStyle = .black
         navigationItem.hidesBackButton = false
 
-        // Sync in-view header visibility again after appearance
-        if let nav = navigationController, nav.viewControllers.firstIndex(of: self) ?? 0 > 0 {
-            // Nothing to toggle; relying on system navigation bar for title/back.
-        } else {
-            // Nothing to toggle; relying on system navigation bar for title/back.
-        }
-        // Debug: print navigation state after appear
-        NSLog("[NotificationsVC] viewDidAppear - navigationController: %@", String(describing: navigationController))
-        NSLog("[NotificationsVC] viewDidAppear - isNavigationBarHidden: %d", navigationController?.isNavigationBarHidden ?? false)
-        NSLog("[NotificationsVC] viewDidAppear - nav stack count: %d", navigationController?.viewControllers.count ?? 0)
-        NSLog("[NotificationsVC] viewDidAppear - hidesBackButton: %d", navigationItem.hidesBackButton)
-
-        // Show fallback back button when system nav bar is not available or hidden
         let navBarHidden = navigationController?.isNavigationBarHidden ?? true
         let hasNavController = (navigationController != nil)
         fallbackBackButton.isHidden = hasNavController && !navBarHidden
@@ -172,7 +154,6 @@ class NotificationsViewController: UIViewController {
         super.viewDidLoad()
 
         view.backgroundColor = UIColor(red: 84/255, green: 72/255, blue: 233/255, alpha: 1)
-        // Add fallback back button to view hierarchy (kept hidden unless needed)
         view.addSubview(fallbackBackButton)
         NSLayoutConstraint.activate([
             fallbackBackButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12),
@@ -181,18 +162,24 @@ class NotificationsViewController: UIViewController {
             fallbackBackButton.heightAnchor.constraint(equalToConstant: 36)
         ])
 
-        // No in-view header; rely on UINavigationBar for title/back
         setupScrollStack()
-        populateSampleContent()
-
-        // Title for system navigation bar (if present)
+        setupRefreshControl()
+        
         navigationItem.title = "Notifications"
 
-        // If this VC is presented modally or is the root of the nav stack, provide a close button.
-        // When pushed onto a nav stack (and not root) the system back button will be shown automatically.
         if presentingViewController != nil || navigationController?.viewControllers.first === self {
             navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(dismissTapped))
         }
+    }
+    
+    private func setupRefreshControl() {
+        refreshControl.tintColor = .white
+        refreshControl.addTarget(self, action: #selector(refreshNotifications), for: .valueChanged)
+        scrollView.refreshControl = refreshControl
+    }
+    
+    @objc private func refreshNotifications() {
+        fetchNotifications()
     }
 
     @objc private func dismissTapped() {
@@ -204,13 +191,11 @@ class NotificationsViewController: UIViewController {
     }
 
     @objc private func fallbackBackTapped() {
-        // Mirror dismissTapped behavior for fallback button
         if presentingViewController != nil {
             dismiss(animated: true, completion: nil)
         } else if navigationController != nil {
             navigationController?.popViewController(animated: true)
         } else {
-            // As a last resort try to dismiss
             dismiss(animated: true, completion: nil)
         }
     }
@@ -230,7 +215,6 @@ class NotificationsViewController: UIViewController {
 
         let safe = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            // Pin top to safe area (below nav bar when present)
             scrollView.topAnchor.constraint(equalTo: safe.topAnchor, constant: 18),
             scrollView.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
             scrollView.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
@@ -258,44 +242,43 @@ class NotificationsViewController: UIViewController {
         return lbl
     }
 
-    private func populateSampleContent() {
-        // Earlier This Day
-        stackView.addArrangedSubview(makeSectionHeader(title: "Earlier This Day"))
-
-        let earlier = [
-            NotificationItem(icon: UIImage(systemName: "doc.text"), title: "Journal Incomplete!", subtitle: "It's Reflection Time! ✍️"),
-            NotificationItem(icon: UIImage(systemName: "heart"), title: "Exercise Complete!", subtitle: "22m Breathing Done. 🧘"),
-            NotificationItem(icon: UIImage(systemName: "face.smiling"), title: "Mood Improved.", subtitle: "Neutral    →    Happy")
-        ]
-
-        for item in earlier {
+    private func fetchNotifications() {
+        NotificationService.shared.getNotifications { [weak self] result in
+            DispatchQueue.main.async {
+                self?.refreshControl.endRefreshing()
+                switch result {
+                case .success(let items):
+                    self?.populateNotifications(items)
+                case .failure(let error):
+                    print("Error fetching notifications: \(error)")
+                }
+            }
+        }
+    }
+    
+    private func populateNotifications(_ items: [NotificationItem]) {
+        // Clear Stack
+        stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        if items.isEmpty {
+            let emptyLabel = UILabel()
+            emptyLabel.text = "No new notifications."
+            emptyLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+            emptyLabel.textAlignment = .center
+            stackView.addArrangedSubview(emptyLabel)
+            return
+        }
+        
+        // Simple grouping could be added here if dates were parsed
+        // For now, just list them all
+        
+        for item in items {
             let card = NotificationCardView(item: item)
             stackView.addArrangedSubview(card)
             card.heightAnchor.constraint(greaterThanOrEqualToConstant: 72).isActive = true
         }
-
-        // spacing
-        let spacer = UIView()
-        spacer.translatesAutoresizingMaskIntoConstraints = false
-        spacer.heightAnchor.constraint(equalToConstant: 8).isActive = true
-        stackView.addArrangedSubview(spacer)
-
-        // Last Week
-        stackView.addArrangedSubview(makeSectionHeader(title: "Last Week"))
-
-        let lastWeek = [
-            NotificationItem(icon: UIImage(systemName: "doc.on.clipboard"), title: "Stress Decreased.", subtitle: "Stress Level is now 3."),
-            NotificationItem(icon: UIImage(systemName: "face.smiling"), title: "Mood Improved.", subtitle: "Neutral    →    Happy"),
-            NotificationItem(icon: UIImage(systemName: "face.smiling"), title: "Mood Improved.", subtitle: "Neutral    →    Happy")
-        ]
-
-        for item in lastWeek {
-            let card = NotificationCardView(item: item)
-            stackView.addArrangedSubview(card)
-            card.heightAnchor.constraint(greaterThanOrEqualToConstant: 72).isActive = true
-        }
-
-        // Add bottom padding so last card isn't flush to bottom
+        
+        // Add bottom padding
         let bottomPad = UIView()
         bottomPad.translatesAutoresizingMaskIntoConstraints = false
         bottomPad.heightAnchor.constraint(equalToConstant: 36).isActive = true

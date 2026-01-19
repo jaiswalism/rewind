@@ -45,22 +45,118 @@ class CommunityFeedViewController: UIViewController {
     // Gradient Layer Property
     private var gradientLayer: CAGradientLayer?
     
+    // MARK: - Data
+    private var posts: [CommunityPost] = []
+    private let refreshControl = UIRefreshControl()
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         navigationItem.title = "Community"
         
         setupUI()
-        setupContent()
+        fetchPosts()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshPosts), name: NSNotification.Name("CommunityPostDeleted"), object: nil)
         setupCustomTabBar()
+        setupRefreshControl()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Hide the system navigation bar completely to rely fully on the custom fixed header.
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        fetchPosts()
+        updateProfileBar()
     }
+    
+    private func setupRefreshControl() {
+        refreshControl.tintColor = .white
+        refreshControl.addTarget(self, action: #selector(refreshPosts), for: .valueChanged)
+        scrollView.refreshControl = refreshControl
+    }
+    
+    @objc private func refreshPosts() {
+        fetchPosts()
+    }
+    
+    private func fetchPosts() {
+        CommunityService.shared.getPosts { [weak self] result in
+            DispatchQueue.main.async {
+                self?.refreshControl.endRefreshing()
+                switch result {
+                case .success(let fetchedPosts):
+                    print("📥 Fetched \(fetchedPosts.count) posts") // Debug Log
+                    self?.posts = fetchedPosts
+                    self?.setupContent()
+                case .failure(let error):
+                    print("❌ Error fetching posts: \(error)")
+                }
+            }
+        }
+    }
+    
+    private func updateProfileBar() {
+        UserService.shared.getProfile { result in
+            DispatchQueue.main.async {
+                if case .success(let user) = result {
+                    print("User profile loaded: \(user.name)")
+                }
+            }
+        }
+    }
+
+    // MARK: - Content Population
+    private func setupContent() {
+        // Clear existing content
+        contentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        if posts.isEmpty {
+            // Show empty state?
+            let label = UILabel()
+            label.text = "No posts yet. Be the first!"
+            label.textColor = .white
+            label.textAlignment = .center
+            contentStackView.addArrangedSubview(label)
+        } else {
+            for post in posts {
+                // Determine display name
+                let name = post.isAnonymous ? "Anonymous" : (post.user?.name ?? "Unknown")
+                
+                // Format Time
+                let timeAgo = "Just now" // Placeholder, needs date logic
+                
+                let postView = CommunityPostView(
+                    postId: post.id,
+                    profileName: name,
+                    timestamp: timeAgo,
+                    postText: post.content,
+                    isAnonymous: post.isAnonymous,
+                    likeCount: post.likeCount,
+                    commentCount: post.commentCount,
+                    isLiked: post.isLikedByMe ?? false, // Use backend state
+                    isMine: post.isMine ?? false, // Pass isMine
+                    mediaUrls: post.mediaUrls,
+                    tags: post.tags // Pass tags
+                )
+                
+                let wrapper = createWrapperView(for: postView, horizontalPadding: 20)
+                contentStackView.addArrangedSubview(wrapper)
+            }
+        }
+        
+        // Final Spacer
+        let customTabBarHeight: CGFloat = 110.0
+        let bottomSafeAreaMargin: CGFloat = 20.0
+        let finalSpacer = UIView()
+        finalSpacer.translatesAutoresizingMaskIntoConstraints = false
+        finalSpacer.heightAnchor.constraint(equalToConstant: customTabBarHeight + bottomSafeAreaMargin).isActive = true
+        contentStackView.addArrangedSubview(finalSpacer)
+    }
+
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -81,8 +177,8 @@ class CommunityFeedViewController: UIViewController {
         gradientLayer.frame = view.bounds
         self.gradientLayer = gradientLayer // Store reference
         // Lighter Gradient using named colors
-        let startColor = UIColor(named: "colors/Blue&Shades/blue-300")?.cgColor ?? UIColor.systemBlue.cgColor
-        let endColor = UIColor(named: "colors/Blue&Shades/blue-500")?.cgColor ?? UIColor.blue.cgColor
+        let startColor = UIColor(named: "colors/Blue&Shades/blue-400")?.cgColor ?? UIColor.systemBlue.cgColor
+        let endColor = UIColor(named: "colors/Blue&Shades/blue-600")?.cgColor ?? UIColor.blue.cgColor
         
         gradientLayer.colors = [startColor, endColor]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
@@ -196,59 +292,10 @@ class CommunityFeedViewController: UIViewController {
     private func setupCustomTabBar() {
         customTabBar.hostViewController = self
         customTabBar.translatesAutoresizingMaskIntoConstraints = false
-        customTabBar.selectTab(at: 4) // Select Community tab (index 4)
+        customTabBar.selectTab(at: 3) // Select Community tab (index 3)
     }
 
-    // MARK: - Content Population
-    private func setupContent() {
-        // Post 1: Vaishnavi (Not Anonymous)
-        let post1 = CommunityPostView(
-            profileName: "Shyam",
-            timestamp: "1m ago",
-            postText: "Everyday I thank god that I'm alive. Super Duper grateful of GOD.",
-            isAnonymous: false,
-            likeCount: 45,
-            commentCount: 5
-        )
-        let wrapper1 = createWrapperView(for: post1, horizontalPadding: 20)
-        contentStackView.addArrangedSubview(wrapper1)
-        
-        // Post 2: Anonymous
-        let post2 = CommunityPostView(
-            profileName: "Anonymous",
-            timestamp: "3m ago",
-            postText: "I feel ABSOLUTELY Happy about my new friend. He is an amazing,",
-            isAnonymous: true,
-            likeCount: 45,
-            commentCount: 5
-        )
-        let wrapper2 = createWrapperView(for: post2, horizontalPadding: 20)
-        contentStackView.addArrangedSubview(wrapper2)
 
-        // Add 5 more identical posts to test scrolling
-        for i in 3...7 {
-            let dummyPost = CommunityPostView(
-                profileName: i % 2 == 0 ? "Anonymous" : "User \(i)",
-                timestamp: "\(i)h ago",
-                postText: "This is a dummy post to test if the feed content scrolls correctly while the header remains fixed.",
-                isAnonymous: i % 2 == 0,
-                likeCount: 20 + i,
-                commentCount: 2
-            )
-            contentStackView.addArrangedSubview(createWrapperView(for: dummyPost, horizontalPadding: 20))
-        }
-        
-        // FIX: Add final large spacer to push the last post up past the floating tab bar
-        let customTabBarHeight: CGFloat = 110.0
-        let bottomSafeAreaMargin: CGFloat = 20.0
-        
-        let finalSpacer = UIView()
-        finalSpacer.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Spacer height = Tab Bar Height + bottom margin to clear the floating bar area
-        finalSpacer.heightAnchor.constraint(equalToConstant: customTabBarHeight + bottomSafeAreaMargin).isActive = true
-        contentStackView.addArrangedSubview(finalSpacer)
-    }
     
     // Utility to wrap a view and apply padding
     private func createWrapperView(for view: UIView, horizontalPadding: CGFloat) -> UIView {
@@ -294,12 +341,12 @@ class CommunityFeedViewController: UIViewController {
         let nameLabel = UILabel()
         nameLabel.text = "Aviral Sharma"
         nameLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        nameLabel.textColor = UIColor(named: "colors/Primary/Light")
+        nameLabel.textColor = .white
         
         let countLabel = UILabel()
         countLabel.text = "25 Total Posts"
         countLabel.font = .systemFont(ofSize: 14, weight: .medium)
-        countLabel.textColor = UIColor(named: "colors/Primary/Light")?.withAlphaComponent(0.8)
+        countLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         
         infoStack.addArrangedSubview(nameLabel)
         infoStack.addArrangedSubview(countLabel)
@@ -309,7 +356,7 @@ class CommunityFeedViewController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let plusImage = UIImage(systemName: "plus.circle.fill", withConfiguration: config)
         plusButton.setImage(plusImage, for: .normal)
-        plusButton.tintColor = UIColor(named: "colors/Primary/Light")
+        plusButton.tintColor = .white
         plusButton.translatesAutoresizingMaskIntoConstraints = false
         plusButton.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         view.addSubview(plusButton)
@@ -342,7 +389,7 @@ class CommunityFeedViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Browse By"
         label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = UIColor(named: "colors/Primary/Light")
+        label.textColor = .white
         view.addSubview(label)
         
         // Tags Scroll View (for horizontal scrolling tags)
@@ -409,8 +456,8 @@ class CommunityFeedViewController: UIViewController {
         
         // Apply "colors/Primary/Darker" color
         // Apply lighter color as requested (blue-500)
-        config.baseBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
-        config.baseForegroundColor = UIColor(named: "colors/Primary/Light")
+        config.baseBackgroundColor = UIColor.white.withAlphaComponent(0.2)
+        config.baseForegroundColor = .white
         config.cornerStyle = .capsule
         
         button.configuration = config
@@ -419,7 +466,210 @@ class CommunityFeedViewController: UIViewController {
 
     // MARK: - Actions
     @objc private func plusButtonTapped() {
-        let createPostVC = CreatePostViewController(nibName: "CreatePostViewController", bundle: nil)
+        let createPostVC = CreatePostViewController()
         navigationController?.pushViewController(createPostVC, animated: true)
+    }
+}
+
+// MARK: - Photo Gallery (Moved here to ensure visibility without project file modification)
+
+class PhotoGalleryViewController: UIViewController {
+
+    // MARK: - Properties
+    private let mediaUrls: [String]
+    private let initialIndex: Int
+    
+    private var pageViewController: UIPageViewController!
+    private var photoViewControllers: [UIViewController] = []
+    
+    // MARK: - UI Components
+    private let closeButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
+        let image = UIImage(systemName: "xmark", withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        button.layer.cornerRadius = 20
+        button.clipsToBounds = true
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    // MARK: - Initialization
+    init(mediaUrls: [String], initialIndex: Int = 0) {
+        self.mediaUrls = mediaUrls
+        self.initialIndex = initialIndex
+        super.init(nibName: nil, bundle: nil)
+        self.modalPresentationStyle = .overFullScreen
+        self.modalTransitionStyle = .crossDissolve
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        
+        setupPageViewController()
+        setupUI()
+    }
+    
+    private func setupUI() {
+        view.addSubview(closeButton)
+        
+        NSLayoutConstraint.activate([
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
+        ])
+        
+        closeButton.addTarget(self, action: #selector(handleClose), for: .touchUpInside)
+    }
+    
+    private func setupPageViewController() {
+        // Create view controllers for each image
+        for (index, url) in mediaUrls.enumerated() {
+            let photoVC = SinglePhotoViewController(url: url, index: index, total: mediaUrls.count)
+            photoViewControllers.append(photoVC)
+        }
+        
+        pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+        pageViewController.dataSource = self
+        pageViewController.delegate = self
+        
+        // Set initial view controller
+        if initialIndex < photoViewControllers.count {
+            pageViewController.setViewControllers([photoViewControllers[initialIndex]], direction: .forward, animated: false, completion: nil)
+        }
+        
+        addChild(pageViewController)
+        view.insertSubview(pageViewController.view, at: 0)
+        pageViewController.view.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            pageViewController.view.topAnchor.constraint(equalTo: view.topAnchor),
+            pageViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            pageViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pageViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+        
+        pageViewController.didMove(toParent: self)
+    }
+    
+    @objc private func handleClose() {
+        dismiss(animated: true, completion: nil)
+    }
+}
+
+// MARK: - UIPageViewControllerDataSource
+extension PhotoGalleryViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        guard let photoVC = viewController as? SinglePhotoViewController,
+              let index = photoViewControllers.firstIndex(of: photoVC),
+              index > 0 else {
+            return nil
+        }
+        return photoViewControllers[index - 1]
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        guard let photoVC = viewController as? SinglePhotoViewController,
+              let index = photoViewControllers.firstIndex(of: photoVC),
+              index < photoViewControllers.count - 1 else {
+            return nil
+        }
+        return photoViewControllers[index + 1]
+    }
+}
+
+// MARK: - Single Photo View Controller
+class SinglePhotoViewController: UIViewController {
+    
+    private let urlString: String
+    private let index: Int
+    private let total: Int
+    
+    private let imageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+    
+    private let counterLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    init(url: String, index: Int, total: Int) {
+        self.urlString = url
+        self.index = index
+        self.total = total
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        loadImage()
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = .clear
+        view.addSubview(imageView)
+        view.addSubview(counterLabel)
+        
+        counterLabel.text = "\(index + 1) / \(total)"
+        
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: view.topAnchor),
+            imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
+            counterLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            counterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+    
+    private func loadImage() {
+        if urlString.hasPrefix("local-image://") {
+            let filename = urlString.replacingOccurrences(of: "local-image://", with: "")
+            if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                let fileUrl = documentsDirectory.appendingPathComponent(filename)
+                if let data = try? Data(contentsOf: fileUrl) {
+                    imageView.image = UIImage(data: data)
+                } else {
+                     imageView.image = UIImage(systemName: "photo")
+                }
+            }
+        } else if urlString.hasPrefix("file://"), let url = URL(string: urlString), let data = try? Data(contentsOf: url) {
+            imageView.image = UIImage(data: data)
+        } else if urlString.hasPrefix("http") {
+             // Placeholder for async loading
+             imageView.image = UIImage(systemName: "photo")
+             // In real app use Kingfisher or SDWebImage
+             DispatchQueue.global().async {
+                 if let url = URL(string: self.urlString), let data = try? Data(contentsOf: url) {
+                     DispatchQueue.main.async {
+                         self.imageView.image = UIImage(data: data)
+                     }
+                 }
+             }
+        } else {
+             imageView.image = UIImage(systemName: "photo")
+        }
     }
 }

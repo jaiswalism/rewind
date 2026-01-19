@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
-        <capability name="Image references" minToolsVersion="12.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -109,9 +108,7 @@
                                         <constraint firstAttribute="width" constant="345" id="OQk-YW-QFz"/>
                                     </constraints>
                                     <state key="normal" title="Button"/>
-                                    <buttonConfiguration key="configuration" style="filled" imagePlacement="trailing" title="Create Journal" imagePadding="16" cornerStyle="capsule">
-                                        <imageReference key="image" image="plus" catalog="system" symbolScale="default"/>
-                                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" weight="black"/>
+                                    <buttonConfiguration key="configuration" style="filled" title="Create Journal" cornerStyle="capsule">
                                         <fontDescription key="titleFontDescription" type="system" weight="heavy" pointSize="18"/>
                                         <directionalEdgeInsets key="contentInsets" top="12" leading="12" bottom="12" trailing="12"/>
                                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
@@ -282,7 +279,6 @@
         <image name="illustrations/emotions/sad" width="64" height="64"/>
         <image name="illustrations/emotions/very sad" width="64" height="64"/>
         <image name="illustrations/emotions/very-happy" width="64" height="64"/>
-        <image name="plus" catalog="system" width="128" height="113"/>
         <namedColor name="colors/Blue&amp;Shades/blue-400">
             <color red="0.38431376218795776" green="0.37647059559822083" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

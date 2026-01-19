@@ -97,9 +97,35 @@ class LoginViewController: UIViewController {
         self.present(forgetVC, animated: true, completion: nil)
     }
     @IBAction func loginButton(_ sender: Any) {
-        // Navigate to OnboardingHealthGoalViewController (XIB)
-                let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-                goalVC.modalPresentationStyle = .fullScreen
-                self.present(goalVC, animated: true, completion: nil)
+        // Validate input
+        guard let email = nameTextField.text, !email.isEmpty,
+              let password = passwordTextField.text, !password.isEmpty else {
+            showAlert(title: "Error", message: "Please fill in all fields.")
+            return
+        }
+        
+        // Disable button/show loading (could be added)
+        
+        AuthService.shared.login(email: email, password: password) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let user):
+                    print("Logged in as: \(user.name)")
+                    // Navigate to OnboardingHealthGoalViewController (XIB)
+                    let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                    goalVC.modalPresentationStyle = .fullScreen
+                    self?.present(goalVC, animated: true, completion: nil)
+                    
+                case .failure(let error):
+                    self?.showAlert(title: "Login Failed", message: error.localizedDescription)
+                }
             }
+        }
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
         }

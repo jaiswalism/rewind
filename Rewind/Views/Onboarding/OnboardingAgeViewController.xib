@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -58,9 +58,7 @@ age?</string>
                         <constraint firstAttribute="width" constant="345" id="LbS-Ka-kqV"/>
                     </constraints>
                     <state key="normal" title="Button"/>
-                    <buttonConfiguration key="configuration" style="filled" imagePlacement="trailing" title="Prefer to skip, thanks" imagePadding="16" cornerStyle="capsule">
-                        <imageReference key="image" image="multiply" catalog="system" symbolScale="default"/>
-                        <preferredSymbolConfiguration key="preferredSymbolConfigurationForImage" weight="bold"/>
+                    <buttonConfiguration key="configuration" style="filled" title="Prefer to skip, thanks" cornerStyle="capsule">
                         <fontDescription key="titleFontDescription" type="boldSystem" pointSize="16"/>
                         <directionalEdgeInsets key="contentInsets" top="12" leading="12" bottom="12" trailing="12"/>
                         <color key="baseForegroundColor" name="colors/Blue&amp;Shades/blue-400"/>
@@ -150,7 +148,6 @@ age?</string>
     <resources>
         <image name="arrow.right" catalog="system" width="128" height="95"/>
         <image name="chevron.backward" catalog="system" width="97" height="128"/>
-        <image name="multiply" catalog="system" width="128" height="111"/>
         <namedColor name="colors/Blue&amp;Shades/blue-400">
             <color red="0.38431376218795776" green="0.37647059559822083" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

@@ -84,6 +84,7 @@ class BreathingAnimationViewController: UIViewController {
     private var isPlaying = true
     private var timer: Timer?
     private var remainingSeconds: Int
+    private var totalSeconds: Int?
     private var breathingTimer: Timer?
     private var isBreathingIn = true
     
@@ -94,6 +95,7 @@ class BreathingAnimationViewController: UIViewController {
     // MARK: - Init
     init(durationInSeconds: Int) {
         self.remainingSeconds = durationInSeconds
+        self.totalSeconds = durationInSeconds
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -297,13 +299,29 @@ class BreathingAnimationViewController: UIViewController {
     private func exerciseCompleted() {
         stopAllAnimations()
         
-        // Calculate duration in minutes
-        let totalMinutes = (remainingSeconds / 60) + 1
-        let durationString = "\(totalMinutes)M"
+        // Use totalSeconds if available, else fallback
+        let duration = self.totalSeconds ?? 300 // Fallback 5 mins
         
-        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: totalMinutes * 20)
-        navigationController?.pushViewController(completedVC, animated: true)
+        CareCornerService.shared.recordBreathing(durationSeconds: duration) { [weak self] result in
+            DispatchQueue.main.async {
+                let pawsEarned: Int
+                switch result {
+                case .success(let earned):
+                    pawsEarned = earned
+                case .failure(let error):
+                    print("Error recording breathing: \(error)")
+                    pawsEarned = (duration / 60) * 10 // Fallback calc
+                }
+                
+                let durationMinutes = duration / 60
+                let durationString = "\(durationMinutes)M"
+                
+                let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                self?.navigationController?.pushViewController(completedVC, animated: true)
+            }
+        }
     }
+
     
     // MARK: - Actions
     @objc private func backButtonTapped() {

@@ -94,14 +94,6 @@ class MeditationViewController: UIViewController {
         button.backgroundColor = .white
         button.layer.cornerRadius = 28
         
-        // Add clock icon
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-        let clockImage = UIImage(systemName: "clock", withConfiguration: config)
-        button.setImage(clockImage, for: .normal)
-        button.tintColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 1.0)
-        button.semanticContentAttribute = .forceRightToLeft
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
-        
         return button
     }()
     

@@ -20,7 +20,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="New Mental Health Journal" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qXZ-2c-eff">
-                    <rect key="frame" x="24" y="158" width="345" height="105.33333333333331"/>
+                    <rect key="frame" x="24" y="193" width="345" height="105.33333333333331"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="345" id="yhC-VT-2vr"/>
                     </constraints>
@@ -29,7 +29,7 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zZV-OV-utp">
-                    <rect key="frame" x="24" y="283.33333333333331" width="345" height="194"/>
+                    <rect key="frame" x="24" y="318.33333333333331" width="345" height="193.99999999999994"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="194" id="CFe-pD-idf"/>
                         <constraint firstAttribute="width" constant="345" id="IyC-P5-gBp"/>
@@ -48,7 +48,7 @@
                     </connections>
                 </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="L5g-1l-Qad" userLabel="Microphone">
-                    <rect key="frame" x="40" y="303.33333333333331" width="55" height="55"/>
+                    <rect key="frame" x="40" y="338.33333333333331" width="55" height="55"/>
                     <subviews>
                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="microphone.fill" translatesAutoresizingMaskIntoConstraints="NO" id="0Os-bR-L3B">
                             <rect key="frame" x="16" y="13" width="23" height="29"/>
@@ -70,19 +70,19 @@
                     </userDefinedRuntimeAttributes>
                 </view>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Voice Journal" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5nj-HX-eRq">
-                    <rect key="frame" x="39.999999999999993" y="378.33333333333331" width="116.33333333333331" height="21"/>
+                    <rect key="frame" x="39.999999999999993" y="413.33333333333331" width="116.33333333333331" height="21"/>
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Automatically create your journal by just speaking" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="w8c-wW-5kp">
-                    <rect key="frame" x="40" y="409.33333333333331" width="313" height="38.333333333333314"/>
+                    <rect key="frame" x="40" y="444.33333333333331" width="313" height="38.333333333333314"/>
                     <fontDescription key="fontDescription" type="system" pointSize="16"/>
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VHV-kX-yPV">
-                    <rect key="frame" x="24" y="522.33333333333337" width="345" height="194"/>
+                    <rect key="frame" x="24" y="557.33333333333337" width="345" height="194"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="345" id="5Nc-69-803"/>
                         <constraint firstAttribute="height" constant="194" id="lS1-sz-Bw2"/>
@@ -101,7 +101,7 @@
                     </connections>
                 </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="R9h-q5-onU" userLabel="Microphone">
-                    <rect key="frame" x="40" y="542.33333333333337" width="55" height="55"/>
+                    <rect key="frame" x="40" y="577.33333333333337" width="55" height="55"/>
                     <subviews>
                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icons/square.text.square.fill" translatesAutoresizingMaskIntoConstraints="NO" id="bn9-PO-X6w">
                             <rect key="frame" x="16" y="13" width="23" height="29"/>
@@ -123,13 +123,13 @@
                     </userDefinedRuntimeAttributes>
                 </view>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Text Journal" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TMF-KO-RUk">
-                    <rect key="frame" x="40.000000000000007" y="617.33333333333337" width="105.66666666666669" height="22"/>
+                    <rect key="frame" x="40.000000000000007" y="652.33333333333337" width="105.66666666666669" height="22"/>
                     <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
                 </label>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Set up manual text journal based on your current mood &amp; conditions" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dgj-y8-cmA">
-                    <rect key="frame" x="40" y="649.33333333333337" width="313" height="36"/>
+                    <rect key="frame" x="40" y="684.33333333333337" width="313" height="36"/>
                     <fontDescription key="fontDescription" type="system" pointSize="15"/>
                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     <nil key="highlightedColor"/>
@@ -146,7 +146,7 @@
                 <constraint firstItem="R9h-q5-onU" firstAttribute="top" secondItem="VHV-kX-yPV" secondAttribute="top" constant="20" id="Dx8-qM-3mZ"/>
                 <constraint firstItem="5nj-HX-eRq" firstAttribute="leading" secondItem="zZV-OV-utp" secondAttribute="leading" constant="16" id="Liy-Lm-lKT"/>
                 <constraint firstItem="VHV-kX-yPV" firstAttribute="trailing" secondItem="dgj-y8-cmA" secondAttribute="trailing" constant="16" id="OB1-ON-62o"/>
-                <constraint firstItem="qXZ-2c-eff" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" constant="40" id="VHh-Ws-M70"/>
+                <constraint firstItem="qXZ-2c-eff" firstAttribute="top" secondItem="fnl-2z-Ty3" secondAttribute="top" constant="75" id="VHh-Ws-M70"/>
                 <constraint firstItem="TMF-KO-RUk" firstAttribute="top" secondItem="R9h-q5-onU" secondAttribute="bottom" constant="20" id="Vu0-rl-xIZ"/>
                 <constraint firstItem="L5g-1l-Qad" firstAttribute="leading" secondItem="zZV-OV-utp" secondAttribute="leading" constant="16" id="Ycc-pW-Vwo"/>
                 <constraint firstItem="zZV-OV-utp" firstAttribute="trailing" secondItem="w8c-wW-5kp" secondAttribute="trailing" constant="16" id="abP-9C-KuF"/>

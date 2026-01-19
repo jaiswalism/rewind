@@ -337,12 +337,30 @@ class MeditationSessionViewController: UIViewController {
     private func meditationCompleted() {
         stopTimer()
         
-        // Calculate duration in minutes
-        let completedMinutes = totalSeconds / 60
-        let durationString = "\(completedMinutes)M"
+        // Calculate duration in minutes (Total session length recorded)
+        // If completed early, we might want to record just the elapsed time.
+        // But this method `meditationCompleted` is called when timer reaches 0.
+        // So duration is `totalSeconds`.
+        let duration = totalSeconds
         
-        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: completedMinutes * 20)
-        navigationController?.pushViewController(completedVC, animated: true)
+        CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: soundName) { [weak self] result in
+            DispatchQueue.main.async {
+                let pawsEarned: Int
+                switch result {
+                case .success(let earned):
+                    pawsEarned = earned
+                case .failure(let error):
+                    print("Error recording meditation: \(error)")
+                    pawsEarned = (duration / 60) * 10 
+                }
+                
+                let completedMinutes = duration / 60
+                let durationString = "\(completedMinutes)M"
+                
+                let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                self?.navigationController?.pushViewController(completedVC, animated: true)
+            }
+        }
     }
     
     private func stopTimer() {
@@ -396,11 +414,26 @@ class MeditationSessionViewController: UIViewController {
             
             // Calculate elapsed time
             let elapsedSeconds = self.totalSeconds - self.remainingSeconds
-            let elapsedMinutes = max(1, elapsedSeconds / 60) // At least 1 minute
-            let durationString = "\(elapsedMinutes)M"
+            // We want to record actual elapsed
+            let duration = elapsedSeconds
             
-            let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: elapsedMinutes * 20)
-            self.navigationController?.pushViewController(completedVC, animated: true)
+            CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: self.soundName) { [weak self] result in
+                DispatchQueue.main.async {
+                    let pawsEarned: Int
+                    switch result {
+                    case .success(let earned):
+                        pawsEarned = earned
+                    case .failure( _):
+                        pawsEarned = (duration / 60) * 10
+                    }
+                    
+                    let elapsedMinutes = max(1, elapsedSeconds / 60)
+                    let durationString = "\(elapsedMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self?.navigationController?.pushViewController(completedVC, animated: true)
+                }
+            }
         })
         present(alert, animated: true)
     }

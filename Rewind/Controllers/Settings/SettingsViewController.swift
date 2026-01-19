@@ -428,7 +428,8 @@ class SettingsViewController: UIViewController {
     
     @objc private func personalInfoTapped() {
         print("Personal Information tapped")
-        // Navigate to personal info screen
+        let personalInfoVC = PersonalInformationViewController()
+        navigationController?.pushViewController(personalInfoVC, animated: true)
     }
     
     @objc private func inviteFriendsTapped() {
