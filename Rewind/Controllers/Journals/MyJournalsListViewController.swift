@@ -20,12 +20,13 @@ class MyJournalsListViewController: UIViewController {
         ("Sun", "1")
     ]
     
-    let journalEntries: [(time: String, mood: String, entry: String)] = [
-        ("10:00", "Feeling Positive Today", "I’m grateful for the supportive phone call I had with my best friend."),
-        ("10:00", "Feeling Positive Today", "I’m grateful for the supportive phone call I had with my best friend."),
-        ("10:00", "Feeling Positive Today", "I’m grateful for the supportive phone call I had with my best friend."),
-        ("10:00", "Feeling Positive Today", "I’m grateful for the supportive phone call I had with my best friend."),
-    ]
+    var journalEntries: [Journal] = [] // API Data
+    
+    // Removed legacy hardcoded data
+    // let days ... (Keeping days for now if needed for calendar, but fetching entries is priority)
+    
+    // Hardcoded days for UI (could be dynamic later)
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,6 +37,22 @@ class MyJournalsListViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        fetchJournals()
+    }
+    
+    private func fetchJournals() {
+        JournalService.shared.getJournals { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let journals):
+                    self?.journalEntries = journals
+                    self?.timelineTableView.reloadData()
+                case .failure(let error):
+                    print("Error fetching journals: \(error)")
+                    // Optionally show empty state
+                }
+            }
+        }
     }
     
     func setupBackButton() {
@@ -169,9 +186,16 @@ extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelega
         let isFirst = indexPath.row == 0
         let isLast = indexPath.row == journalEntries.count - 1
         
-        cell.configure(time: entry.time,
-                       mood: entry.mood,
-                       entry: entry.entry,
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        let timeString = entry.createdDate.map { formatter.string(from: $0) } ?? "Now"
+        
+        // Use title as Mood/Headline for now, or use first mood tag
+        let moodHeadline = entry.moodTags?.first ?? entry.title
+        
+        cell.configure(time: timeString,
+                       mood: moodHeadline,
+                       entry: entry.content,
                        isFirst: isFirst,
                        isLast: isLast)
         

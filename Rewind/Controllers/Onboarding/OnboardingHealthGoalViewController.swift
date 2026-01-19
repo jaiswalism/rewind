@@ -98,9 +98,19 @@ class OnboardingHealthGoalViewController: UIViewController {
     */
 
     @IBAction func nextButton(_ sender: Any) {
+        // Find selected button
+        if let selectedButton = optionButtons.first(where: { $0.isSelected }),
+           let goal = selectedButton.configuration?.title ?? selectedButton.title(for: .normal) {
+             OnboardingDataManager.shared.healthGoal = goal
+             print("Saved Health Goal: \(goal)")
+        } else {
+            // Fallback if title not found, though layout implies there is one
+            OnboardingDataManager.shared.healthGoal = "Improve overall well-being"
+        }
+
         // Navigate to OnboardingGenderViewController (XIB)
-                let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
-                genderVC.modalPresentationStyle = .fullScreen
-                present(genderVC, animated: true, completion: nil)
-            }
+        let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
+        genderVC.modalPresentationStyle = .fullScreen
+        present(genderVC, animated: true, completion: nil)
+    }
         }

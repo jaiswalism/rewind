@@ -127,12 +127,25 @@ class OnboardingGenderViewController: UIViewController {
            present(goalVC, animated: true, completion: nil)
        }
     @IBAction func nextButton(_ sender: Any) {
-        // Navigate to OnboardingGenderViewController (XIB)
-                let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
-                ageVC.modalPresentationStyle = .fullScreen
-                present(ageVC, animated: true, completion: nil)
+        // Save gender
+        if let selectedButton = genderButtons.first(where: { $0.isSelected }) {
+            let gender: String
+            switch selectedButton.tag {
+            case 1: gender = "male"
+            case 2: gender = "female"
+            default: gender = "prefer_not_to_say"
             }
+            OnboardingDataManager.shared.gender = gender
+        }
+        
+        // Navigate to OnboardingAgeViewController (XIB)
+        let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
+        ageVC.modalPresentationStyle = .fullScreen
+        present(ageVC, animated: true, completion: nil)
+    }
     @IBAction func preferNotToSay(_ sender: Any) {
+        OnboardingDataManager.shared.gender = "prefer_not_to_say"
+        
         let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
         ageVC.modalPresentationStyle = .fullScreen
         present(ageVC, animated: true, completion: nil)

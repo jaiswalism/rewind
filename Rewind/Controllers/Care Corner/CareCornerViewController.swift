@@ -290,7 +290,7 @@ class CareCornerViewController: UIViewController {
     
     // MARK: - Navigation Actions
     @objc private func tellCommunityTapped() {
-        let createPostVC = CreatePostViewController(nibName: "CreatePostViewController", bundle: nil)
+        let createPostVC = CreatePostViewController()
         navigationController?.pushViewController(createPostVC, animated: true)
     }
     

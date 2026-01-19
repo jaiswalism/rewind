@@ -7,14 +7,11 @@
 
 import UIKit
 
-// NEW: Structure for holding comment data
-struct Comment {
-    let username: String
-    let commentText: String
-    let timestamp: String
-}
-
 class CommentSheetViewController: UIViewController {
+    
+    // MARK: - Properties
+    var postId: String!
+    private var comments: [Comment] = []
     
     // MARK: - UI Components
     private let titleLabel: UILabel = {
@@ -35,6 +32,14 @@ class CommentSheetViewController: UIViewController {
         return button
     }()
     
+    private let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.color = .white
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+    
     private let commentsTableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -49,21 +54,13 @@ class CommentSheetViewController: UIViewController {
     private let commentInputView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        // FIX: Set color to Dark:hover
-        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover")
+        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover") // Ensure this color exists
         return view
     }()
     
-    // NEW: Input field components
     private let inputTextField = UITextField()
     private let sendButton = UIButton(type: .system)
 
-    // NEW: Sample Data
-    private var sampleComments: [Comment] = [
-        Comment(username: "User123", commentText: "This is so true! We forget the simple things in life. Thanks for sharing.", timestamp: "2h"),
-        Comment(username: "GratitudeGiver", commentText: "Love this energy! Keep rewinding to the good stuff. 🙏", timestamp: "5h"),
-        Comment(username: "Aviral Sharma", commentText: "Just wanted to say thank you for the feedback on the app features!", timestamp: "1d")
-    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,17 +74,36 @@ class CommentSheetViewController: UIViewController {
         
         setupUI()
         setupInputViewContent()
+        
+        fetchComments()
+    }
+    
+    private func fetchComments() {
+        guard let postId = postId else { return }
+        activityIndicator.startAnimating()
+        CommunityService.shared.getComments(postId: postId) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.activityIndicator.stopAnimating()
+                switch result {
+                case .success(let fetchedComments):
+                    self?.comments = fetchedComments
+                    self?.commentsTableView.reloadData()
+                case .failure(let error):
+                    print("Error fetching comments: \(error)")
+                }
+            }
+        }
     }
     
     // MARK: - Setup
     private func setupUI() {
-        // FIX: Set view background color to Dark:hover
-        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover")
+        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover") ?? .black
         
         view.addSubview(titleLabel)
         view.addSubview(closeButton)
         view.addSubview(commentsTableView)
         view.addSubview(commentInputView)
+        view.addSubview(activityIndicator)
         
         setupConstraints()
     }
@@ -106,10 +122,14 @@ class CommentSheetViewController: UIViewController {
             titleLabel.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
+            // Activity Indicator
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            
             // Comment Input Bar (Fixed to the bottom)
             commentInputView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             commentInputView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            commentInputView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            commentInputView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor), // Keyboard support
             
             // Comments Table View
             commentsTableView.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 10),
@@ -139,29 +159,28 @@ class CommentSheetViewController: UIViewController {
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         sendButton.setTitle("Send", for: .normal)
         sendButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        sendButton.tintColor = UIColor(named: "colors/Primary/Light")
+        sendButton.tintColor = .white
         sendButton.addTarget(self, action: #selector(sendComment), for: .touchUpInside)
 
         // Add to the input view
         commentInputView.addSubview(inputTextField)
         commentInputView.addSubview(sendButton)
         
-        let inputArea = commentInputView.safeAreaLayoutGuide
-
         NSLayoutConstraint.activate([
+            // Input View Height (dynamic based on content but min height)
+            commentInputView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
+
             // Input Text Field
             inputTextField.leadingAnchor.constraint(equalTo: commentInputView.leadingAnchor, constant: 16),
             inputTextField.topAnchor.constraint(equalTo: commentInputView.topAnchor, constant: 10),
             inputTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -8),
             inputTextField.heightAnchor.constraint(equalToConstant: 40),
+            inputTextField.bottomAnchor.constraint(equalTo: commentInputView.bottomAnchor, constant: -10),
 
             // Send Button
             sendButton.trailingAnchor.constraint(equalTo: commentInputView.trailingAnchor, constant: -16),
             sendButton.centerYAnchor.constraint(equalTo: inputTextField.centerYAnchor),
             sendButton.widthAnchor.constraint(equalToConstant: 60),
-
-            // Define the input view's height by pinning the text field's bottom to the safe area bottom.
-            inputTextField.bottomAnchor.constraint(equalTo: inputArea.bottomAnchor, constant: -10)
         ])
     }
     
@@ -171,30 +190,41 @@ class CommentSheetViewController: UIViewController {
     }
     
     @objc private func sendComment() {
-        guard let text = inputTextField.text, !text.isEmpty else { return }
+        guard let text = inputTextField.text, !text.isEmpty, let postId = postId else { return }
         
-        let newComment = Comment(username: "Me", commentText: text, timestamp: "Now")
-        sampleComments.append(newComment)
-        
-        let indexPath = IndexPath(row: sampleComments.count - 1, section: 0)
-        commentsTableView.insertRows(at: [indexPath], with: .automatic)
-        commentsTableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
-        
-        inputTextField.text = ""
+        sendButton.isEnabled = false
+        CommunityService.shared.addComment(postId: postId, text: text) { [weak self] result in
+            DispatchQueue.main.async {
+                self?.sendButton.isEnabled = true
+                switch result {
+                case .success(let newComment):
+                    self?.comments.append(newComment)
+                    self?.inputTextField.text = ""
+                    self?.commentsTableView.reloadData()
+                    if let count = self?.comments.count, count > 0 {
+                        let indexPath = IndexPath(row: count - 1, section: 0)
+                        self?.commentsTableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                    }
+                case .failure(let error):
+                    print("Error posting comment: \(error)")
+                    // Show alert
+                }
+            }
+        }
     }
 }
 
 // MARK: - UITableViewDataSource
 extension CommentSheetViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return sampleComments.count
+        return comments.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CommentTableViewCell.reuseIdentifier, for: indexPath) as? CommentTableViewCell else {
             return UITableViewCell()
         }
-        let comment = sampleComments[indexPath.row]
+        let comment = comments[indexPath.row]
         cell.configure(with: comment)
         return cell
     }

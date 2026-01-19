@@ -19,22 +19,26 @@ extension UIView {
 class CommunityPostView: UIView {
     
     // MARK: - Properties
+    let postId: String // Added property
     let profileName: String
     let timestamp: String
     let postText: String
     let isAnonymous: Bool
     var likeCount: Int
-    let commentCount: Int
+    var commentCount: Int // Changed to var to update locally
+    let isMine: Bool // Add isMine property
+    let mediaUrls: [String]
+    let tags: [String] // Added tags property
     
     // Internal state for the like button
-    private var isLiked: Bool = false
+    private var currentLikeState: Bool = false // Add currentLikeState property
     
     // Lazily initialized buttons connected to actions
     private lazy var likeButton: UIButton = {
         let button = createActionButton(
-            iconName: self.isLiked ? "heart.fill" : "heart",
+            iconName: self.currentLikeState ? "heart.fill" : "heart",
             count: self.likeCount,
-            color: self.isLiked ? .systemRed : .white
+            color: self.currentLikeState ? .systemRed : .white
         )
         button.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
         return button
@@ -72,6 +76,7 @@ class CommunityPostView: UIView {
         return view
     }()
     
+    // ... [Reuse existing components] ...
     private let blurView: UIVisualEffectView = {
         let blur = UIBlurEffect(style: .systemUltraThinMaterialDark)
         let view = UIVisualEffectView(effect: blur)
@@ -90,13 +95,19 @@ class CommunityPostView: UIView {
     }()
     
     // MARK: - Initialization
-    init(profileName: String, timestamp: String, postText: String, isAnonymous: Bool, likeCount: Int, commentCount: Int) {
+    init(postId: String, profileName: String, timestamp: String, postText: String, isAnonymous: Bool, likeCount: Int, commentCount: Int, isLiked: Bool, isMine: Bool, mediaUrls: [String]? = nil, tags: [String] = []) {
+        self.postId = postId
         self.profileName = profileName
         self.timestamp = timestamp
         self.postText = postText
         self.isAnonymous = isAnonymous
         self.likeCount = likeCount
         self.commentCount = commentCount
+        // self.isLiked = isLiked // Removed key
+        self.currentLikeState = isLiked
+        self.isMine = isMine
+        self.mediaUrls = mediaUrls ?? []
+        self.tags = tags
         super.init(frame: .zero)
         setupViews()
     }
@@ -131,8 +142,12 @@ class CommunityPostView: UIView {
         
         // Populate the stack view
         innerStack.addArrangedSubview(createUserHeader())
-        innerStack.addArrangedSubview(createPostLabel())
-        innerStack.addArrangedSubview(createMediaPreview())
+        innerStack.addArrangedSubview(createPostLabel()) // Always add text
+        
+        // Conditionally add media preview
+        if !mediaUrls.isEmpty {
+            innerStack.addArrangedSubview(createMediaPreview())
+        }
         
         // Add a vertical spacer before the actions view
         let actionSpacer = UIView()
@@ -155,25 +170,52 @@ class CommunityPostView: UIView {
             innerStack.bottomAnchor.constraint(equalTo: cardView.bottomAnchor),
         ])
     }
-
     // MARK: - Action Handlers
     
     @objc private func likeButtonTapped(sender: UIButton) {
-        isLiked.toggle()
-        
-        if isLiked {
+        // Optimistic UI Update
+        currentLikeState.toggle()
+        if currentLikeState {
             likeCount += 1
+            CommunityService.shared.likePost(id: postId) { [weak self] result in
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        self.likeCount = response.likeCount // Sync with server
+                        self.updateLikeButton(sender: sender)
+                    case .failure(let error):
+                        print("Error liking post: \(error)")
+                        // Revert
+                        self.currentLikeState.toggle()
+                        self.likeCount -= 1
+                        self.updateLikeButton(sender: sender)
+                    }
+                }
+            }
         } else {
             likeCount -= 1
+            CommunityService.shared.unlikePost(id: postId) { [weak self] result in
+                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let response):
+                        self.likeCount = response.likeCount // Sync with server
+                        self.updateLikeButton(sender: sender)
+                    case .failure(let error):
+                        print("Error unliking post: \(error)")
+                        // Revert
+                        self.currentLikeState.toggle()
+                        self.likeCount += 1
+                        self.updateLikeButton(sender: sender)
+                    }
+                }
+            }
         }
         
-        let iconName = isLiked ? "heart.fill" : "heart"
-        let iconColor: UIColor = isLiked ? .systemRed : .white
-
-        let newConfig = createActionButtonConfig(iconName: iconName, count: likeCount, color: iconColor)
-        sender.configuration = newConfig
+        updateLikeButton(sender: sender)
         
-        // Play a subtle animation
+        // Animation
         UIView.animate(withDuration: 0.1, animations: {
             sender.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
         }) { _ in
@@ -183,6 +225,13 @@ class CommunityPostView: UIView {
         }
     }
     
+    private func updateLikeButton(sender: UIButton) {
+        let iconName = currentLikeState ? "heart.fill" : "heart"
+        let iconColor: UIColor = currentLikeState ? .systemRed : .white
+        let newConfig = createActionButtonConfig(iconName: iconName, count: likeCount, color: iconColor)
+        sender.configuration = newConfig
+    }
+    
     @objc private func commentButtonTapped(sender: UIButton) {
         guard let presentingVC = self.parentViewController else {
             print("ERROR: Could not find presenting view controller to show comment sheet.")
@@ -190,6 +239,7 @@ class CommunityPostView: UIView {
         }
 
         let commentVC = CommentSheetViewController()
+        commentVC.postId = self.postId // Pass postId
         
         // Set up presentation style for a modal sheet
         if #available(iOS 15.0, *) {
@@ -245,25 +295,45 @@ class CommunityPostView: UIView {
 
         let actionSheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 
-        // 1. Conditional Actions (Show for non-anonymous/user's assumed posts)
-        if !isAnonymous {
+        // 1. Conditional Actions (Show only if it is MY post)
+        if isMine {
             // Edit Post
-            actionSheet.addAction(UIAlertAction(title: "Edit Post", style: .default) { _ in
-                print("Action: Edit Post Tapped for post by \(self.profileName)")
+            actionSheet.addAction(UIAlertAction(title: "Edit Post", style: .default) { [weak self] _ in
+                guard let self = self else { return }
+                
+                // Reconstruct CommunityPost object for editing
+                let post = CommunityPost(
+                    id: self.postId,
+                    content: self.postText,
+                    isAnonymous: self.isAnonymous,
+                    tags: self.tags,
+                    mediaUrls: self.mediaUrls,
+                    likeCount: self.likeCount,
+                    commentCount: self.commentCount,
+                    createdAt: self.timestamp, // Note: timestamp string passed, might not parse back to Date exactly if formatter logic differs but used valid 'createdAt' string in fetching. Ideally store original.
+                    user: nil, // User not needed for edit logic significantly
+                    isLikedByMe: self.currentLikeState,
+                    isMine: true
+                )
+                
+                let editVC = CreatePostViewController(postToEdit: post)
+                
+                // Check if we can push
+                if let navigationController = presentingVC.navigationController {
+                    navigationController.pushViewController(editVC, animated: true)
+                } else {
+                    presentingVC.present(editVC, animated: true, completion: nil)
+                }
             })
 
             // Delete Post
-            actionSheet.addAction(UIAlertAction(title: "Delete Post", style: .destructive) { _ in
-                print("Action: Delete Post Tapped for post by \(self.profileName)")
+            actionSheet.addAction(UIAlertAction(title: "Delete Post", style: .destructive) { [weak self] _ in
+                guard let self = self else { return }
+                self.deletePost()
             })
         }
         
         // 2. Standard Actions (Always available)
-
-        // Hide Post
-        actionSheet.addAction(UIAlertAction(title: "Hide Post", style: .default) { _ in
-            print("Action: Hide Post Tapped for post by \(self.profileName)")
-        })
 
         // Report Post
         actionSheet.addAction(UIAlertAction(title: "Report Post", style: .default) { _ in
@@ -374,102 +444,89 @@ class CommunityPostView: UIView {
         container.clipsToBounds = true
         container.heightAnchor.constraint(equalToConstant: 200).isActive = true
         
-        // Background Image (Leaf Pattern - Placeholder)
-        let bgImage = UIImageView()
-        bgImage.backgroundColor = .darkGray
-        bgImage.contentMode = .scaleAspectFill
-        bgImage.layer.opacity = 0.7
-        bgImage.translatesAutoresizingMaskIntoConstraints = false
-        container.addSubview(bgImage)
+        // For now, just show the first image as a background if available
+        // In a real app, use a carousel or grid
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         
-        // Avatars Stack (Horizontal)
-        let avatarsStack = UIStackView()
-        avatarsStack.translatesAutoresizingMaskIntoConstraints = false
-        avatarsStack.axis = .horizontal
-        avatarsStack.spacing = 5
-        
-        // Create repeating avatar elements
-        let avatar1 = createMediaAvatar(isOverlay: false)
-        let avatar2 = createMediaAvatar(isOverlay: false)
-        avatarsStack.addArrangedSubview(avatar1)
-        avatarsStack.addArrangedSubview(avatar2)
-        
-        // Add the third element (either Camera Overlay or third Avatar)
-        if isAnonymous {
-            avatarsStack.addArrangedSubview(createMediaAvatar(isOverlay: false))
-        } else {
-            avatarsStack.addArrangedSubview(createMediaAvatar(isOverlay: true))
+        // Load image logic (simplified for prototype)
+        if let firstUrl = mediaUrls.first {
+            // Check for local persistence scheme
+            if firstUrl.hasPrefix("local-image://") {
+                let filename = firstUrl.replacingOccurrences(of: "local-image://", with: "")
+                if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                    let fileUrl = documentsDirectory.appendingPathComponent(filename)
+                    if let data = try? Data(contentsOf: fileUrl) {
+                        imageView.image = UIImage(data: data)
+                    } else {
+                        // Image file missing
+                         imageView.image = UIImage(systemName: "photo")
+                    }
+                }
+            } else if firstUrl.hasPrefix("file://"), let url = URL(string: firstUrl), let data = try? Data(contentsOf: url) {
+                 imageView.image = UIImage(data: data)
+            } else if firstUrl.hasPrefix("http") {
+                // Async load remote image
+                imageView.image = UIImage(systemName: "photo") // Placeholder
+                DispatchQueue.global().async {
+                    if let url = URL(string: firstUrl), let data = try? Data(contentsOf: url) {
+                        DispatchQueue.main.async {
+                            // Check if the cell is still displaying this URL (basic check)
+                            // In a real reusable cell, we'd need more robust check or cancellation
+                            imageView.image = UIImage(data: data)
+                        }
+                    }
+                }
+            } else {
+                 imageView.image = UIImage(systemName: "photo")
+            }
         }
         
-        container.addSubview(avatarsStack)
+        container.addSubview(imageView)
         
         NSLayoutConstraint.activate([
-            bgImage.topAnchor.constraint(equalTo: container.topAnchor),
-            bgImage.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            bgImage.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            bgImage.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            
-            // Pin stack to the left and bottom, inside the rounded container
-            avatarsStack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
-            avatarsStack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -16)
+            imageView.topAnchor.constraint(equalTo: container.topAnchor),
+            imageView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
+        
+        // Overlay count if more than 1
+        if mediaUrls.count > 1 {
+            let countLabel = UILabel()
+            countLabel.text = "+\(mediaUrls.count - 1)"
+            countLabel.font = .systemFont(ofSize: 16, weight: .bold)
+            countLabel.textColor = .white
+            countLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+            countLabel.layer.cornerRadius = 12
+            countLabel.clipsToBounds = true
+            countLabel.textAlignment = .center
+            countLabel.translatesAutoresizingMaskIntoConstraints = false
+            
+            container.addSubview(countLabel)
+            
+            NSLayoutConstraint.activate([
+                countLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -10),
+                countLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
+                countLabel.widthAnchor.constraint(equalToConstant: 40),
+                countLabel.heightAnchor.constraint(equalToConstant: 24)
+            ])
+        }
+        
+        // Add Tap Gesture
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleMediaTap))
+        container.addGestureRecognizer(tapGesture)
+        container.isUserInteractionEnabled = true
         
         return container
     }
     
-    private func createMediaAvatar(isOverlay: Bool) -> UIView {
-        let size: CGFloat = 40
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.layer.cornerRadius = 8
-        view.clipsToBounds = true
-        
-        view.widthAnchor.constraint(equalToConstant: size).isActive = true
-        view.heightAnchor.constraint(equalToConstant: size).isActive = true
-        
-        let icon = UIImageView()
-        icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.contentMode = .scaleAspectFill
-        
-        if isOverlay {
-            // Camera Overlay Style (Rectangle with dark background)
-            view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-            icon.image = UIImage(systemName: "camera.fill")
-            icon.tintColor = .white
-            
-            // Text "+4"
-            let label = UILabel()
-            label.text = "4"
-            label.font = .systemFont(ofSize: 16, weight: .bold)
-            label.textColor = .white
-            
-            let stack = UIStackView(arrangedSubviews: [icon, label])
-            stack.axis = .horizontal
-            stack.spacing = 2
-            stack.alignment = .center
-            stack.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(stack)
-            
-            NSLayoutConstraint.activate([
-                stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                stack.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-            ])
-        } else {
-            // Figure Style (Placeholder for actual image, light rectangular background)
-            view.backgroundColor = .lightGray
-            icon.image = UIImage(systemName: "figure.walk")
-            icon.tintColor = .black
-            view.addSubview(icon)
-            
-            NSLayoutConstraint.activate([
-                icon.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                icon.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                icon.widthAnchor.constraint(equalToConstant: 30),
-                icon.heightAnchor.constraint(equalToConstant: 30)
-            ])
-        }
-        
-        return view
+    @objc private func handleMediaTap() {
+        guard let presentingVC = self.parentViewController, !mediaUrls.isEmpty else { return }
+        let galleryVC = PhotoGalleryViewController(mediaUrls: mediaUrls)
+        presentingVC.present(galleryVC, animated: true, completion: nil)
     }
     
     private func createActionsView() -> UIView {
@@ -577,9 +634,22 @@ class CommunityPostView: UIView {
         // Apply vertical inset for proper vertical alignment
         buttonConfig.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0)
         
-        button.contentVerticalAlignment = .center
         button.configuration = buttonConfig
         
         return button
+    }
+    
+    private func deletePost() {
+        CommunityService.shared.deletePost(id: postId) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    print("Post deleted successfully")
+                    NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
+                case .failure(let error):
+                    print("Error deleting post: \(error)")
+                }
+            }
+        }
     }
 }
