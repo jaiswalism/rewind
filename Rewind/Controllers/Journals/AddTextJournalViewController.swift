@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import PhotosUI
 
 class AddTextJournalViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
 
@@ -21,6 +22,25 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
         private let activeBorderColor = UIColor.white.cgColor
         private let inactiveFillColor = UIColor(named: "colors/Blue&Shades/blue-300") ?? .systemBlue
         
+        // MARK: - Media Properties
+        private var selectedImages: [UIImage] = []
+        
+        private let mediaScrollView: UIScrollView = {
+            let sv = UIScrollView()
+            sv.showsHorizontalScrollIndicator = false
+            sv.translatesAutoresizingMaskIntoConstraints = false
+            sv.heightAnchor.constraint(equalToConstant: 80).isActive = true
+            return sv
+        }()
+        
+        private let mediaStack: UIStackView = {
+            let stack = UIStackView()
+            stack.axis = .horizontal
+            stack.spacing = 10
+            stack.translatesAutoresizingMaskIntoConstraints = false
+            return stack
+        }()
+    
     // MARK: - View Lifecycle
         
         override func viewDidLoad() {
@@ -35,9 +55,11 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
             
             setupInputs()
             setupEmotionButtons()
+            setupMediaUI()
             
             // Ensure all components start in the inactive/unfocused state
-            setupSaveButton() // Add Save Button
+            setupCreateJournalButton()
+            setupMediaButtons()
         }
         
         override func viewWillAppear(_ animated: Bool) {
@@ -156,6 +178,9 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                  blur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
                  blur.isUserInteractionEnabled = false
                  button.insertSubview(blur, at: 0)
+                
+                // Bring interaction enabled to true and bring to front if needed
+                button.isUserInteractionEnabled = true
             }
         }
     
@@ -173,6 +198,24 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
             }
             
         }
+    
+    private func setupMediaUI() {
+        self.view.addSubview(mediaScrollView)
+        mediaScrollView.addSubview(mediaStack)
+        
+        NSLayoutConstraint.activate([
+            mediaScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            mediaScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            mediaScrollView.bottomAnchor.constraint(equalTo: uploadButton.topAnchor, constant: -20),
+            mediaScrollView.heightAnchor.constraint(equalToConstant: 80),
+            
+            mediaStack.leadingAnchor.constraint(equalTo: mediaScrollView.leadingAnchor),
+            mediaStack.trailingAnchor.constraint(equalTo: mediaScrollView.trailingAnchor),
+            mediaStack.topAnchor.constraint(equalTo: mediaScrollView.topAnchor),
+            mediaStack.bottomAnchor.constraint(equalTo: mediaScrollView.bottomAnchor),
+            mediaStack.heightAnchor.constraint(equalTo: mediaScrollView.heightAnchor)
+        ])
+    }
     
     private func updateEmotionButtonAppearance(for button: UIButton) {
             if button.isSelected {
@@ -262,28 +305,51 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
         }
         
         // MARK: - Save Functionality
+    
+        private func setupCreateJournalButton() {
+            // Since we don't have a direct outlet to the "Create Journal" button in this file (it's in the XIB),
+            // we'll traverse the view hierarchy or assume it's set up in Interface Builder.
+            // However, the action isn't connected in IB. Let's find it.
+            
+            // Recursive search helper
+            func findButton(in view: UIView, withTitle title: String) -> UIButton? {
+                for subview in view.subviews {
+                    if let button = subview as? UIButton {
+                        if button.configuration?.title == title || button.currentTitle == title {
+                            return button
+                        }
+                    }
+                    if let found = findButton(in: subview, withTitle: title) {
+                        return found
+                    }
+                }
+                return nil
+            }
+            
+            if let createButton = findButton(in: self.view, withTitle: "Create Journal") {
+                createButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+            } else {
+                print("Could not find Create Journal button")
+            }
+        }
+    
+        private func setupMediaButtons() {
+            cameraButton.addTarget(self, action: #selector(mediaButtonTapped), for: .touchUpInside)
+            uploadButton.addTarget(self, action: #selector(mediaButtonTapped), for: .touchUpInside)
+            
+            // Ensure they are on top of the blur views we added in setupInputs
+            cameraButton.superview?.bringSubviewToFront(cameraButton)
+            uploadButton.superview?.bringSubviewToFront(uploadButton)
+        }
         
-        private func setupSaveButton() {
-            let saveButton = UIButton(type: .system)
-            saveButton.translatesAutoresizingMaskIntoConstraints = false
+        @objc private func mediaButtonTapped() {
+            var config = PHPickerConfiguration()
+            config.selectionLimit = 4 - selectedImages.count // Max 4 images
+            config.filter = .images
             
-            var config = UIButton.Configuration.filled()
-            config.title = "Save Entry"
-            config.baseBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
-            config.baseForegroundColor = .white
-            config.cornerStyle = .capsule
-            saveButton.configuration = config
-            
-            saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-            
-            view.addSubview(saveButton)
-            
-            NSLayoutConstraint.activate([
-                saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-                saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                saveButton.widthAnchor.constraint(equalToConstant: 120),
-                saveButton.heightAnchor.constraint(equalToConstant: 50)
-            ])
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = self
+            present(picker, animated: true)
         }
         
         @objc private func saveButtonTapped() {
@@ -308,13 +374,34 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                 }
             }
             
+            // Process Images
+            var mediaUrls: [String] = []
+            if !selectedImages.isEmpty {
+                // Save to Documents Directory for persistence
+                if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                    for image in selectedImages {
+                        if let data = image.jpegData(compressionQuality: 0.8) {
+                            let filename = UUID().uuidString + ".jpg"
+                            let fileUrl = documentsDirectory.appendingPathComponent(filename)
+                            
+                            do {
+                                try data.write(to: fileUrl)
+                                mediaUrls.append("local-image://\(filename)")
+                            } catch {
+                                print("Error saving image: \(error)")
+                            }
+                        }
+                    }
+                }
+            }
+            
             JournalService.shared.createJournal(
                 title: title,
                 content: content,
                 type: .text,
                 moodTags: moodTags,
                 voiceUrl: nil,
-                mediaUrls: nil,
+                mediaUrls: mediaUrls, // Pass the generated URLs
                 transcription: nil
             ) { [weak self] result in
                 DispatchQueue.main.async {
@@ -344,4 +431,35 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
     }
     */
 
+}
+
+// MARK: - PHPickerViewControllerDelegate
+extension AddTextJournalViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        
+        for result in results {
+            result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] (object, error) in
+                if let image = object as? UIImage {
+                    DispatchQueue.main.async {
+                        self?.addSelectedImage(image)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addSelectedImage(_ image: UIImage) {
+        selectedImages.append(image)
+        
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = 12
+        imageView.clipsToBounds = true
+        imageView.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        
+        mediaStack.addArrangedSubview(imageView)
+    }
 }
