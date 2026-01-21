@@ -210,6 +210,9 @@ extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelega
             bundle: nil
         )
         
+        let entry = journalEntries[indexPath.row]
+        vc.journal = entry
+        
         navigationController?.pushViewController(vc, animated: true)
     }
 }
