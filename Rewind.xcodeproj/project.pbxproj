@@ -103,6 +103,7 @@
 		52D61AEA2F16EA4B00098095 /* PetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D61AE02F16EA4B00098095 /* PetService.swift */; };
 		52D61AEB2F16EA4B00098095 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D61ADA2F16EA4B00098095 /* AuthService.swift */; };
 		B20E99292EFE409A00F3625B /* PetTalkingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E99282EFE409A00F3625B /* PetTalkingViewController.swift */; };
+		B234356E2F1A6F5E00A72A4E /* penguin 2.usdz in Resources */ = {isa = PBXBuildFile; fileRef = B234356D2F1A6F5E00A72A4E /* penguin 2.usdz */; };
 		B28393AE2ED75D6E0038EC3B /* CareCornerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */; };
 		B28393B02ED75E200038EC3B /* BreathingExerciseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */; };
 		B28393B22ED75F500038EC3B /* BreathingAnimationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */; };
@@ -233,6 +234,7 @@
 		52D61AE02F16EA4B00098095 /* PetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetService.swift; sourceTree = "<group>"; };
 		52D61AE12F16EA4B00098095 /* UserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
 		B20E99282EFE409A00F3625B /* PetTalkingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetTalkingViewController.swift; sourceTree = "<group>"; };
+		B234356D2F1A6F5E00A72A4E /* penguin 2.usdz */ = {isa = PBXFileReference; lastKnownFileType = file; path = "penguin 2.usdz"; sourceTree = "<group>"; };
 		B28393AD2ED75D6E0038EC3B /* CareCornerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareCornerViewController.swift; sourceTree = "<group>"; };
 		B28393AF2ED75E200038EC3B /* BreathingExerciseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingExerciseViewController.swift; sourceTree = "<group>"; };
 		B28393B12ED75F500038EC3B /* BreathingAnimationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationViewController.swift; sourceTree = "<group>"; };
@@ -319,6 +321,7 @@
 				5214F65B2EBD0CD5005020AA /* Assets.xcassets */,
 				5214F65C2EBD0CD5005020AA /* Info.plist */,
 				5214F6632EBD0CD5005020AA /* Rewind.entitlements */,
+				B234356D2F1A6F5E00A72A4E /* penguin 2.usdz */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -755,6 +758,7 @@
 				523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */,
 				523BF2552EBE63C9003F7696 /* OnboardingProfHelpViewController.xib in Resources */,
 				529C87FB2EC3A5BB00DA9890 /* NewJournalTypeViewController.xib in Resources */,
+				B234356E2F1A6F5E00A72A4E /* penguin 2.usdz in Resources */,
 				529C880E2EC3A75300DA9890 /* CareCornerHomeViewController.xib in Resources */,
 				523BF2512EBE63B2003F7696 /* OnboardingAgeViewController.xib in Resources */,
 				523BF2792EBE6B87003F7696 /* AddGoalViewController.xib in Resources */,

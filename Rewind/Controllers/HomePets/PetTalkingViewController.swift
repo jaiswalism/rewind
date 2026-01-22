@@ -8,6 +8,7 @@
 import UIKit
 import Speech
 import AVFoundation
+import SceneKit
 
 class PetTalkingViewController: UIViewController {
     
@@ -20,15 +21,20 @@ class PetTalkingViewController: UIViewController {
         button.setImage(image, for: .normal)
         button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
         button.backgroundColor = UIColor.clear
-        
-        // Make sure the button is interactive
         button.isUserInteractionEnabled = true
         button.isEnabled = true
-        
-        // Add padding for better touch area
         button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        
         return button
+    }()
+    
+    private let penguinSceneView: SCNView = {
+        let sceneView = SCNView()
+        sceneView.translatesAutoresizingMaskIntoConstraints = false
+        sceneView.backgroundColor = .clear
+        sceneView.allowsCameraControl = false
+        sceneView.autoenablesDefaultLighting = true
+        sceneView.antialiasingMode = .multisampling4X
+        return sceneView
     }()
     
     private let animatedBlobContainer: UIView = {
@@ -102,23 +108,21 @@ class PetTalkingViewController: UIViewController {
     private var isRecording = false
     private var audioLevelTimer: Timer?
     
+    // 3D Model Properties
+    private var penguinNode: SCNNode?
+    private var idleAnimation: SCNAction?
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("PetTalkingViewController loaded") // Debug log
         setupUI()
         setupActions()
+        setup3DPenguin()
         requestSpeechPermission()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("PetTalkingViewController appeared") // Debug log
-        print("Back button frame: \(backButton.frame)")
-        print("Back button superview: \(backButton.superview != nil)")
-        print("Back button isUserInteractionEnabled: \(backButton.isUserInteractionEnabled)")
-        print("Back button isEnabled: \(backButton.isEnabled)")
-        print("Navigation controller: \(navigationController != nil)")
         startBlobAnimation()
     }
     
@@ -158,11 +162,12 @@ class PetTalkingViewController: UIViewController {
         // Hide navigation bar to match app style
         navigationController?.setNavigationBarHidden(true, animated: false)
         
-        // Add views in correct order (back button last to be on top)
-        view.addSubview(animatedBlobContainer)
+        // Add views in correct order
+        view.addSubview(penguinSceneView)
         view.addSubview(transcriptionLabel)
+        view.addSubview(animatedBlobContainer)
         view.addSubview(micButton)
-        view.addSubview(backButton) // Add back button last so it's on top
+        view.addSubview(backButton)
         
         // Add blob elements to container
         animatedBlobContainer.addSubview(outerBlob)
@@ -175,52 +180,59 @@ class PetTalkingViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Back Button - larger touch area
+            // Back Button
             backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             backButton.widthAnchor.constraint(equalToConstant: 50),
             backButton.heightAnchor.constraint(equalToConstant: 50),
             
-            // Animated Blob Container - moved up
-            animatedBlobContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            animatedBlobContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -80),
-            animatedBlobContainer.widthAnchor.constraint(equalToConstant: 300),
-            animatedBlobContainer.heightAnchor.constraint(equalToConstant: 300),
+            // Penguin 3D Scene View - larger to show full model
+            penguinSceneView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            penguinSceneView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
+            penguinSceneView.widthAnchor.constraint(equalToConstant: 350),
+            penguinSceneView.heightAnchor.constraint(equalToConstant: 350),
+            
+            // Transcription Label - centered
+            transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            transcriptionLabel.topAnchor.constraint(equalTo: penguinSceneView.bottomAnchor, constant: 30),
+            transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+            transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+            
+            // Mic Button - below transcription
+            micButton.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 60),
+            micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            micButton.widthAnchor.constraint(equalToConstant: 60),
+            micButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Animated Blob Container - behind mic button
+            animatedBlobContainer.centerXAnchor.constraint(equalTo: micButton.centerXAnchor),
+            animatedBlobContainer.centerYAnchor.constraint(equalTo: micButton.centerYAnchor),
+            animatedBlobContainer.widthAnchor.constraint(equalToConstant: 120),
+            animatedBlobContainer.heightAnchor.constraint(equalToConstant: 120),
             
             // Outer Blob
             outerBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             outerBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
-            outerBlob.widthAnchor.constraint(equalToConstant: 300),
-            outerBlob.heightAnchor.constraint(equalToConstant: 300),
+            outerBlob.widthAnchor.constraint(equalToConstant: 120),
+            outerBlob.heightAnchor.constraint(equalToConstant: 120),
             
             // Middle Blob
             middleBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             middleBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
-            middleBlob.widthAnchor.constraint(equalToConstant: 220),
-            middleBlob.heightAnchor.constraint(equalToConstant: 220),
+            middleBlob.widthAnchor.constraint(equalToConstant: 90),
+            middleBlob.heightAnchor.constraint(equalToConstant: 90),
             
             // Inner Blob
             innerBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             innerBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
-            innerBlob.widthAnchor.constraint(equalToConstant: 150),
-            innerBlob.heightAnchor.constraint(equalToConstant: 150),
+            innerBlob.widthAnchor.constraint(equalToConstant: 70),
+            innerBlob.heightAnchor.constraint(equalToConstant: 70),
             
             // Center Dot
             centerDot.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             centerDot.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
-            centerDot.widthAnchor.constraint(equalToConstant: 40),
-            centerDot.heightAnchor.constraint(equalToConstant: 40),
-            
-            // Transcription Label
-            transcriptionLabel.topAnchor.constraint(equalTo: animatedBlobContainer.bottomAnchor, constant: 40),
-            transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            
-            // Mic Button
-            micButton.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 40),
-            micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            micButton.widthAnchor.constraint(equalToConstant: 60),
-            micButton.heightAnchor.constraint(equalToConstant: 60)
+            centerDot.widthAnchor.constraint(equalToConstant: 20),
+            centerDot.heightAnchor.constraint(equalToConstant: 20)
         ])
     }
     
@@ -229,18 +241,174 @@ class PetTalkingViewController: UIViewController {
         micButton.addTarget(self, action: #selector(micButtonTapped), for: .touchUpInside)
     }
     
+    // MARK: - 3D Penguin Setup
+    private func setup3DPenguin() {
+        // Create a new scene
+        let scene = SCNScene()
+        penguinSceneView.scene = scene
+        
+        // Debug: Check if file exists
+        print("🔍 Looking for penguin 2.usdz...")
+        
+        // Try different paths
+        if let modelURL = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
+            print("✅ Found penguin 2.usdz at: \(modelURL)")
+            loadPenguinModel(from: modelURL, into: scene)
+        } else if let modelURL = Bundle.main.url(forResource: "penguin", withExtension: "usdz") {
+            print("✅ Found penguin.usdz at: \(modelURL)")
+            loadPenguinModel(from: modelURL, into: scene)
+        } else if let modelURL = Bundle.main.url(forResource: "Resources/penguin 2", withExtension: "usdz") {
+            print("✅ Found penguin 2.usdz in Resources at: \(modelURL)")
+            loadPenguinModel(from: modelURL, into: scene)
+        } else {
+            print("❌ Failed to find penguin.usdz file")
+            print("📦 Bundle path: \(Bundle.main.bundlePath)")
+            
+            // List all USDZ files in bundle
+            if let resourcePath = Bundle.main.resourcePath {
+                do {
+                    let contents = try FileManager.default.contentsOfDirectory(atPath: resourcePath)
+                    let usdzFiles = contents.filter { $0.hasSuffix(".usdz") }
+                    print("📁 USDZ files found in bundle: \(usdzFiles)")
+                } catch {
+                    print("❌ Error listing bundle contents: \(error)")
+                }
+            }
+            
+            // Show a placeholder message
+            showPlaceholderPenguin(in: scene)
+        }
+    }
+    
+    private func loadPenguinModel(from url: URL, into scene: SCNScene) {
+        do {
+            let penguinScene = try SCNScene(url: url)
+            
+            // Get the penguin node from the scene
+            if let penguin = penguinScene.rootNode.childNodes.first {
+                penguinNode = penguin
+                
+                // Position the penguin at origin
+                penguin.position = SCNVector3(0, 0, 0)
+                
+                // Scale the penguin smaller to see the whole model
+                let scale: Float = 0.5
+                penguin.scale = SCNVector3(scale, scale, scale)
+                
+                // Add the penguin to the scene
+                scene.rootNode.addChildNode(penguin)
+                
+                // Setup camera - move it back further to see the whole penguin
+                let cameraNode = SCNNode()
+                cameraNode.camera = SCNCamera()
+                cameraNode.position = SCNVector3(0, 0, 10) // Moved back from 5 to 10
+                cameraNode.look(at: SCNVector3(0, 0, 0))
+                scene.rootNode.addChildNode(cameraNode)
+                
+                // Setup lighting
+                let lightNode = SCNNode()
+                lightNode.light = SCNLight()
+                lightNode.light?.type = .omni
+                lightNode.light?.intensity = 1000
+                lightNode.position = SCNVector3(0, 10, 10)
+                scene.rootNode.addChildNode(lightNode)
+                
+                let ambientLightNode = SCNNode()
+                ambientLightNode.light = SCNLight()
+                ambientLightNode.light?.type = .ambient
+                ambientLightNode.light?.color = UIColor.white.withAlphaComponent(0.8)
+                ambientLightNode.light?.intensity = 500
+                scene.rootNode.addChildNode(ambientLightNode)
+                
+                // Start idle animation
+                startPenguinIdleAnimation()
+                
+                print("✅ Penguin 3D model loaded successfully")
+                print("📏 Penguin bounding box: \(penguin.boundingBox)")
+            } else {
+                print("⚠️ Penguin scene loaded but no child nodes found")
+                showPlaceholderPenguin(in: scene)
+            }
+        } catch {
+            print("❌ Failed to load penguin model: \(error)")
+            showPlaceholderPenguin(in: scene)
+        }
+    }
+    
+    private func showPlaceholderPenguin(in scene: SCNScene) {
+        // Create a simple sphere as placeholder
+        let sphere = SCNSphere(radius: 0.5)
+        sphere.firstMaterial?.diffuse.contents = UIColor.white
+        
+        let sphereNode = SCNNode(geometry: sphere)
+        sphereNode.position = SCNVector3(0, 0, 0)
+        scene.rootNode.addChildNode(sphereNode)
+        penguinNode = sphereNode
+        
+        // Add camera
+        let cameraNode = SCNNode()
+        cameraNode.camera = SCNCamera()
+        cameraNode.position = SCNVector3(0, 0, 5)
+        scene.rootNode.addChildNode(cameraNode)
+        
+        // Add lighting
+        let lightNode = SCNNode()
+        lightNode.light = SCNLight()
+        lightNode.light?.type = .omni
+        lightNode.position = SCNVector3(0, 10, 10)
+        scene.rootNode.addChildNode(lightNode)
+        
+        startPenguinIdleAnimation()
+        
+        print("ℹ️ Showing placeholder sphere instead of penguin model")
+    }
+    
+    private func startPenguinIdleAnimation() {
+        guard let penguin = penguinNode else { return }
+        
+        // Gentle rotation animation
+        let rotateAction = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: 8.0)
+        let repeatRotation = SCNAction.repeatForever(rotateAction)
+        
+        // Gentle bobbing animation
+        let moveUp = SCNAction.moveBy(x: 0, y: 0.1, z: 0, duration: 1.5)
+        moveUp.timingMode = .easeInEaseOut
+        let moveDown = SCNAction.moveBy(x: 0, y: -0.1, z: 0, duration: 1.5)
+        moveDown.timingMode = .easeInEaseOut
+        let bobSequence = SCNAction.sequence([moveUp, moveDown])
+        let repeatBob = SCNAction.repeatForever(bobSequence)
+        
+        // Run animations
+        penguin.runAction(repeatRotation, forKey: "rotation")
+        penguin.runAction(repeatBob, forKey: "bobbing")
+    }
+    
+    private func animatePenguinForVoice(intensity: Float) {
+        guard let penguin = penguinNode else { return }
+        
+        // Scale animation based on voice intensity
+        let scale = 2.0 + (CGFloat(intensity) * 0.3)
+        let scaleAction = SCNAction.scale(to: scale, duration: 0.1)
+        penguin.runAction(scaleAction, forKey: "voiceScale")
+        
+        // Slight tilt when speaking
+        if intensity > 0.3 {
+            let tiltAngle = CGFloat(intensity) * 0.2
+            let tiltAction = SCNAction.rotateBy(x: tiltAngle, y: 0, z: 0, duration: 0.2)
+            penguin.runAction(tiltAction, forKey: "voiceTilt")
+        }
+    }
+    
     // MARK: - Blob Animation
     private func startBlobAnimation() {
         guard !isAnimating else { return }
         isAnimating = true
         
-        // Start continuous pulsing animation
-        animateBlobPulse()
-        
-        // Start morphing animation with timer
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            self?.animateBlobMorph()
-        }
+        // Hide blob initially
+        outerBlob.alpha = 0
+        middleBlob.alpha = 0
+        innerBlob.alpha = 0
+        centerDot.alpha = 0
     }
     
     private func stopBlobAnimation() {
@@ -248,7 +416,6 @@ class PetTalkingViewController: UIViewController {
         animationTimer?.invalidate()
         animationTimer = nil
         
-        // Stop all animations
         outerBlob.layer.removeAllAnimations()
         middleBlob.layer.removeAllAnimations()
         innerBlob.layer.removeAllAnimations()
@@ -256,50 +423,25 @@ class PetTalkingViewController: UIViewController {
     }
     
     private func animateBlobPulse() {
-        guard isAnimating else { return }
+        guard isRecording else { return }
         
-        // Outer blob - slow pulse
         UIView.animate(withDuration: 2.0, delay: 0, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
             self.outerBlob.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
             self.outerBlob.alpha = 0.3
         })
         
-        // Middle blob - medium pulse
         UIView.animate(withDuration: 1.5, delay: 0.2, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
             self.middleBlob.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
             self.middleBlob.alpha = 0.5
         })
         
-        // Inner blob - fast pulse
         UIView.animate(withDuration: 1.0, delay: 0.4, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
             self.innerBlob.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             self.innerBlob.alpha = 0.9
         })
         
-        // Center dot - rapid pulse
         UIView.animate(withDuration: 0.8, delay: 0.6, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
             self.centerDot.transform = CGAffineTransform(scaleX: 1.3, y: 1.3)
-        })
-    }
-    
-    private func animateBlobMorph() {
-        guard isAnimating else { return }
-        
-        // Random morphing effects
-        let randomScale = Double.random(in: 0.95...1.05)
-        let randomRotation = Double.random(in: -0.1...0.1)
-        let randomOpacity = Double.random(in: 0.7...1.0)
-        
-        // Apply subtle random transformations
-        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
-            // Slight morphing for organic feel
-            self.outerBlob.transform = self.outerBlob.transform.scaledBy(x: randomScale, y: randomScale).rotated(by: randomRotation)
-            
-            let middleScale = Double.random(in: 0.98...1.02)
-            self.middleBlob.transform = self.middleBlob.transform.scaledBy(x: middleScale, y: middleScale)
-            
-            // Subtle opacity changes
-            self.innerBlob.alpha = randomOpacity
         })
     }
     
@@ -311,16 +453,13 @@ class PetTalkingViewController: UIViewController {
                 case .authorized:
                     print("Speech recognition authorized")
                 case .denied:
-                    print("Speech recognition denied")
                     self?.transcriptionLabel.text = "Speech recognition denied"
                 case .restricted:
-                    print("Speech recognition restricted")
                     self?.transcriptionLabel.text = "Speech recognition restricted"
                 case .notDetermined:
-                    print("Speech recognition not determined")
                     self?.transcriptionLabel.text = "Speech recognition not available"
                 @unknown default:
-                    print("Speech recognition unknown status")
+                    break
                 }
             }
         }
@@ -329,11 +468,9 @@ class PetTalkingViewController: UIViewController {
     private func startRecording() {
         guard !isRecording else { return }
         
-        // Cancel previous task
         recognitionTask?.cancel()
         recognitionTask = nil
         
-        // Configure audio session
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
@@ -343,23 +480,16 @@ class PetTalkingViewController: UIViewController {
             return
         }
         
-        // Create recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else {
-            print("Unable to create recognition request")
-            return
-        }
+        guard let recognitionRequest = recognitionRequest else { return }
         
         recognitionRequest.shouldReportPartialResults = true
         
-        // Configure audio engine
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
             recognitionRequest.append(buffer)
-            
-            // Calculate audio level for blob animation
             self?.processAudioLevel(buffer: buffer)
         }
         
@@ -372,15 +502,11 @@ class PetTalkingViewController: UIViewController {
             return
         }
         
-        // Start recognition
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             DispatchQueue.main.async {
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
                     self?.transcriptionLabel.text = transcription
-                    
-                    // Animate blob based on speech
-                    self?.animateBlobForSpeech(intensity: min(transcription.count / 10, 5))
                 }
                 
                 if error != nil || result?.isFinal == true {
@@ -392,6 +518,7 @@ class PetTalkingViewController: UIViewController {
         isRecording = true
         updateMicButton()
         transcriptionLabel.text = "Listening..."
+        showBlobForRecording()
     }
     
     private func stopRecording() {
@@ -415,6 +542,8 @@ class PetTalkingViewController: UIViewController {
         if transcriptionLabel.text == "Listening..." {
             transcriptionLabel.text = "Tap to start talking..."
         }
+        
+        hideBlobAfterRecording()
     }
     
     private func processAudioLevel(buffer: AVAudioPCMBuffer) {
@@ -428,10 +557,51 @@ class PetTalkingViewController: UIViewController {
         }
         
         let averageLevel = sum / Float(frameLength)
-        let normalizedLevel = min(averageLevel * 10, 1.0) // Normalize to 0-1
+        let normalizedLevel = min(averageLevel * 10, 1.0)
         
         DispatchQueue.main.async { [weak self] in
             self?.animateBlobForAudio(level: normalizedLevel)
+        }
+    }
+    
+    private func animateBlobForAudio(level: Float) {
+        guard isRecording else { return }
+        
+        let intensity = CGFloat(level)
+        let scale = 1.0 + (intensity * 0.5)
+        
+        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut], animations: {
+            self.outerBlob.transform = CGAffineTransform(scaleX: scale * 1.1, y: scale * 1.1)
+            self.middleBlob.transform = CGAffineTransform(scaleX: scale * 1.2, y: scale * 1.2)
+            self.innerBlob.transform = CGAffineTransform(scaleX: scale * 1.3, y: scale * 1.3)
+            self.centerDot.transform = CGAffineTransform(scaleX: scale * 1.4, y: scale * 1.4)
+            
+            self.outerBlob.alpha = 0.1 + (intensity * 0.3)
+            self.middleBlob.alpha = 0.2 + (intensity * 0.4)
+            self.innerBlob.alpha = 0.8 + (intensity * 0.2)
+            self.centerDot.alpha = 1.0
+        })
+        
+        // Animate penguin based on voice
+        animatePenguinForVoice(intensity: level)
+    }
+    
+    private func showBlobForRecording() {
+        UIView.animate(withDuration: 0.3) {
+            self.outerBlob.alpha = 0.1
+            self.middleBlob.alpha = 0.2
+            self.innerBlob.alpha = 0.8
+            self.centerDot.alpha = 1.0
+        }
+        animateBlobPulse()
+    }
+    
+    private func hideBlobAfterRecording() {
+        UIView.animate(withDuration: 0.3) {
+            self.outerBlob.alpha = 0
+            self.middleBlob.alpha = 0
+            self.innerBlob.alpha = 0
+            self.centerDot.alpha = 0
         }
     }
     
@@ -442,48 +612,17 @@ class PetTalkingViewController: UIViewController {
         micButton.setImage(image, for: .normal)
         
         UIView.animate(withDuration: 0.2) {
-            self.micButton.backgroundColor = self.isRecording ? 
-                UIColor.red.withAlphaComponent(0.3) : 
+            self.micButton.backgroundColor = self.isRecording ?
+                UIColor.red.withAlphaComponent(0.3) :
                 UIColor(named: "colors/Primary/Dark")?.withAlphaComponent(0.3) ?? UIColor.blue.withAlphaComponent(0.3)
         }
     }
     
-    private func animateBlobForAudio(level: Float) {
-        guard isRecording else { return }
-        
-        let intensity = CGFloat(level)
-        let scale = 1.0 + (intensity * 0.5) // Scale based on audio level
-        
-        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut], animations: {
-            self.outerBlob.transform = CGAffineTransform(scaleX: scale * 1.1, y: scale * 1.1)
-            self.middleBlob.transform = CGAffineTransform(scaleX: scale * 1.2, y: scale * 1.2)
-            self.innerBlob.transform = CGAffineTransform(scaleX: scale * 1.3, y: scale * 1.3)
-            self.centerDot.transform = CGAffineTransform(scaleX: scale * 1.4, y: scale * 1.4)
-            
-            // Adjust opacity based on audio level
-            self.outerBlob.alpha = 0.1 + (intensity * 0.3)
-            self.middleBlob.alpha = 0.2 + (intensity * 0.4)
-            self.innerBlob.alpha = 0.8 + (intensity * 0.2)
-        })
-    }
-    
-    private func animateBlobForSpeech(intensity: Int) {
-        let scale = 1.0 + (CGFloat(intensity) * 0.1)
-        
-        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
-            self.outerBlob.transform = CGAffineTransform(scaleX: scale, y: scale)
-            self.middleBlob.transform = CGAffineTransform(scaleX: scale * 1.1, y: scale * 1.1)
-            self.innerBlob.transform = CGAffineTransform(scaleX: scale * 1.2, y: scale * 1.2)
-        })
-    }
-    
     // MARK: - Actions
     @objc private func micButtonTapped() {
-        // Add haptic feedback
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
         
-        // Animate button press
         UIView.animate(withDuration: 0.1, animations: {
             self.micButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         }) { _ in
@@ -499,21 +638,10 @@ class PetTalkingViewController: UIViewController {
         }
     }
     
-    // MARK: - Actions
     @objc private func backButtonTapped() {
-        print("🔙 Back button tapped - starting navigation") // Debug log
-        
-        // Stop recording if active
-        if isRecording {
-            print("🔙 Stopping recording before navigation")
-            stopRecording()
-        }
-        
-        // Add haptic feedback
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
         
-        // Animate button press
         UIView.animate(withDuration: 0.1, animations: {
             self.backButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
         }) { _ in
@@ -522,12 +650,9 @@ class PetTalkingViewController: UIViewController {
             }
         }
         
-        // Navigate back
         if let navController = navigationController {
-            print("🔙 Using navigation controller to pop")
             navController.popViewController(animated: true)
         } else {
-            print("🔙 No navigation controller, using dismiss")
             dismiss(animated: true)
         }
     }
