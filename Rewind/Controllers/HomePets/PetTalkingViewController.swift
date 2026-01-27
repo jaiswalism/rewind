@@ -31,9 +31,15 @@ class PetTalkingViewController: UIViewController {
         let sceneView = SCNView()
         sceneView.translatesAutoresizingMaskIntoConstraints = false
         sceneView.backgroundColor = .clear
-        sceneView.allowsCameraControl = false
+        sceneView.allowsCameraControl = true // This enables pan, zoom, and rotate
         sceneView.autoenablesDefaultLighting = true
         sceneView.antialiasingMode = .multisampling4X
+        
+        // Configure camera control settings
+        sceneView.cameraControlConfiguration.allowsTranslation = true
+        sceneView.cameraControlConfiguration.rotationSensitivity = 1.0
+        sceneView.cameraControlConfiguration.panSensitivity = 1.0
+        
         return sceneView
     }()
     
@@ -288,20 +294,20 @@ class PetTalkingViewController: UIViewController {
             if let penguin = penguinScene.rootNode.childNodes.first {
                 penguinNode = penguin
                 
-                // Position the penguin at origin
+                // Simple approach - just put penguin at origin
                 penguin.position = SCNVector3(0, 0, 0)
                 
-                // Scale the penguin smaller to see the whole model
-                let scale: Float = 0.5
+                // Make it very small first
+                let scale: Float = 0.1
                 penguin.scale = SCNVector3(scale, scale, scale)
                 
                 // Add the penguin to the scene
                 scene.rootNode.addChildNode(penguin)
                 
-                // Setup camera - move it back further to see the whole penguin
+                // Setup camera - simple position
                 let cameraNode = SCNNode()
                 cameraNode.camera = SCNCamera()
-                cameraNode.position = SCNVector3(0, 0, 10) // Moved back from 5 to 10
+                cameraNode.position = SCNVector3(0, 0, 5) // Close to see it
                 cameraNode.look(at: SCNVector3(0, 0, 0))
                 scene.rootNode.addChildNode(cameraNode)
                 
@@ -320,11 +326,14 @@ class PetTalkingViewController: UIViewController {
                 ambientLightNode.light?.intensity = 500
                 scene.rootNode.addChildNode(ambientLightNode)
                 
-                // Start idle animation
+                // Start idle animation (no rotation)
                 startPenguinIdleAnimation()
                 
-                print("✅ Penguin 3D model loaded successfully")
-                print("📏 Penguin bounding box: \(penguin.boundingBox)")
+                print("✅ Penguin loaded at origin with scale 0.1")
+                
+                // Get bounding box after positioning
+                let (min, max) = penguin.boundingBox
+                print("📏 Penguin bounding box: min=\(min), max=\(max)")
             } else {
                 print("⚠️ Penguin scene loaded but no child nodes found")
                 showPlaceholderPenguin(in: scene)
@@ -366,20 +375,15 @@ class PetTalkingViewController: UIViewController {
     private func startPenguinIdleAnimation() {
         guard let penguin = penguinNode else { return }
         
-        // Gentle rotation animation
-        let rotateAction = SCNAction.rotateBy(x: 0, y: CGFloat.pi * 2, z: 0, duration: 8.0)
-        let repeatRotation = SCNAction.repeatForever(rotateAction)
-        
-        // Gentle bobbing animation
-        let moveUp = SCNAction.moveBy(x: 0, y: 0.1, z: 0, duration: 1.5)
+        // Only gentle bobbing animation - no rotation
+        let moveUp = SCNAction.moveBy(x: 0, y: 0.05, z: 0, duration: 2.0)
         moveUp.timingMode = .easeInEaseOut
-        let moveDown = SCNAction.moveBy(x: 0, y: -0.1, z: 0, duration: 1.5)
+        let moveDown = SCNAction.moveBy(x: 0, y: -0.05, z: 0, duration: 2.0)
         moveDown.timingMode = .easeInEaseOut
         let bobSequence = SCNAction.sequence([moveUp, moveDown])
         let repeatBob = SCNAction.repeatForever(bobSequence)
         
-        // Run animations
-        penguin.runAction(repeatRotation, forKey: "rotation")
+        // Run only bobbing animation
         penguin.runAction(repeatBob, forKey: "bobbing")
     }
     
