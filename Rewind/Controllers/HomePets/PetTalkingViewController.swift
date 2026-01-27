@@ -31,9 +31,15 @@ class PetTalkingViewController: UIViewController {
         let sceneView = SCNView()
         sceneView.translatesAutoresizingMaskIntoConstraints = false
         sceneView.backgroundColor = .clear
-        sceneView.allowsCameraControl = true // Enable camera controls so you can pan/zoom
+        sceneView.allowsCameraControl = true // This enables pan, zoom, and rotate
         sceneView.autoenablesDefaultLighting = true
         sceneView.antialiasingMode = .multisampling4X
+        
+        // Configure camera control settings
+        sceneView.cameraControlConfiguration.allowsTranslation = true
+        sceneView.cameraControlConfiguration.rotationSensitivity = 1.0
+        sceneView.cameraControlConfiguration.panSensitivity = 1.0
+        
         return sceneView
     }()
     
