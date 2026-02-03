@@ -10,7 +10,6 @@ import UIKit
 class HomePetsViewController: UIViewController {
     
     // MARK: - Properties
-    private let customTabBar = CustomTabBar()
     
     // Pet UI
     private let petContainer = UIView()
@@ -23,7 +22,7 @@ class HomePetsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupCustomTabBar()
+        setupTabBar()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -85,19 +84,58 @@ class HomePetsViewController: UIViewController {
         ])
     }
 
-    private func setupCustomTabBar() {
-        customTabBar.hostViewController = self
-        customTabBar.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(customTabBar)
-        customTabBar.selectTab(at: 1) // Home (Paw) is index 1
+    
+    // MARK: - Tab Bar Setup
+    private func setupTabBar() {
+        // Create a tab bar controller and embed this view controller in it
+        let tabBarController = UITabBarController()
         
-        // Position tab bar at the very bottom of the screen
-        NSLayoutConstraint.activate([
-            customTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            customTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customTabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 10),
-            customTabBar.heightAnchor.constraint(equalToConstant: 110)
-        ])
+        // Replace with custom tab bar
+        let customTabBar = CustomTabBar()
+        tabBarController.setValue(customTabBar, forKey: "tabBar")
+        
+        // Create navigation controllers for each tab
+        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
+        journalsVC.tabBarItem = UITabBarItem(
+            title: "Journal",
+            image: UIImage(systemName: "doc.text"),
+            selectedImage: UIImage(systemName: "doc.text.fill")
+        )
+        let journalsNav = UINavigationController(rootViewController: journalsVC)
+        
+        let homePetsVC = self
+        homePetsVC.tabBarItem = UITabBarItem(
+            title: "Home",
+            image: UIImage(systemName: "pawprint"),
+            selectedImage: UIImage(systemName: "pawprint.fill")
+        )
+        let homePetsNav = UINavigationController(rootViewController: homePetsVC)
+        
+        let careCornerVC = CareCornerViewController()
+        careCornerVC.tabBarItem = UITabBarItem(
+            title: "Care",
+            image: UIImage(systemName: "brain.head.profile"),
+            selectedImage: UIImage(systemName: "brain.head.profile.fill")
+        )
+        let careCornerNav = UINavigationController(rootViewController: careCornerVC)
+        
+        let communityVC = CommunityFeedViewController(nibName: "CommunityFeedViewController", bundle: nil)
+        communityVC.tabBarItem = UITabBarItem(
+            title: "Community",
+            image: UIImage(systemName: "person.2"),
+            selectedImage: UIImage(systemName: "person.2.fill")
+        )
+        let communityNav = UINavigationController(rootViewController: communityVC)
+        
+        // Set view controllers
+        tabBarController.viewControllers = [journalsNav, homePetsNav, careCornerNav, communityNav]
+        tabBarController.selectedIndex = 1 // Select Home tab
+        
+        // Present the tab bar controller
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.rootViewController = tabBarController
+        }
     }
     
     // MARK: - API

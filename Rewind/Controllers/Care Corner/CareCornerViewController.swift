@@ -123,8 +123,6 @@ class CareCornerViewController: UIViewController {
         return imageView
     }()
     
-    private let customTabBar = CustomTabBar()
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -152,7 +150,6 @@ class CareCornerViewController: UIViewController {
         contentView.addSubview(meditationCard)
         
         setupCards()
-        setupCustomTabBar()
         setupConstraints()
     }
     
@@ -203,12 +200,6 @@ class CareCornerViewController: UIViewController {
         ])
     }
     
-    private func setupCustomTabBar() {
-        customTabBar.hostViewController = self
-        customTabBar.translatesAutoresizingMaskIntoConstraints = false
-        customTabBar.selectTab(at: 2) // Select Care Corner tab
-        view.addSubview(customTabBar)
-    }
     
     private func setupConstraints() {
         let safeArea = view.safeAreaLayoutGuide
@@ -225,7 +216,7 @@ class CareCornerViewController: UIViewController {
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: customTabBar.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             // Content View (For scrollable content)
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
@@ -268,13 +259,7 @@ class CareCornerViewController: UIViewController {
             meditationCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
             meditationCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
             meditationCard.heightAnchor.constraint(equalToConstant: 150),
-            meditationCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            
-            // Custom Tab Bar (Constraints for positioning at the bottom)
-            customTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            customTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customTabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 10),
-            customTabBar.heightAnchor.constraint(equalToConstant: 110)
+            meditationCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
         ])
     }
     

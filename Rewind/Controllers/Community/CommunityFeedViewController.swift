@@ -35,8 +35,6 @@ class CommunityFeedViewController: UIViewController {
         stackView.alignment = .fill
         return stackView
     }()
-    
-    private let customTabBar = CustomTabBar()
 
     // MARK: - UI Components (Header Content)
     private var profileBar: UIView!
@@ -58,7 +56,6 @@ class CommunityFeedViewController: UIViewController {
         fetchPosts()
         
         NotificationCenter.default.addObserver(self, selector: #selector(refreshPosts), name: NSNotification.Name("CommunityPostDeleted"), object: nil)
-        setupCustomTabBar()
         setupRefreshControl()
     }
     
@@ -149,11 +146,11 @@ class CommunityFeedViewController: UIViewController {
         }
         
         // Final Spacer
-        let customTabBarHeight: CGFloat = 110.0
+        let tabBarHeight: CGFloat = 110.0
         let bottomSafeAreaMargin: CGFloat = 20.0
         let finalSpacer = UIView()
         finalSpacer.translatesAutoresizingMaskIntoConstraints = false
-        finalSpacer.heightAnchor.constraint(equalToConstant: customTabBarHeight + bottomSafeAreaMargin).isActive = true
+        finalSpacer.heightAnchor.constraint(equalToConstant: tabBarHeight + bottomSafeAreaMargin).isActive = true
         contentStackView.addArrangedSubview(finalSpacer)
     }
 
@@ -258,15 +255,6 @@ class CommunityFeedViewController: UIViewController {
             tagsView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor, constant: -15),
         ])
         
-        // --- Custom Tab Bar Constraints ---
-        view.addSubview(customTabBar)
-        NSLayoutConstraint.activate([
-            customTabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            customTabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customTabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 10),
-            customTabBar.heightAnchor.constraint(equalToConstant: 110)
-        ])
-        
         // --- Scroll View Constraints (Full Screen) ---
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -289,12 +277,6 @@ class CommunityFeedViewController: UIViewController {
         contentStackView.isLayoutMarginsRelativeArrangement = true
     }
     
-    private func setupCustomTabBar() {
-        customTabBar.hostViewController = self
-        customTabBar.translatesAutoresizingMaskIntoConstraints = false
-        customTabBar.selectTab(at: 3) // Select Community tab (index 3)
-    }
-
 
     
     // Utility to wrap a view and apply padding
