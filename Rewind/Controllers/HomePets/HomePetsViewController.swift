@@ -95,14 +95,6 @@ class HomePetsViewController: UIViewController {
         tabBarController.setValue(customTabBar, forKey: "tabBar")
         
         // Create navigation controllers for each tab
-        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
-        journalsVC.tabBarItem = UITabBarItem(
-            title: "Journal",
-            image: UIImage(systemName: "doc.text"),
-            selectedImage: UIImage(systemName: "doc.text.fill")
-        )
-        let journalsNav = UINavigationController(rootViewController: journalsVC)
-        
         let homePetsVC = self
         homePetsVC.tabBarItem = UITabBarItem(
             title: "Home",
@@ -110,6 +102,14 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "pawprint.fill")
         )
         let homePetsNav = UINavigationController(rootViewController: homePetsVC)
+        
+        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
+        journalsVC.tabBarItem = UITabBarItem(
+            title: "Journal",
+            image: UIImage(systemName: "doc.text"),
+            selectedImage: UIImage(systemName: "doc.text.fill")
+        )
+        let journalsNav = UINavigationController(rootViewController: journalsVC)
         
         let careCornerVC = CareCornerViewController()
         careCornerVC.tabBarItem = UITabBarItem(
@@ -127,9 +127,9 @@ class HomePetsViewController: UIViewController {
         )
         let communityNav = UINavigationController(rootViewController: communityVC)
         
-        // Set view controllers
-        tabBarController.viewControllers = [journalsNav, homePetsNav, careCornerNav, communityNav]
-        tabBarController.selectedIndex = 1 // Select Home tab
+        // Set view controllers - Home is now at index 0
+        tabBarController.viewControllers = [homePetsNav, journalsNav, careCornerNav, communityNav]
+        tabBarController.selectedIndex = 0 // Select Home tab (now at index 0)
         
         // Present the tab bar controller
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
