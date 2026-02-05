@@ -108,10 +108,10 @@ class PetTalkingViewController: UIViewController {
     private var isAnimating = false
     
     // Speech Recognition Properties
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private lazy var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
-    private let audioEngine = AVAudioEngine()
+    private lazy var audioEngine = AVAudioEngine()
     private var isRecording = false
     private var audioLevelTimer: Timer?
     
@@ -124,12 +124,12 @@ class PetTalkingViewController: UIViewController {
         setupUI()
         setupActions()
         setup3DPenguin()
-        requestSpeechPermission()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         startBlobAnimation()
+        requestSpeechPermission()
     }
     
     override func viewWillDisappear(_ animated: Bool) {

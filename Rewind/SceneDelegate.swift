@@ -19,8 +19,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: windowScene)
         
 //      Change this for testing a particular screen and change the controller file
-        var testing = false
-        let testScene = OnboardingGenderViewController()
+        var testing = true
+        let testScene = HomePetsViewController()
 
         // Always show the Onboarding storyboard
         if(!testing){
