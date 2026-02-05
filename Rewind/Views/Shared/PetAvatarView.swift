@@ -92,7 +92,7 @@ class PetAvatarView: SCNView {
                 let petScene = try SCNScene(url: url)
                 
                 // Process the node
-                if let petNode = petScene.rootNode.childNodes.first {
+                if let petNode = petScene.rootNode.childNodes.first?.clone() {
                     
                     // Normalizing the pivot (Calculations are fast, can be done here)
                     let (min, max) = petNode.boundingBox
@@ -106,9 +106,7 @@ class PetAvatarView: SCNView {
                     DispatchQueue.main.async {
                         guard let scene = self.scene else { return }
                         
-                        // CRITICAL FIX: Remove from previous parent (petScene) before adding to new scene
-                        // This prevents 'child->_parent == NULL' assertion failure
-                        petNode.removeFromParentNode()
+                        // Node is cloned, so it is already detached
                         
                         self.penguinNode = petNode
                         // Set pivot

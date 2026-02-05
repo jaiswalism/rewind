@@ -42,6 +42,7 @@ class HomePetsViewController: UIViewController {
         
         // Setup Pet Container
         petContainer.translatesAutoresizingMaskIntoConstraints = false
+        petContainer.isUserInteractionEnabled = false // Allow touches to pass through to buttons
         view.addSubview(petContainer)
         
         // Pet Scene View (3D)
