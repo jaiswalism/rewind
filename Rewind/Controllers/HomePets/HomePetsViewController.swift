@@ -15,8 +15,9 @@ class HomePetsViewController: UIViewController {
     // Pet UI
     private let petContainer = UIView()
     private let petImageView = UIImageView()
-    private let penguinSceneView = SCNView()
-    private var penguinNode: SCNNode?
+    private let petView = PetAvatarView()
+    // Removed: private let penguinSceneView = SCNView()
+    // Removed: private var penguinNode: SCNNode?
     
     private let nameLabel = UILabel()
     private let levelLabel = UILabel()
@@ -44,8 +45,8 @@ class HomePetsViewController: UIViewController {
         view.addSubview(petContainer)
         
         // Pet Scene View (3D)
-        setupPenguinSceneView()
-        petContainer.addSubview(penguinSceneView)
+        petView.translatesAutoresizingMaskIntoConstraints = false
+        petContainer.addSubview(petView)
         
         // Pet Image (Fallback)
         petImageView.translatesAutoresizingMaskIntoConstraints = false
@@ -79,10 +80,10 @@ class HomePetsViewController: UIViewController {
             petContainer.heightAnchor.constraint(equalToConstant: 420), // Increased height for 3D model
             
             // 3D View Constraints
-            penguinSceneView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
-            penguinSceneView.topAnchor.constraint(equalTo: petContainer.topAnchor),
-            penguinSceneView.widthAnchor.constraint(equalToConstant: 380), // Increased width
-            penguinSceneView.heightAnchor.constraint(equalToConstant: 380), // Increased height
+            petView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
+            petView.topAnchor.constraint(equalTo: petContainer.topAnchor),
+            petView.widthAnchor.constraint(equalToConstant: 380), // Increased width
+            petView.heightAnchor.constraint(equalToConstant: 380), // Increased height
             
             // 2D Image Constraints (Fallback)
             petImageView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
@@ -90,7 +91,7 @@ class HomePetsViewController: UIViewController {
             petImageView.widthAnchor.constraint(equalToConstant: 220),
             petImageView.heightAnchor.constraint(equalToConstant: 220),
             
-            nameLabel.topAnchor.constraint(equalTo: penguinSceneView.bottomAnchor, constant: -50), // Increased negative spacing to bring text closer to penguin
+            nameLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: -50), // Increased negative spacing to bring text closer to penguin
             nameLabel.leadingAnchor.constraint(equalTo: petContainer.leadingAnchor),
             nameLabel.trailingAnchor.constraint(equalTo: petContainer.trailingAnchor),
             
@@ -100,7 +101,8 @@ class HomePetsViewController: UIViewController {
         ])
         
         // Load 3D Penguin
-        setup3DPenguin()
+        // Configure with specific size/position for Home Screen
+        petView.configure(scale: 0.13, position: SCNVector3(0, -1.8, 0))
     }
 
     
@@ -224,103 +226,5 @@ class HomePetsViewController: UIViewController {
     }
     
     // MARK: - 3D Penguin Setup
-    private func setupPenguinSceneView() {
-        penguinSceneView.translatesAutoresizingMaskIntoConstraints = false
-        penguinSceneView.backgroundColor = .clear
-        penguinSceneView.allowsCameraControl = true // Allow user to rotate/interact
-        penguinSceneView.autoenablesDefaultLighting = true
-        penguinSceneView.antialiasingMode = .multisampling4X
-        
-        let scene = SCNScene()
-        penguinSceneView.scene = scene
-    }
-
-    private func setup3DPenguin() {
-        let scene = penguinSceneView.scene ?? SCNScene()
-        penguinSceneView.scene = scene
-        
-        print("🔍 Looking for penguin 2.usdz for Home Screen...")
-        
-        // Try different paths - prioritized list
-        if let modelURL = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
-            print("✅ Found penguin 2.usdz at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else if let modelURL = Bundle.main.url(forResource: "penguin", withExtension: "usdz") {
-            print("✅ Found penguin.usdz at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else if let modelURL = Bundle.main.url(forResource: "Resources/penguin 2", withExtension: "usdz") {
-            print("✅ Found penguin 2.usdz in Resources at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else {
-            print("❌ Failed to find penguin.usdz file")
-            // Fallback to 2D image
-            penguinSceneView.isHidden = true
-            petImageView.isHidden = false
-        }
-    }
-    
-    private func loadPenguinModel(from url: URL, into scene: SCNScene) {
-        do {
-            let penguinScene = try SCNScene(url: url)
-            
-            if let penguin = penguinScene.rootNode.childNodes.first {
-                penguinNode = penguin
-                // Adjust position to be grounded
-                penguin.position = SCNVector3(0, -1.4, 0)
-                
-                // Adjust scale - bigger
-                let scale: Float = 0.13
-                penguin.scale = SCNVector3(scale, scale, scale)
-                
-                scene.rootNode.addChildNode(penguin)
-                
-                // Lighting
-                let lightNode = SCNNode()
-                lightNode.light = SCNLight()
-                lightNode.light?.type = .omni
-                lightNode.light?.intensity = 1000
-                lightNode.position = SCNVector3(0, 10, 10)
-                scene.rootNode.addChildNode(lightNode)
-                
-                let ambientLightNode = SCNNode()
-                ambientLightNode.light = SCNLight()
-                ambientLightNode.light?.type = .ambient
-                ambientLightNode.light?.color = UIColor.white.withAlphaComponent(0.8)
-                ambientLightNode.light?.intensity = 500
-                scene.rootNode.addChildNode(ambientLightNode)
-                
-                startPenguinIdleAnimation()
-                
-                penguinSceneView.isHidden = false
-                petImageView.isHidden = true
-                
-                // Debug
-                let (min, max) = penguin.boundingBox
-                print("📏 Home Penguin bounding box: min=\(min), max=\(max)")
-            } else {
-                print("⚠️ Penguin scene loaded but no child nodes found")
-                // Fallback
-                penguinSceneView.isHidden = true
-                petImageView.isHidden = false
-            }
-        } catch {
-            print("❌ Failed to load penguin model: \(error)")
-            // Fallback
-            penguinSceneView.isHidden = true
-            petImageView.isHidden = false
-        }
-    }
-    
-    private func startPenguinIdleAnimation() {
-        guard let penguin = penguinNode else { return }
-        
-        let moveUp = SCNAction.moveBy(x: 0, y: 0.05, z: 0, duration: 2.0)
-        moveUp.timingMode = .easeInEaseOut
-        let moveDown = SCNAction.moveBy(x: 0, y: -0.05, z: 0, duration: 2.0)
-        moveDown.timingMode = .easeInEaseOut
-        let bobSequence = SCNAction.sequence([moveUp, moveDown])
-        let repeatBob = SCNAction.repeatForever(bobSequence)
-        
-        penguin.runAction(repeatBob, forKey: "homeBobbing")
-    }
+    // MARK: - 3D Penguin Setup - Removed as it is now in PetAvatarView
 }
