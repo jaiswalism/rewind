@@ -13,6 +13,10 @@ class PetAvatarView: SCNView {
     // MARK: - Properties
     var penguinNode: SCNNode?
     
+    // Pending configuration to apply once model loads
+    private var pendingScale: Float?
+    private var pendingPosition: SCNVector3?
+    
     // MARK: - Init
     convenience init() {
         self.init(frame: .zero)
@@ -102,17 +106,30 @@ class PetAvatarView: SCNView {
                     DispatchQueue.main.async {
                         guard let scene = self.scene else { return }
                         
+                        // CRITICAL FIX: Remove from previous parent (petScene) before adding to new scene
+                        // This prevents 'child->_parent == NULL' assertion failure
+                        petNode.removeFromParentNode()
+                        
                         self.penguinNode = petNode
                         // Set pivot
                         petNode.pivot = SCNMatrix4MakeTranslation(center.x, min.y, center.z)
+                        
+                        // Apply pending configuration if any
+                        if let scale = self.pendingScale {
+                            petNode.scale = SCNVector3(scale, scale, scale)
+                        }
+                        if let pos = self.pendingPosition {
+                            petNode.position = pos
+                        }
                         
                         scene.rootNode.addChildNode(petNode)
                         
                         // Start animation
                         self.startIdleAnimation()
                         
-                        // Re-apply configuration if it was set pending load
-                        // (Ideally we would store pending config, but for now we rely on the caller setting it)
+                        // Clear pending to avoid re-applying unnecessarily, though harmless
+                        self.pendingScale = nil
+                        self.pendingPosition = nil
                     }
                 }
             } catch {
@@ -128,6 +145,9 @@ class PetAvatarView: SCNView {
     ///   - scale: The uniform scale factor
     ///   - position: The position vector (x, y, z)
     func configure(scale: Float, position: SCNVector3) {
+        self.pendingScale = scale
+        self.pendingPosition = position
+        
         guard let penguin = penguinNode else { return }
         penguin.scale = SCNVector3(scale, scale, scale)
         penguin.position = position

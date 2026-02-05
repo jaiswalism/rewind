@@ -214,6 +214,14 @@ class HomePetsViewController: UIViewController {
     }
     
     @IBAction func micButtonTapped(_ sender: Any) {
+        // Prevent double taps/navigation
+        if let navController = navigationController, navController.topViewController is PetTalkingViewController {
+            return
+        }
+        if presentedViewController is PetTalkingViewController {
+            return
+        }
+        
         print("Mic button tapped - navigating to PetTalkingViewController") // Debug log
         let petTalkingVC = PetTalkingViewController()
         if let navController = navigationController {
