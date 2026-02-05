@@ -19,19 +19,19 @@ extension UIView {
 class CommunityPostView: UIView {
     
     // MARK: - Properties
-    let postId: String // Added property
+    let postId: String
     let profileName: String
     let timestamp: String
     let postText: String
     let isAnonymous: Bool
     var likeCount: Int
-    var commentCount: Int // Changed to var to update locally
-    let isMine: Bool // Add isMine property
+    var commentCount: Int 
+    let isMine: Bool 
     let mediaUrls: [String]
-    let tags: [String] // Added tags property
+    let tags: [String]
     
     // Internal state for the like button
-    private var currentLikeState: Bool = false // Add currentLikeState property
+    private var currentLikeState: Bool = false 
     
     // Lazily initialized buttons connected to actions
     private lazy var likeButton: UIButton = {
@@ -619,12 +619,7 @@ class CommunityPostView: UIView {
         var buttonConfig = UIButton.Configuration.plain()
         buttonConfig.image = image
         
-        let titleText = "Share"
-        var attributes = AttributeContainer()
-        attributes.font = .systemFont(ofSize: 16, weight: .bold)
-        attributes.foregroundColor = .white
-        
-        buttonConfig.attributedTitle = AttributedString(titleText, attributes: attributes)
+        buttonConfig.attributedTitle = nil
         
         buttonConfig.imagePlacement = .leading
         buttonConfig.imagePadding = 5

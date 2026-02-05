@@ -161,6 +161,7 @@ class CreatePostViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 10
+        stack.alignment = .center // Fix: alignment .center avoids forcing children to fill height (100 vs 80)
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -312,6 +313,12 @@ class CreatePostViewController: UIViewController {
         }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Ensure nav bar is hidden to prevent double headers and layout loops with safe area
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
     private func setupUI() {
         // Gradient Background
         view.backgroundColor = UIColor(named: "colors/Primary/Dark")
@@ -330,6 +337,7 @@ class CreatePostViewController: UIViewController {
         headerView.addSubview(postButton)
         
         // Main Content
+        scrollView.contentInsetAdjustmentBehavior = .never // Prevent system safe area conflicts
         view.addSubview(scrollView)
         scrollView.addSubview(contentStack)
         
@@ -416,7 +424,7 @@ class CreatePostViewController: UIViewController {
             privacyLabel.bottomAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: -2),
             
             // Text Input Constraints
-            textContainer.heightAnchor.constraint(equalToConstant: 150), // Min height
+            textContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 150), // Changed to allow growth
             textView.topAnchor.constraint(equalTo: textContainer.topAnchor),
             textView.leadingAnchor.constraint(equalTo: textContainer.leadingAnchor),
             textView.trailingAnchor.constraint(equalTo: textContainer.trailingAnchor),

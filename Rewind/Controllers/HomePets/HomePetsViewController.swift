@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SceneKit
 
 class HomePetsViewController: UIViewController {
     
@@ -14,6 +15,10 @@ class HomePetsViewController: UIViewController {
     // Pet UI
     private let petContainer = UIView()
     private let petImageView = UIImageView()
+    private let petView = PetAvatarView()
+    // Removed: private let penguinSceneView = SCNView()
+    // Removed: private var penguinNode: SCNNode?
+    
     private let nameLabel = UILabel()
     private let levelLabel = UILabel()
     private let refreshControl = UIRefreshControl()
@@ -39,11 +44,16 @@ class HomePetsViewController: UIViewController {
         petContainer.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(petContainer)
         
-        // Pet Image
+        // Pet Scene View (3D)
+        petView.translatesAutoresizingMaskIntoConstraints = false
+        petContainer.addSubview(petView)
+        
+        // Pet Image (Fallback)
         petImageView.translatesAutoresizingMaskIntoConstraints = false
         petImageView.contentMode = .scaleAspectFit
         petImageView.image = UIImage(systemName: "hare.fill") // Fallback
         petImageView.tintColor = .white
+        petImageView.isHidden = true // Hidden by default, shown if 3D fails
         petContainer.addSubview(petImageView)
         
         // Name Label
@@ -65,23 +75,34 @@ class HomePetsViewController: UIViewController {
         // Constraints
         NSLayoutConstraint.activate([
             petContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            petContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
+            petContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor), // Centered vertically
             petContainer.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -40),
-            petContainer.heightAnchor.constraint(equalToConstant: 300),
+            petContainer.heightAnchor.constraint(equalToConstant: 420), // Increased height for 3D model
             
+            // 3D View Constraints
+            petView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
+            petView.topAnchor.constraint(equalTo: petContainer.topAnchor),
+            petView.widthAnchor.constraint(equalToConstant: 380), // Increased width
+            petView.heightAnchor.constraint(equalToConstant: 380), // Increased height
+            
+            // 2D Image Constraints (Fallback)
             petImageView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
             petImageView.topAnchor.constraint(equalTo: petContainer.topAnchor),
-            petImageView.widthAnchor.constraint(equalToConstant: 180),
-            petImageView.heightAnchor.constraint(equalToConstant: 180),
+            petImageView.widthAnchor.constraint(equalToConstant: 220),
+            petImageView.heightAnchor.constraint(equalToConstant: 220),
             
-            nameLabel.topAnchor.constraint(equalTo: petImageView.bottomAnchor, constant: 20),
+            nameLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: -50), // Increased negative spacing to bring text closer to penguin
             nameLabel.leadingAnchor.constraint(equalTo: petContainer.leadingAnchor),
             nameLabel.trailingAnchor.constraint(equalTo: petContainer.trailingAnchor),
             
-            levelLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 8),
+            levelLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4), // Reduced spacing
             levelLabel.leadingAnchor.constraint(equalTo: petContainer.leadingAnchor),
             levelLabel.trailingAnchor.constraint(equalTo: petContainer.trailingAnchor)
         ])
+        
+        // Load 3D Penguin
+        // Configure with specific size/position for Home Screen
+        petView.configure(scale: 0.13, position: SCNVector3(0, -1.8, 0))
     }
 
     
@@ -95,14 +116,6 @@ class HomePetsViewController: UIViewController {
         tabBarController.setValue(customTabBar, forKey: "tabBar")
         
         // Create navigation controllers for each tab
-        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
-        journalsVC.tabBarItem = UITabBarItem(
-            title: "Journal",
-            image: UIImage(systemName: "doc.text"),
-            selectedImage: UIImage(systemName: "doc.text.fill")
-        )
-        let journalsNav = UINavigationController(rootViewController: journalsVC)
-        
         let homePetsVC = self
         homePetsVC.tabBarItem = UITabBarItem(
             title: "Home",
@@ -110,6 +123,14 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "pawprint.fill")
         )
         let homePetsNav = UINavigationController(rootViewController: homePetsVC)
+        
+        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
+        journalsVC.tabBarItem = UITabBarItem(
+            title: "Journal",
+            image: UIImage(systemName: "doc.text"),
+            selectedImage: UIImage(systemName: "doc.text.fill")
+        )
+        let journalsNav = UINavigationController(rootViewController: journalsVC)
         
         let careCornerVC = CareCornerViewController()
         careCornerVC.tabBarItem = UITabBarItem(
@@ -127,9 +148,9 @@ class HomePetsViewController: UIViewController {
         )
         let communityNav = UINavigationController(rootViewController: communityVC)
         
-        // Set view controllers
-        tabBarController.viewControllers = [journalsNav, homePetsNav, careCornerNav, communityNav]
-        tabBarController.selectedIndex = 1 // Select Home tab
+        // Set view controllers - Home is now at index 0
+        tabBarController.viewControllers = [homePetsNav, journalsNav, careCornerNav, communityNav]
+        tabBarController.selectedIndex = 0 // Select Home tab (now at index 0)
         
         // Present the tab bar controller
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -193,6 +214,14 @@ class HomePetsViewController: UIViewController {
     }
     
     @IBAction func micButtonTapped(_ sender: Any) {
+        // Prevent double taps/navigation
+        if let navController = navigationController, navController.topViewController is PetTalkingViewController {
+            return
+        }
+        if presentedViewController is PetTalkingViewController {
+            return
+        }
+        
         print("Mic button tapped - navigating to PetTalkingViewController") // Debug log
         let petTalkingVC = PetTalkingViewController()
         if let navController = navigationController {
@@ -203,4 +232,7 @@ class HomePetsViewController: UIViewController {
             present(navController, animated: true)
         }
     }
+    
+    // MARK: - 3D Penguin Setup
+    // MARK: - 3D Penguin Setup - Removed as it is now in PetAvatarView
 }

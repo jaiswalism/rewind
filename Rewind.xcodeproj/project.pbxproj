@@ -21,6 +21,7 @@
 		521F7CAA2ED7B121000BB2DA /* CommunityPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CA92ED7B121000BB2DA /* CommunityPostView.swift */; };
 		521F7CBE2ED7CA89000BB2DA /* CommentSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CBD2ED7CA89000BB2DA /* CommentSheetViewController.swift */; };
 		521F7CC02ED7CE66000BB2DA /* CommentTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521F7CBF2ED7CE66000BB2DA /* CommentTableViewCell.swift */; };
+		5222F0012F350132002E8A39 /* PetAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5222F0002F350132002E8A39 /* PetAvatarView.swift */; };
 		523BF2492EBE6385003F7696 /* OnboardingHealthGoalViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */; };
 		523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */; };
 		523BF24D2EBE639E003F7696 /* OnboardingGenderViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 523BF24C2EBE639E003F7696 /* OnboardingGenderViewController.xib */; };
@@ -149,6 +150,7 @@
 		521F7CA92ED7B121000BB2DA /* CommunityPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityPostView.swift; sourceTree = "<group>"; };
 		521F7CBD2ED7CA89000BB2DA /* CommentSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentSheetViewController.swift; sourceTree = "<group>"; };
 		521F7CBF2ED7CE66000BB2DA /* CommentTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentTableViewCell.swift; sourceTree = "<group>"; };
+		5222F0002F350132002E8A39 /* PetAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PetAvatarView.swift; sourceTree = "<group>"; };
 		523BF2472EBE6385003F7696 /* OnboardingHealthGoalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthGoalViewController.swift; sourceTree = "<group>"; };
 		523BF2482EBE6385003F7696 /* OnboardingHealthGoalViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnboardingHealthGoalViewController.xib; sourceTree = "<group>"; };
 		523BF24B2EBE639E003F7696 /* OnboardingGenderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGenderViewController.swift; sourceTree = "<group>"; };
@@ -476,6 +478,7 @@
 		523E8D692EBD147F00DB875D /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				5222F0002F350132002E8A39 /* PetAvatarView.swift */,
 				B2C2E9172ED6BFF9009AC9C3 /* CustomTabBar.swift */,
 				B2C2E9182ED6BFF9009AC9C3 /* PrimaryButton.swift */,
 				B2C2E9192ED6BFF9009AC9C3 /* SocialLoginButton.swift */,
@@ -819,6 +822,7 @@
 				523BF2702EBE6B36003F7696 /* CreatePostViewController.swift in Sources */,
 				B20E99292EFE409A00F3625B /* PetTalkingViewController.swift in Sources */,
 				52D61AC32F16EA1100098095 /* PetModels.swift in Sources */,
+				5222F0012F350132002E8A39 /* PetAvatarView.swift in Sources */,
 				52D61AC12F16EA0C00098095 /* NotificationModels.swift in Sources */,
 				523BF24A2EBE6385003F7696 /* OnboardingHealthGoalViewController.swift in Sources */,
 				521F7C732ED67993000BB2DA /* JournalTimelineCell.swift in Sources */,

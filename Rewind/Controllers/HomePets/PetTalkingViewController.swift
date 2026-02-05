@@ -12,6 +12,20 @@ import SceneKit
 
 class PetTalkingViewController: UIViewController {
     
+    // MARK: - Init
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        hidesBottomBarWhenPushed = true
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        hidesBottomBarWhenPushed = true
+    }
+    
+    // MARK: - Constants
+    private let petBaseScale: Float = 0.13
+    
     // MARK: - UI Components
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
@@ -27,21 +41,8 @@ class PetTalkingViewController: UIViewController {
         return button
     }()
     
-    private let penguinSceneView: SCNView = {
-        let sceneView = SCNView()
-        sceneView.translatesAutoresizingMaskIntoConstraints = false
-        sceneView.backgroundColor = .clear
-        sceneView.allowsCameraControl = true // This enables pan, zoom, and rotate
-        sceneView.autoenablesDefaultLighting = true
-        sceneView.antialiasingMode = .multisampling4X
-        
-        // Configure camera control settings
-        sceneView.cameraControlConfiguration.allowsTranslation = true
-        sceneView.cameraControlConfiguration.rotationSensitivity = 1.0
-        sceneView.cameraControlConfiguration.panSensitivity = 1.0
-        
-        return sceneView
-    }()
+    private let petView = PetAvatarView()
+    // Removed: private let penguinSceneView: SCNView
     
     private let animatedBlobContainer: UIView = {
         let view = UIView()
@@ -115,7 +116,6 @@ class PetTalkingViewController: UIViewController {
     private var audioLevelTimer: Timer?
     
     // 3D Model Properties
-    private var penguinNode: SCNNode?
     private var idleAnimation: SCNAction?
     
     // MARK: - Lifecycle
@@ -169,7 +169,8 @@ class PetTalkingViewController: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: false)
         
         // Add views in correct order
-        view.addSubview(penguinSceneView)
+        petView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(petView)
         view.addSubview(transcriptionLabel)
         view.addSubview(animatedBlobContainer)
         view.addSubview(micButton)
@@ -180,6 +181,10 @@ class PetTalkingViewController: UIViewController {
         animatedBlobContainer.addSubview(middleBlob)
         animatedBlobContainer.addSubview(innerBlob)
         animatedBlobContainer.addSubview(centerDot)
+        
+        // Ensure buttons are on top
+        view.bringSubviewToFront(micButton)
+        view.bringSubviewToFront(backButton)
         
         setupConstraints()
     }
@@ -193,14 +198,14 @@ class PetTalkingViewController: UIViewController {
             backButton.heightAnchor.constraint(equalToConstant: 50),
             
             // Penguin 3D Scene View - larger to show full model
-            penguinSceneView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            penguinSceneView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
-            penguinSceneView.widthAnchor.constraint(equalToConstant: 350),
-            penguinSceneView.heightAnchor.constraint(equalToConstant: 350),
+            petView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            petView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
+            petView.widthAnchor.constraint(equalToConstant: 350),
+            petView.heightAnchor.constraint(equalToConstant: 350),
             
             // Transcription Label - centered
             transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            transcriptionLabel.topAnchor.constraint(equalTo: penguinSceneView.bottomAnchor, constant: 30),
+            transcriptionLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: 30),
             transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             
@@ -248,150 +253,29 @@ class PetTalkingViewController: UIViewController {
     }
     
     // MARK: - 3D Penguin Setup
+    // MARK: - 3D Penguin Setup
     private func setup3DPenguin() {
-        // Create a new scene
-        let scene = SCNScene()
-        penguinSceneView.scene = scene
+        // Re-enable default interaction to match Home screen
+        petView.enableCameraControl(true)
         
-        // Debug: Check if file exists
-        print("🔍 Looking for penguin 2.usdz...")
+        // Use default camera (remove explicit setupCamera call)
         
-        // Try different paths
-        if let modelURL = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
-            print("✅ Found penguin 2.usdz at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else if let modelURL = Bundle.main.url(forResource: "penguin", withExtension: "usdz") {
-            print("✅ Found penguin.usdz at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else if let modelURL = Bundle.main.url(forResource: "Resources/penguin 2", withExtension: "usdz") {
-            print("✅ Found penguin 2.usdz in Resources at: \(modelURL)")
-            loadPenguinModel(from: modelURL, into: scene)
-        } else {
-            print("❌ Failed to find penguin.usdz file")
-            print("📦 Bundle path: \(Bundle.main.bundlePath)")
-            
-            // List all USDZ files in bundle
-            if let resourcePath = Bundle.main.resourcePath {
-                do {
-                    let contents = try FileManager.default.contentsOfDirectory(atPath: resourcePath)
-                    let usdzFiles = contents.filter { $0.hasSuffix(".usdz") }
-                    print("📁 USDZ files found in bundle: \(usdzFiles)")
-                } catch {
-                    print("❌ Error listing bundle contents: \(error)")
-                }
-            }
-            
-            // Show a placeholder message
-            showPlaceholderPenguin(in: scene)
-        }
+        // Configure pet view
+        // Position at -1.8 y (matching Home screen)
+        // x: 0 to strict center (constraints ensure view is centered)
+        petView.configure(scale: petBaseScale, position: SCNVector3(0, -1.8, 0))
     }
     
-    private func loadPenguinModel(from url: URL, into scene: SCNScene) {
-        do {
-            let penguinScene = try SCNScene(url: url)
-            
-            // Get the penguin node from the scene
-            if let penguin = penguinScene.rootNode.childNodes.first {
-                penguinNode = penguin
-                
-                // Simple approach - just put penguin at origin
-                penguin.position = SCNVector3(0, 0, 0)
-                
-                // Make it very small first
-                let scale: Float = 0.1
-                penguin.scale = SCNVector3(scale, scale, scale)
-                
-                // Add the penguin to the scene
-                scene.rootNode.addChildNode(penguin)
-                
-                // Setup camera - simple position
-                let cameraNode = SCNNode()
-                cameraNode.camera = SCNCamera()
-                cameraNode.position = SCNVector3(0, 0, 5) // Close to see it
-                cameraNode.look(at: SCNVector3(0, 0, 0))
-                scene.rootNode.addChildNode(cameraNode)
-                
-                // Setup lighting
-                let lightNode = SCNNode()
-                lightNode.light = SCNLight()
-                lightNode.light?.type = .omni
-                lightNode.light?.intensity = 1000
-                lightNode.position = SCNVector3(0, 10, 10)
-                scene.rootNode.addChildNode(lightNode)
-                
-                let ambientLightNode = SCNNode()
-                ambientLightNode.light = SCNLight()
-                ambientLightNode.light?.type = .ambient
-                ambientLightNode.light?.color = UIColor.white.withAlphaComponent(0.8)
-                ambientLightNode.light?.intensity = 500
-                scene.rootNode.addChildNode(ambientLightNode)
-                
-                // Start idle animation (no rotation)
-                startPenguinIdleAnimation()
-                
-                print("✅ Penguin loaded at origin with scale 0.1")
-                
-                // Get bounding box after positioning
-                let (min, max) = penguin.boundingBox
-                print("📏 Penguin bounding box: min=\(min), max=\(max)")
-            } else {
-                print("⚠️ Penguin scene loaded but no child nodes found")
-                showPlaceholderPenguin(in: scene)
-            }
-        } catch {
-            print("❌ Failed to load penguin model: \(error)")
-            showPlaceholderPenguin(in: scene)
-        }
-    }
-    
-    private func showPlaceholderPenguin(in scene: SCNScene) {
-        // Create a simple sphere as placeholder
-        let sphere = SCNSphere(radius: 0.5)
-        sphere.firstMaterial?.diffuse.contents = UIColor.white
-        
-        let sphereNode = SCNNode(geometry: sphere)
-        sphereNode.position = SCNVector3(0, 0, 0)
-        scene.rootNode.addChildNode(sphereNode)
-        penguinNode = sphereNode
-        
-        // Add camera
-        let cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
-        cameraNode.position = SCNVector3(0, 0, 5)
-        scene.rootNode.addChildNode(cameraNode)
-        
-        // Add lighting
-        let lightNode = SCNNode()
-        lightNode.light = SCNLight()
-        lightNode.light?.type = .omni
-        lightNode.position = SCNVector3(0, 10, 10)
-        scene.rootNode.addChildNode(lightNode)
-        
-        startPenguinIdleAnimation()
-        
-        print("ℹ️ Showing placeholder sphere instead of penguin model")
-    }
-    
-    private func startPenguinIdleAnimation() {
-        guard let penguin = penguinNode else { return }
-        
-        // Only gentle bobbing animation - no rotation
-        let moveUp = SCNAction.moveBy(x: 0, y: 0.05, z: 0, duration: 2.0)
-        moveUp.timingMode = .easeInEaseOut
-        let moveDown = SCNAction.moveBy(x: 0, y: -0.05, z: 0, duration: 2.0)
-        moveDown.timingMode = .easeInEaseOut
-        let bobSequence = SCNAction.sequence([moveUp, moveDown])
-        let repeatBob = SCNAction.repeatForever(bobSequence)
-        
-        // Run only bobbing animation
-        penguin.runAction(repeatBob, forKey: "bobbing")
-    }
+    // Removed loadPenguinModel, showPlaceholderPenguin, startPenguinIdleAnimation 
+    // as they are handled by PetAvatarView
     
     private func animatePenguinForVoice(intensity: Float) {
-        guard let penguin = penguinNode else { return }
+        guard let penguin = petView.penguinNode else { return }
+        
         
         // Scale animation based on voice intensity
-        let scale = 2.0 + (CGFloat(intensity) * 0.3)
+        // Pulse around the base scale
+        let scale = CGFloat(petBaseScale) * (1.0 + (CGFloat(intensity) * 0.3))
         let scaleAction = SCNAction.scale(to: scale, duration: 0.1)
         penguin.runAction(scaleAction, forKey: "voiceScale")
         
