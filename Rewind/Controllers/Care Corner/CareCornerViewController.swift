@@ -276,16 +276,19 @@ class CareCornerViewController: UIViewController {
     // MARK: - Navigation Actions
     @objc private func tellCommunityTapped() {
         let createPostVC = CreatePostViewController()
+        createPostVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(createPostVC, animated: true)
     }
     
     @objc private func breathingTapped() {
         let breathingVC = BreathingExerciseViewController()
+        breathingVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(breathingVC, animated: true)
     }
     
     @objc private func meditationTapped() {
         let meditationVC = MeditationViewController()
+        meditationVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(meditationVC, animated: true)
     }
 }

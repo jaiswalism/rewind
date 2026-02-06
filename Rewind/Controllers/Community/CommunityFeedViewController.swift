@@ -449,6 +449,7 @@ class CommunityFeedViewController: UIViewController {
     // MARK: - Actions
     @objc private func plusButtonTapped() {
         let createPostVC = CreatePostViewController()
+        createPostVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(createPostVC, animated: true)
     }
 }

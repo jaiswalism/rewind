@@ -19,11 +19,13 @@ class JournalsHomeViewController: UIViewController {
     
     @IBAction func addJournal(_ sender: Any) {
         let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
+        vc.hidesBottomBarWhenPushed = true
         self.navigationController?.pushViewController(vc, animated: true)
     }
     
     @IBAction func viewJournals(_ sender: Any) {
         let vc = MyJournalsListViewController(nibName: "MyJournalsListViewController", bundle: nil)
+        vc.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(vc, animated: true)
     }
 }

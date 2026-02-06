@@ -124,6 +124,7 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "pawprint.fill")
         )
         let homePetsNav = UINavigationController(rootViewController: homePetsVC)
+        homePetsNav.delegate = self // Set delegate to handle tab bar hiding
         
         let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
         journalsVC.tabBarItem = UITabBarItem(
@@ -132,6 +133,7 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "doc.text.fill")
         )
         let journalsNav = UINavigationController(rootViewController: journalsVC)
+        journalsNav.delegate = self
         
         let careCornerVC = CareCornerViewController()
         careCornerVC.tabBarItem = UITabBarItem(
@@ -140,6 +142,7 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "brain.head.profile.fill")
         )
         let careCornerNav = UINavigationController(rootViewController: careCornerVC)
+        careCornerNav.delegate = self
         
         let communityVC = CommunityFeedViewController(nibName: "CommunityFeedViewController", bundle: nil)
         communityVC.tabBarItem = UITabBarItem(
@@ -148,6 +151,7 @@ class HomePetsViewController: UIViewController {
             selectedImage: UIImage(systemName: "person.2.fill")
         )
         let communityNav = UINavigationController(rootViewController: communityVC)
+        communityNav.delegate = self
         
         // Set view controllers - Home is now at index 0
         tabBarController.viewControllers = [homePetsNav, journalsNav, careCornerNav, communityNav]
@@ -194,6 +198,7 @@ class HomePetsViewController: UIViewController {
     @IBAction func buttontaped(_ sender: Any) {
         // Present NotificationsViewController instead of Settings
         let notificationsVC = NotificationsViewController()
+        notificationsVC.hidesBottomBarWhenPushed = true
         if let navController = navigationController {
             navController.pushViewController(notificationsVC, animated: true)
         } else {
@@ -205,6 +210,7 @@ class HomePetsViewController: UIViewController {
     
     @IBAction func settingsProfile(_ sender: Any) {
         let settingsVC = SettingsViewController()
+        settingsVC.hidesBottomBarWhenPushed = true
         if let navController = navigationController {
             navController.pushViewController(settingsVC, animated: true)
         } else {
@@ -225,6 +231,7 @@ class HomePetsViewController: UIViewController {
         
         print("Mic button tapped - navigating to PetTalkingViewController") // Debug log
         let petTalkingVC = PetTalkingViewController()
+        petTalkingVC.hidesBottomBarWhenPushed = true
         if let navController = navigationController {
             navController.pushViewController(petTalkingVC, animated: true)
         } else {
@@ -236,4 +243,14 @@ class HomePetsViewController: UIViewController {
     
     // MARK: - 3D Penguin Setup
     // MARK: - 3D Penguin Setup - Removed as it is now in PetAvatarView
+}
+
+
+// MARK: - UINavigationControllerDelegate
+extension HomePetsViewController: UINavigationControllerDelegate {
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        // Hide tab bar when pushing to a new screen (not a root view controller)
+        let isRootViewController = navigationController.viewControllers.first == viewController
+        viewController.hidesBottomBarWhenPushed = !isRootViewController
+    }
 }
