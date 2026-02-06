@@ -45,7 +45,7 @@ class AuthService {
     func logout(completion: @escaping (Result<Void, Error>) -> Void) {
         APIService.shared.makeRequest(endpoint: "/auth/logout", method: "POST") { (result: Result<APIResponse<String>, Error>) in
             APIService.shared.authToken = nil
-            // Clear other user data if needed
+
             switch result {
             case .success:
                 completion(.success(()))
@@ -54,10 +54,8 @@ class AuthService {
             }
         }
     }
-    
-    // MARK: - Helper Methods
+
     private func handleAuthSuccess(_ data: AuthResponseData) {
         APIService.shared.authToken = data.tokens.accessToken
-        // You might also want to save the refresh token and user info
     }
 }

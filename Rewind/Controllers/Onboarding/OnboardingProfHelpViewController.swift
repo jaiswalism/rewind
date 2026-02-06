@@ -31,7 +31,6 @@ class OnboardingProfHelpViewController: UIViewController {
     private func submitOnboarding(seekingHelp: Bool) {
         OnboardingDataManager.shared.seekingProfessionalHelp = seekingHelp
         
-        // Show loading if possible
         
         OnboardingDataManager.shared.submit { [weak self] result in
             DispatchQueue.main.async {

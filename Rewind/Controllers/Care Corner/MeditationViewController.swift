@@ -75,7 +75,8 @@ class MeditationViewController: UIViewController {
         button.layer.cornerRadius = 20
         button.contentHorizontalAlignment = .center
         
-        // Add speaker icon
+        // add a speaker icon
+
         let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         let speakerImage = UIImage(systemName: "speaker.wave.2.fill", withConfiguration: config)
         button.setImage(speakerImage, for: .normal)
@@ -279,7 +280,7 @@ class MeditationViewController: UIViewController {
     }
     
     @objc private func minutesTapped() {
-        // Cycle through common meditation values: 5, 10, 15, 20, 25, 30
+        // Cycle through common meditation values
         let commonValues = [5, 10, 15, 20, 25, 30]
         if let currentIndex = commonValues.firstIndex(of: selectedMinutes) {
             selectedMinutes = commonValues[(currentIndex + 1) % commonValues.count]
@@ -290,7 +291,8 @@ class MeditationViewController: UIViewController {
     }
     
     @objc private func secondsTapped() {
-        // Cycle through: 0, 15, 30, 45
+        // cycle through seconds
+
         selectedSeconds = (selectedSeconds + 15) % 60
         updateSecondsLabel()
     }

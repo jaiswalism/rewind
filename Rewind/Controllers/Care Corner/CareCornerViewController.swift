@@ -23,7 +23,7 @@ class CareCornerViewController: UIViewController {
         return view
     }()
     
-    // NEW: Top Background Illustration (The curve section)
+    // MARK: Top Background Circle
     private let topIllustration: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -70,7 +70,6 @@ class CareCornerViewController: UIViewController {
         button.setTitle("Tell Community", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         button.setTitleColor(.white, for: .normal)
-        // Use a color from the palette, matching the screenshot's button style
         button.backgroundColor = UIColor(named: "colors/Primary/Darker")?.withAlphaComponent(0.6) ?? UIColor.white.withAlphaComponent(0.25)
         button.layer.cornerRadius = 25
         return button
@@ -81,13 +80,11 @@ class CareCornerViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Here's Some light activities"
         label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        // Set color to a contrasting shade from the palette
         label.textColor = UIColor(named: "colors/Primary/Dark") ?? UIColor(red: 0.45, green: 0.45, blue: 0.65, alpha: 1.0)
         label.textAlignment = .center
         return label
     }()
     
-    // Activity Cards (background color set to a suitable shade)
     private let breathingCard: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -106,7 +103,7 @@ class CareCornerViewController: UIViewController {
         return view
     }()
 
-    // NEW: Card Illustrations
+    // MARK: Card Illustrations
     private let breathingIllustration: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -132,15 +129,18 @@ class CareCornerViewController: UIViewController {
     
     // MARK: - Setup
     private func setupUI() {
-        // SET NEW MAIN BACKGROUND COLOR
+        // setting the main background color
+
         view.backgroundColor = UIColor(named: "colors/Primary/Light :active") ?? .systemBlue
         
-        // Add Illustration before the Scroll View
+        // putting the illustration first
+
         view.addSubview(topIllustration)
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        // Add elements to the content view (some appear over the top illustration)
+        // layering content on top
+
         contentView.addSubview(titleLabel)
         contentView.addSubview(challengeHeaderLabel)
         contentView.addSubview(challengeTextLabel)
@@ -154,7 +154,8 @@ class CareCornerViewController: UIViewController {
     }
     
     private func setupCards() {
-        // 1. Add illustration backgrounds to the cards
+        // 1. putting illustrations on the cards
+
         breathingCard.addSubview(breathingIllustration)
         meditationCard.addSubview(meditationIllustration)
 
@@ -171,7 +172,8 @@ class CareCornerViewController: UIViewController {
             meditationIllustration.bottomAnchor.constraint(equalTo: meditationCard.bottomAnchor),
         ])
         
-        // 2. Add text labels on top of the illustrations
+        // 2. putting text on top
+
         
         // Breathing Card Label
         let breathingLabel = UILabel()
@@ -205,11 +207,13 @@ class CareCornerViewController: UIViewController {
         let safeArea = view.safeAreaLayoutGuide
         
         NSLayoutConstraint.activate([
-            // NEW: Top Illustration (Pinned to top and width, covers the curve section)
+            // NEW: pinning the top illustration
+
             topIllustration.topAnchor.constraint(equalTo: view.topAnchor),
             topIllustration.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             topIllustration.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            // Fixed height derived from visual inspection of where the curve ends (~380px)
+            // fixed height for the curve
+
             topIllustration.heightAnchor.constraint(equalToConstant: 380),
 
             // Scroll View
@@ -218,7 +222,8 @@ class CareCornerViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
-            // Content View (For scrollable content)
+            // content view defines the scrollable area
+
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
@@ -273,7 +278,8 @@ class CareCornerViewController: UIViewController {
         meditationCard.addGestureRecognizer(meditationTap)
     }
     
-    // MARK: - Navigation Actions
+    // navigation
+
     @objc private func tellCommunityTapped() {
         let createPostVC = CreatePostViewController()
         navigationController?.pushViewController(createPostVC, animated: true)

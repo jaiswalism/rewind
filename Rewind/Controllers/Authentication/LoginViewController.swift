@@ -24,8 +24,7 @@ class LoginViewController: UIViewController {
         
         for field in fields {
             guard let textField = field else { continue }
-            
-            // White border
+        
             textField.layer.borderColor = UIColor.white.cgColor
             textField.layer.borderWidth = 1.5
             
@@ -44,7 +43,7 @@ class LoginViewController: UIViewController {
             // Text color
             textField.textColor = .white
             
-            // Left padding (so text doesn’t touch border)
+            // Left padding
             let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: textField.frame.height))
             textField.leftView = paddingView
             textField.leftViewMode = .always
@@ -52,7 +51,8 @@ class LoginViewController: UIViewController {
     }
     
     private func setupPasswordVisibilityToggle() {
-        // Create the eye button
+        // setting up the eye button
+
         let eyeButton = UIButton(type: .custom)
         let eyeImage = UIImage(systemName: "eye.fill")
         eyeButton.setImage(eyeImage, for: .normal)
@@ -64,7 +64,6 @@ class LoginViewController: UIViewController {
         eyeButton.frame = CGRect(x: 8, y: 0, width: 24, height: 24) // adds 8pt left padding
         container.addSubview(eyeButton)
         
-        // Assign as right view
         passwordTextField.rightView = container
         passwordTextField.rightViewMode = .always
         passwordTextField.isSecureTextEntry = true
@@ -81,18 +80,19 @@ class LoginViewController: UIViewController {
     }
     
     @IBAction func signUpButton(_ sender: Any) {
-        // Initialize the SignupViewController from its XIB file
+        // let's go sign up
+
         let signupVC = SignupViewController(nibName: "SignupViewController", bundle: nil)
         
-        // Present it full screen
+        // full screen for better focus
+
         signupVC.modalPresentationStyle = .fullScreen
         self.present(signupVC, animated: true, completion: nil)
     }
     @IBAction func forgetPasswordButton(_ sender: Any) {
-        // Safely initialize ForgetPasswordViewController from its XIB
+        // forgot password
         let forgetVC = ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil)
         
-        // Present it full screen
         forgetVC.modalPresentationStyle = UIModalPresentationStyle.fullScreen
         self.present(forgetVC, animated: true, completion: nil)
     }
@@ -111,7 +111,7 @@ class LoginViewController: UIViewController {
                 switch result {
                 case .success(let user):
                     print("Logged in as: \(user.name)")
-                    // Navigate to OnboardingHealthGoalViewController (XIB)
+
                     let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
                     goalVC.modalPresentationStyle = .fullScreen
                     self?.present(goalVC, animated: true, completion: nil)

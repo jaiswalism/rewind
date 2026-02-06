@@ -23,8 +23,8 @@ struct RecordMeditationRequest: Codable {
     let soundName: String
 }
 
-struct ActivityResponse: Codable { // Basic response with Paws earned
+struct ActivityResponse: Codable { // what we get back after an activity
+
     let id: String
     let pawsEarned: Int
-    // other fields omitted for brevity if not used immediately
 }

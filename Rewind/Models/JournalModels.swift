@@ -31,11 +31,7 @@ struct CreateJournalRequest: Codable {
     let content: String
     let entryType: String
     let moodTags: [String]?
-    // Note: mediaUrls and voiceRecordingUrl are typically handled via upload return values or separate upload endpoints, 
-    // but the API contract for CREATE takes them if they are already uploaded, or we might need to handle them differently.
-    // The contract says:
-    // voiceRecordingUrl: string (uri)
-    // mediaUrls: [string] (uri)
+
     let voiceRecordingUrl: String?
     let mediaUrls: [String]?
     let transcriptionText: String?
@@ -57,4 +53,8 @@ struct Pagination: Codable {
     let perPage: Int
     let total: Int
     let totalPages: Int
+}
+
+struct UploadMediaResponse: Codable {
+    let mediaUrl: String
 }

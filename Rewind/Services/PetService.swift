@@ -4,6 +4,7 @@ class HomePetService {
     static let shared = HomePetService()
     private init() {}
     
+    // fetching your pet's details
     func getPet(completion: @escaping (Result<Pet, Error>) -> Void) {
         APIService.shared.makeRequest(endpoint: "/homepets/user-pet", method: "GET") { (result: Result<APIResponse<Pet>, Error>) in
             switch result {

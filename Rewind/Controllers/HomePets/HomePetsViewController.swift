@@ -16,18 +16,22 @@ class HomePetsViewController: UIViewController {
     private let petContainer = UIView()
     private let petImageView = UIImageView()
     private let petView = PetAvatarView()
-    // Removed: private let penguinSceneView = SCNView()
-    // Removed: private var penguinNode: SCNNode?
     
     private let nameLabel = UILabel()
     private let levelLabel = UILabel()
     private let refreshControl = UIRefreshControl()
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupTabBar()
+        
+        // Ensure buttons stay on top of the 3D view
+        view.subviews.forEach { subview in
+            if subview is UIButton {
+                view.bringSubviewToFront(subview)
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -42,7 +46,7 @@ class HomePetsViewController: UIViewController {
         
         // Setup Pet Container
         petContainer.translatesAutoresizingMaskIntoConstraints = false
-        petContainer.isUserInteractionEnabled = false // Allow touches to pass through to buttons
+        petContainer.isUserInteractionEnabled = true
         view.addSubview(petContainer)
         
         // Pet Scene View (3D)
@@ -52,9 +56,9 @@ class HomePetsViewController: UIViewController {
         // Pet Image (Fallback)
         petImageView.translatesAutoresizingMaskIntoConstraints = false
         petImageView.contentMode = .scaleAspectFit
-        petImageView.image = UIImage(systemName: "hare.fill") // Fallback
+        petImageView.image = UIImage(systemName: "hare.fill") 
         petImageView.tintColor = .white
-        petImageView.isHidden = true // Hidden by default, shown if 3D fails
+        petImageView.isHidden = true
         petContainer.addSubview(petImageView)
         
         // Name Label
@@ -76,17 +80,17 @@ class HomePetsViewController: UIViewController {
         // Constraints
         NSLayoutConstraint.activate([
             petContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            petContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor), // Centered vertically
+            petContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor), 
             petContainer.widthAnchor.constraint(equalTo: view.widthAnchor, constant: -40),
-            petContainer.heightAnchor.constraint(equalToConstant: 420), // Increased height for 3D model
+            petContainer.heightAnchor.constraint(equalToConstant: 420),
             
             // 3D View Constraints
             petView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
             petView.topAnchor.constraint(equalTo: petContainer.topAnchor),
-            petView.widthAnchor.constraint(equalToConstant: 380), // Increased width
-            petView.heightAnchor.constraint(equalToConstant: 380), // Increased height
+            petView.widthAnchor.constraint(equalToConstant: 380), 
+            petView.heightAnchor.constraint(equalToConstant: 380), 
             
-            // 2D Image Constraints (Fallback)
+            // 2D Image Constraints
             petImageView.centerXAnchor.constraint(equalTo: petContainer.centerXAnchor),
             petImageView.topAnchor.constraint(equalTo: petContainer.topAnchor),
             petImageView.widthAnchor.constraint(equalToConstant: 220),
@@ -102,17 +106,15 @@ class HomePetsViewController: UIViewController {
         ])
         
         // Load 3D Penguin
-        // Configure with specific size/position for Home Screen
+        petView.enableCameraControl(true)
         petView.configure(scale: 0.13, position: SCNVector3(0, -1.8, 0))
     }
 
     
     // MARK: - Tab Bar Setup
     private func setupTabBar() {
-        // Create a tab bar controller and embed this view controller in it
         let tabBarController = UITabBarController()
         
-        // Replace with custom tab bar
         let customTabBar = CustomTabBar()
         tabBarController.setValue(customTabBar, forKey: "tabBar")
         
@@ -169,7 +171,7 @@ class HomePetsViewController: UIViewController {
                     self?.updatePetUI(pet)
                 case .failure(let error):
                     print("Error fetching pet: \(error)")
-                    // Optional: Show error state or keep default
+
                     self?.nameLabel.text = "My Pet"
                 }
             }
@@ -180,10 +182,7 @@ class HomePetsViewController: UIViewController {
         nameLabel.text = pet.name
         levelLabel.text = "Level \(pet.level)"
         
-        // Simple logic to choose image based on type/color
-        // In a real app, this would use the asset catalog
         let imageName = pet.type.lowercased() == "cat" ? "cat.fill" : "dog.fill"
-        // Try to load asset if available, else system
         if let assetImage = UIImage(named: "illustrations/homePets/\(pet.type)") {
              petImageView.image = assetImage
         } else {
@@ -192,7 +191,6 @@ class HomePetsViewController: UIViewController {
     }
 
     @IBAction func buttontaped(_ sender: Any) {
-        // Present NotificationsViewController instead of Settings
         let notificationsVC = NotificationsViewController()
         if let navController = navigationController {
             navController.pushViewController(notificationsVC, animated: true)
@@ -215,7 +213,7 @@ class HomePetsViewController: UIViewController {
     }
     
     @IBAction func micButtonTapped(_ sender: Any) {
-        // Prevent double taps/navigation
+        // limit taps
         if let navController = navigationController, navController.topViewController is PetTalkingViewController {
             return
         }
@@ -224,6 +222,7 @@ class HomePetsViewController: UIViewController {
         }
         
         print("Mic button tapped - navigating to PetTalkingViewController") // Debug log
+
         let petTalkingVC = PetTalkingViewController()
         if let navController = navigationController {
             navController.pushViewController(petTalkingVC, animated: true)
@@ -233,7 +232,4 @@ class HomePetsViewController: UIViewController {
             present(navController, animated: true)
         }
     }
-    
-    // MARK: - 3D Penguin Setup
-    // MARK: - 3D Penguin Setup - Removed as it is now in PetAvatarView
 }

@@ -1,11 +1,5 @@
-//
-//  MyJournalsListViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 11/11/25.
-//
-
 import UIKit
+import AVFoundation
 
 class MyJournalsListViewController: UIViewController {
 
@@ -22,11 +16,8 @@ class MyJournalsListViewController: UIViewController {
     
     var journalEntries: [Journal] = [] // API Data
     
-    // Removed legacy hardcoded data
-    // let days ... (Keeping days for now if needed for calendar, but fetching entries is priority)
-    
-    // Hardcoded days for UI (could be dynamic later)
-
+    // Audio Playback
+    var audioPlayer: AVPlayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,7 +40,6 @@ class MyJournalsListViewController: UIViewController {
                     self?.timelineTableView.reloadData()
                 case .failure(let error):
                     print("Error fetching journals: \(error)")
-                    // Optionally show empty state
                 }
             }
         }
@@ -93,28 +83,24 @@ class MyJournalsListViewController: UIViewController {
         setupFloatingActionButton()
     }
     
-    // MARK: - Floating Action Button
+    // floating button
     private func setupFloatingActionButton() {
         let fab = UIButton(type: .system)
         fab.translatesAutoresizingMaskIntoConstraints = false
         
-        // Icon
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let plusImage = UIImage(systemName: "plus", withConfiguration: config)
         fab.setImage(plusImage, for: .normal)
         fab.tintColor = .white
         
-        // Style
-        fab.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") // Use app theme color
-        fab.layer.cornerRadius = 28 // Half of 56 width
+        fab.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+        fab.layer.cornerRadius = 28
         
-        // Shadow
         fab.layer.shadowColor = UIColor.black.cgColor
         fab.layer.shadowOpacity = 0.3
         fab.layer.shadowOffset = CGSize(width: 0, height: 4)
         fab.layer.shadowRadius = 5
         
-        // Action
         fab.addTarget(self, action: #selector(fabTapped), for: .touchUpInside)
         
         view.addSubview(fab)
@@ -129,16 +115,21 @@ class MyJournalsListViewController: UIViewController {
     }
     
     @objc private func fabTapped() {
-        // Navigate to New Journal Type selection or directly to Add Journal
         let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
-        
-        // If the user wants to keep ONLY the plus button, ensuring no other navigation happens from other places.
-        // Assuming this is the primary entry point now.
         navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc func backButtonTapped(_ sender: Any) {
         navigationController?.popViewController(animated: true)
+    }
+    
+    // MARK: - Playback Logic
+    func playVoice(url: String) {
+        guard let mediaURL = URL(string: url) else { return }
+        
+        let playerItem = AVPlayerItem(url: mediaURL)
+        audioPlayer = AVPlayer(playerItem: playerItem)
+        audioPlayer?.play()
     }
 }
 
@@ -165,7 +156,8 @@ extension MyJournalsListViewController: UICollectionViewDataSource, UICollection
     }
 }
 
-// MARK: - UITableViewDataSource & Delegate
+// table view
+
 extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -190,14 +182,19 @@ extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelega
         formatter.dateFormat = "HH:mm"
         let timeString = entry.createdDate.map { formatter.string(from: $0) } ?? "Now"
         
-        // Use title as Mood/Headline for now, or use first mood tag
         let moodHeadline = entry.moodTags?.first ?? entry.title
+        
+        let hasVoice = entry.voiceRecordingUrl != nil && !entry.voiceRecordingUrl!.isEmpty
         
         cell.configure(time: timeString,
                        mood: moodHeadline,
                        entry: entry.content,
                        isFirst: isFirst,
-                       isLast: isLast)
+                       isLast: isLast,
+                       showPlayButton: hasVoice,
+                       onPlay: hasVoice ? { [weak self] in
+                           self?.playVoice(url: entry.voiceRecordingUrl!)
+                       } : nil)
         
         return cell
     }

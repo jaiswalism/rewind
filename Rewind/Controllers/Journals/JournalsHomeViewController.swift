@@ -9,14 +9,11 @@ import UIKit
 
 class JournalsHomeViewController: UIViewController {
     
-    // MARK: - Properties
-
     override func viewDidLoad() {
         super.viewDidLoad()
     }
     
-    // MARK: - Setup
-    
+    // setup
     @IBAction func addJournal(_ sender: Any) {
         let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
         self.navigationController?.pushViewController(vc, animated: true)

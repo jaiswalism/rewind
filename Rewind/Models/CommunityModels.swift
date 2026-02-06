@@ -9,15 +9,10 @@ struct CommunityPost: Codable {
     let likeCount: Int
     let commentCount: Int
     let createdAt: String
-    let user: User? // Null if anonymous or user deleted? API says user object is returned usually.
-    let isLikedByMe: Bool? // Often added by APIs for UI state, checking contract...
-    let isMine: Bool? // Indicates if the post belongs to the current user
-    
-    // API Contract might not return `isLikedByMe` directly in the list unless specified. 
-    // If not present, we might need to handle it or fetching separately. 
-    // Looking at common patterns, let's include it if the API provides it, or nullable.
-    
-    // Helper for date
+    let user: User? 
+    let isLikedByMe: Bool? 
+    let isMine: Bool?
+
     var createdDate: Date? {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

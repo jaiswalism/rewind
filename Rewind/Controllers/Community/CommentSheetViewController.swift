@@ -50,7 +50,8 @@ class CommentSheetViewController: UIViewController {
         return tableView
     }()
     
-    // The gray bar at the bottom
+    // the gray bar at the bottom
+
     private let commentInputView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false

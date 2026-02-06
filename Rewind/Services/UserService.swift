@@ -4,8 +4,7 @@ class UserService {
     static let shared = UserService()
     private init() {}
     
-    // MARK: - Profile Management
-    
+    // managing the user profile
     func getProfile(completion: @escaping (Result<User, Error>) -> Void) {
         APIService.shared.makeRequest(endpoint: "/users/profile", method: "GET") { (result: Result<APIResponse<User>, Error>) in
             switch result {
@@ -32,10 +31,6 @@ class UserService {
         if let healthGoal = healthGoal { body["healthGoal"] = healthGoal }
         if let seekingProfessionalHelp = seekingProfessionalHelp { body["seekingProfessionalHelp"] = seekingProfessionalHelp }
         
-        // We need a custom wrapper to encode [String: Any] as Codable is strictly typed
-        // For simplicity in this example, let's assume we create a minimal struct or rely on a helper.
-        // But `APIService.makeRequest` expects `Encodable`.
-        // Let's make a strict struct for the update body.
         let requestBody = UpdateProfileRequest(
             name: name,
             location: location,
@@ -60,12 +55,12 @@ class UserService {
         }
     }
     
-    // MARK: - Avatar Upload
-    // Note: Multipart upload requires a different request construction than simple JSON.
-    // We will postpone complex multipart implementation for a dedicated step or use a simplified version if possible.
-    // For now, we'll focus on JSON-based text data.
+    // update the user's face
+    // multipart upload is a bit tricky so we'll handle it properly later
+    // sticking to json updates for now
     
-    // MARK: - Onboarding
+    // getting the user started
+
     
     func saveOnboarding(healthGoal: String, gender: String, age: Int, seekingProfessionalHelp: Bool, completion: @escaping (Result<User, Error>) -> Void) {
         let requestBody = OnboardingRequest(
@@ -105,8 +100,7 @@ class UserService {
     }
 }
 
-// MARK: - Request Models
-
+// data structures for requests
 struct UpdateProfileRequest: Codable {
     let name: String?
     let location: String?

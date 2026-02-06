@@ -4,6 +4,7 @@ class OnboardingDataManager {
     static let shared = OnboardingDataManager()
     private init() {}
     
+    // storing the user's choices
     var healthGoal: String?
     var gender: String?
     var age: Int?

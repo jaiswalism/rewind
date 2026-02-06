@@ -96,7 +96,8 @@ class MeditationSessionViewController: UIViewController {
         return button
     }()
 
-    // Background image that should cover the whole screen
+    // background image
+
     private let backgroundImageView: UIImageView = {
         let iv = UIImageView()
         iv.translatesAutoresizingMaskIntoConstraints = false
@@ -108,9 +109,9 @@ class MeditationSessionViewController: UIViewController {
     }()
     
     // MARK: - Properties
-    // Note: gradient layer removed; using color asset + background image
      private var isPlaying = false
-    // Ensure we only auto-start once when the screen first appears
+    
+    // checking if we auto-started
     private var hasStartedAutomatically = false
      private var timer: Timer?
      private var remainingSeconds: Int
@@ -143,7 +144,6 @@ class MeditationSessionViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // Only setup progress layers once (after layout so container bounds are valid)
         if progressBackgroundLayer.superlayer == nil {
             setupProgressLayers()
         }
@@ -151,23 +151,26 @@ class MeditationSessionViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // Initialize progress to show full circle
         updateProgress()
         
-        // Auto-start the timer the first time the screen appears
+        // auto-starting the timer
+
         if !hasStartedAutomatically {
             hasStartedAutomatically = true
             isPlaying = true
 
-            // Update play/pause button to show pause
+            // showing pause button
+
             let config = UIImage.SymbolConfiguration(pointSize: 40, weight: .bold)
             let pauseImage = UIImage(systemName: "pause.fill", withConfiguration: config)
             playPauseButton.setImage(pauseImage, for: .normal)
 
-            // Hide the "Complete Early" button while playing
+            // hiding complete early button while playing
+
             completeEarlyButton.isHidden = true
 
-            // Start the timer
+            // starting the clock
+
             startTimer()
             updateProgress()
         }
@@ -175,7 +178,8 @@ class MeditationSessionViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Stop timer when navigating away to avoid background execution
+        // stop timer when leaving
+
         stopTimer()
     }
 
@@ -185,10 +189,10 @@ class MeditationSessionViewController: UIViewController {
 
     // MARK: - Setup
     private func setupUI() {
-        // Use the color asset 'blue-400' as the base background color (fallback provided)
         view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? UIColor(red: 0.4, green: 0.45, blue: 0.95, alpha: 1.0)
         
-        // Add full-screen background image behind everything
+        // putting the background image behind everything
+
         view.addSubview(backgroundImageView)
         NSLayoutConstraint.activate([
             backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -211,7 +215,8 @@ class MeditationSessionViewController: UIViewController {
     
      private func setupConstraints() {
          NSLayoutConstraint.activate([
-            // Background image constraints are set in setupUI (so image sits behind everything)
+            // background image constrained above
+
              // Back Button
              backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
              backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -337,10 +342,7 @@ class MeditationSessionViewController: UIViewController {
     private func meditationCompleted() {
         stopTimer()
         
-        // Calculate duration in minutes (Total session length recorded)
-        // If completed early, we might want to record just the elapsed time.
-        // But this method `meditationCompleted` is called when timer reaches 0.
-        // So duration is `totalSeconds`.
+        // calculating duration
         let duration = totalSeconds
         
         CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: soundName) { [weak self] result in
@@ -389,7 +391,8 @@ class MeditationSessionViewController: UIViewController {
         if isPlaying {
             startTimer()
             completeEarlyButton.isHidden = true
-            // Ensure progress updates immediately
+            // keeping progress updated
+
             updateProgress()
         } else {
             stopTimer()
@@ -412,9 +415,11 @@ class MeditationSessionViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Complete", style: .default) { [weak self] _ in
             guard let self = self else { return }
             
-            // Calculate elapsed time
+            // calculating elapsed time
+
             let elapsedSeconds = self.totalSeconds - self.remainingSeconds
-            // We want to record actual elapsed
+            // recording actual elapsed
+
             let duration = elapsedSeconds
             
             CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: self.soundName) { [weak self] result in

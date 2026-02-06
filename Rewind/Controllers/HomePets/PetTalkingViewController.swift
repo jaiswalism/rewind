@@ -42,7 +42,6 @@ class PetTalkingViewController: UIViewController {
     }()
     
     private let petView = PetAvatarView()
-    // Removed: private let penguinSceneView: SCNView
     
     private let animatedBlobContainer: UIView = {
         let view = UIView()
@@ -102,7 +101,8 @@ class PetTalkingViewController: UIViewController {
         return button
     }()
     
-    // MARK: - Properties
+    // variables
+
     private var gradientLayer: CAGradientLayer?
     private var animationTimer: Timer?
     private var isAnimating = false
@@ -118,7 +118,7 @@ class PetTalkingViewController: UIViewController {
     // 3D Model Properties
     private var idleAnimation: SCNAction?
     
-    // MARK: - Lifecycle
+    // lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -151,10 +151,8 @@ class PetTalkingViewController: UIViewController {
     
     // MARK: - Setup
     private func setupUI() {
-        // Set background color matching app theme
         view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? UIColor(red: 0.38, green: 0.38, blue: 1.0, alpha: 1.0)
         
-        // Add gradient background similar to other screens
         let gradient = CAGradientLayer()
         gradient.frame = view.bounds
         gradient.colors = [
@@ -165,10 +163,8 @@ class PetTalkingViewController: UIViewController {
         view.layer.insertSublayer(gradient, at: 0)
         gradientLayer = gradient
         
-        // Hide navigation bar to match app style
         navigationController?.setNavigationBarHidden(true, animated: false)
         
-        // Add views in correct order
         petView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(petView)
         view.addSubview(transcriptionLabel)
@@ -176,13 +172,11 @@ class PetTalkingViewController: UIViewController {
         view.addSubview(micButton)
         view.addSubview(backButton)
         
-        // Add blob elements to container
         animatedBlobContainer.addSubview(outerBlob)
         animatedBlobContainer.addSubview(middleBlob)
         animatedBlobContainer.addSubview(innerBlob)
         animatedBlobContainer.addSubview(centerDot)
-        
-        // Ensure buttons are on top
+  
         view.bringSubviewToFront(micButton)
         view.bringSubviewToFront(backButton)
         
@@ -197,25 +191,25 @@ class PetTalkingViewController: UIViewController {
             backButton.widthAnchor.constraint(equalToConstant: 50),
             backButton.heightAnchor.constraint(equalToConstant: 50),
             
-            // Penguin 3D Scene View - larger to show full model
+            // Penguin 3D Scene View 
             petView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             petView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             petView.widthAnchor.constraint(equalToConstant: 350),
             petView.heightAnchor.constraint(equalToConstant: 350),
             
-            // Transcription Label - centered
+            // Transcription Label 
             transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             transcriptionLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: 30),
             transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             
-            // Mic Button - below transcription
+            // Mic Button 
             micButton.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 60),
             micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             micButton.widthAnchor.constraint(equalToConstant: 60),
             micButton.heightAnchor.constraint(equalToConstant: 60),
             
-            // Animated Blob Container - behind mic button
+            // Animated Blob Container 
             animatedBlobContainer.centerXAnchor.constraint(equalTo: micButton.centerXAnchor),
             animatedBlobContainer.centerYAnchor.constraint(equalTo: micButton.centerYAnchor),
             animatedBlobContainer.widthAnchor.constraint(equalToConstant: 120),
@@ -252,29 +246,19 @@ class PetTalkingViewController: UIViewController {
         micButton.addTarget(self, action: #selector(micButtonTapped), for: .touchUpInside)
     }
     
-    // MARK: - 3D Penguin Setup
-    // MARK: - 3D Penguin Setup
+    // 3d penguin stuff
+
     private func setup3DPenguin() {
-        // Re-enable default interaction to match Home screen
         petView.enableCameraControl(true)
         
-        // Use default camera (remove explicit setupCamera call)
-        
-        // Configure pet view
-        // Position at -1.8 y (matching Home screen)
-        // x: 0 to strict center (constraints ensure view is centered)
         petView.configure(scale: petBaseScale, position: SCNVector3(0, -1.8, 0))
     }
-    
-    // Removed loadPenguinModel, showPlaceholderPenguin, startPenguinIdleAnimation 
-    // as they are handled by PetAvatarView
     
     private func animatePenguinForVoice(intensity: Float) {
         guard let penguin = petView.penguinNode else { return }
         
         
         // Scale animation based on voice intensity
-        // Pulse around the base scale
         let scale = CGFloat(petBaseScale) * (1.0 + (CGFloat(intensity) * 0.3))
         let scaleAction = SCNAction.scale(to: scale, duration: 0.1)
         penguin.runAction(scaleAction, forKey: "voiceScale")
@@ -287,12 +271,12 @@ class PetTalkingViewController: UIViewController {
         }
     }
     
-    // MARK: - Blob Animation
+    // blob animation
+
     private func startBlobAnimation() {
         guard !isAnimating else { return }
         isAnimating = true
         
-        // Hide blob initially
         outerBlob.alpha = 0
         middleBlob.alpha = 0
         innerBlob.alpha = 0
@@ -470,7 +454,6 @@ class PetTalkingViewController: UIViewController {
             self.centerDot.alpha = 1.0
         })
         
-        // Animate penguin based on voice
         animatePenguinForVoice(intensity: level)
     }
     

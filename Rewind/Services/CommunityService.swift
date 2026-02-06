@@ -4,8 +4,7 @@ class CommunityService {
     static let shared = CommunityService()
     private init() {}
     
-    // MARK: - Posts
-    
+    // interacting with community posts    
     func getPosts(page: Int = 1, limit: Int = 10, completion: @escaping (Result<[CommunityPost], Error>) -> Void) {
         let endpoint = "/community/posts?page=\(page)&limit=\(limit)"
         APIService.shared.makeRequest(endpoint: endpoint, method: "GET") { (result: Result<PostListResponse, Error>) in
@@ -62,8 +61,7 @@ class CommunityService {
         }
     }
     
-    // MARK: - Likes
-    
+    // managing likes
     func likePost(id: String, completion: @escaping (Result<LikeResponse, Error>) -> Void) {
         APIService.shared.makeRequest(endpoint: "/community/posts/\(id)/like", method: "POST") { (result: Result<APIResponse<LikeResponse>, Error>) in
             switch result {
@@ -80,7 +78,7 @@ class CommunityService {
     }
     
     func unlikePost(id: String, completion: @escaping (Result<LikeResponse, Error>) -> Void) {
-        // Backend uses a toggle strategy on POST, so we use POST here too.
+        // backend treats this as a toggle, so same endpoint as like
         APIService.shared.makeRequest(endpoint: "/community/posts/\(id)/like", method: "POST") { (result: Result<APIResponse<LikeResponse>, Error>) in
             switch result {
             case .success(let response):
@@ -95,7 +93,7 @@ class CommunityService {
         }
     }
     
-    // MARK: - Comments
+    // Comments
     
     func getComments(postId: String, page: Int = 1, limit: Int = 20, completion: @escaping (Result<[Comment], Error>) -> Void) {
         let endpoint = "/community/posts/\(postId)/comments?page=\(page)&limit=\(limit)"

@@ -4,7 +4,8 @@ struct NotificationItem: Codable {
     let id: String
     let title: String
     let message: String
-    let type: String // e.g., "alert", "reminder", "info"
+    let type: String // alert type
+
     let isRead: Bool
     let createdAt: String
     

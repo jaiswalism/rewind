@@ -16,15 +16,14 @@ class SignupViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
         let fields = [nameInput, emailPhoneField, passwordField]
             fields.forEach { $0?.styleRoundedInput() }
 
             passwordField.enablePasswordToggle()
     }
     
-    @IBAction func signInButton(_ sender: Any) { //  // Navigate to  // Navigate to LoginViewController (XIB-based)
+    @IBAction func signInButton(_ sender: Any) {
+        // go to login sceren
         let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
         loginVC.modalPresentationStyle = .fullScreen
         present(loginVC, animated: true, completion: nil)
@@ -43,7 +42,7 @@ class SignupViewController: UIViewController {
                 switch result {
                 case .success(let user):
                     print("Registered user: \(user.name)")
-                    // Navigate to OnboardingHealthGoalViewController (XIB)
+                    // Navigate to OnboardingHealthGoalViewController
                     let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
                     goalVC.modalPresentationStyle = .fullScreen
                     self?.present(goalVC, animated: true, completion: nil)

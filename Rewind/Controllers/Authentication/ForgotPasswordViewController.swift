@@ -19,15 +19,15 @@ class ForgotPasswordViewController: UIViewController {
     }
 
     @IBAction func backButton(_ sender: Any) {
-        // Initialize the LoginViewController from its XIB
+        // back to login
+
              let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
              
-             // Present it full screen
              loginVC.modalPresentationStyle = .fullScreen
              present(loginVC, animated: true, completion: nil)
          }
     @IBAction func sendOTPButton(_ sender: Any) {
-        // Navigate to OTPVerifyViewController (XIB)
+        // Navigate to OTPVerifyViewController
                 let otpVC = OTPVerifyViewController(nibName: "OTPVerifyViewController", bundle: nil)
                 otpVC.modalPresentationStyle = .fullScreen
                 present(otpVC, animated: true, completion: nil)

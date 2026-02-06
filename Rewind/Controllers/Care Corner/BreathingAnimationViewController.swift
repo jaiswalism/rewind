@@ -162,13 +162,15 @@ class BreathingAnimationViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Back Button
+            // back button
+
             backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             backButton.widthAnchor.constraint(equalToConstant: 44),
             backButton.heightAnchor.constraint(equalToConstant: 44),
             
-            // Breathing Blob Container
+            // the breathing blob container
+
             breathingBlobContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             breathingBlobContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             breathingBlobContainer.widthAnchor.constraint(equalToConstant: 500),

@@ -11,7 +11,7 @@ class CommunityFeedViewController: UIViewController {
 
     // MARK: - UI Components (Structural)
     
-    // Fixed container for the top non-scrolling elements (Profile Bar and Tags)
+    // Fixed container for the top non-scrolling elements
     private let fixedHeaderView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -112,7 +112,6 @@ class CommunityFeedViewController: UIViewController {
         contentStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
         if posts.isEmpty {
-            // Show empty state?
             let label = UILabel()
             label.text = "No posts yet. Be the first!"
             label.textColor = .white
@@ -124,7 +123,7 @@ class CommunityFeedViewController: UIViewController {
                 let name = post.isAnonymous ? "Anonymous" : (post.user?.name ?? "Unknown")
                 
                 // Format Time
-                let timeAgo = "Just now" // Placeholder, needs date logic
+                let timeAgo = "Just now" 
                 
                 let postView = CommunityPostView(
                     postId: post.id,
@@ -134,10 +133,11 @@ class CommunityFeedViewController: UIViewController {
                     isAnonymous: post.isAnonymous,
                     likeCount: post.likeCount,
                     commentCount: post.commentCount,
-                    isLiked: post.isLikedByMe ?? false, // Use backend state
-                    isMine: post.isMine ?? false, // Pass isMine
+                    isLiked: post.isLikedByMe ?? false,
+
+                    isMine: post.isMine ?? false, 
                     mediaUrls: post.mediaUrls,
-                    tags: post.tags // Pass tags
+                    tags: post.tags
                 )
                 
                 let wrapper = createWrapperView(for: postView, horizontalPadding: 20)
@@ -157,23 +157,19 @@ class CommunityFeedViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Restore the navigation bar for other view controllers
         navigationController?.setNavigationBarHidden(false, animated: animated)
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        // FIX: Update gradient frame to match current view bounds (handling safe areas/resizing)
         gradientLayer?.frame = view.bounds
     }
     
     // MARK: - Setup
     private func setupUI() {
-        // --- 1. Premium Gradient Background (Lighter) ---
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = view.bounds
-        self.gradientLayer = gradientLayer // Store reference
-        // Lighter Gradient using named colors
+        self.gradientLayer = gradientLayer 
         let startColor = UIColor(named: "colors/Blue&Shades/blue-400")?.cgColor ?? UIColor.systemBlue.cgColor
         let endColor = UIColor(named: "colors/Blue&Shades/blue-600")?.cgColor ?? UIColor.blue.cgColor
         
@@ -182,15 +178,13 @@ class CommunityFeedViewController: UIViewController {
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         view.layer.insertSublayer(gradientLayer, at: 0)
         
-        // --- 2. Initialize properties ---
+
         profileBar = createProfileBar()
         tagsView = createTagsView()
         
-        // --- 3. Glassmorphic Header ---
         setupGlassHeader()
-        
-        // --- 4. Add components to view hierarchy ---
-        scrollView.backgroundColor = .clear // FIX: Ensure transparent
+
+        scrollView.backgroundColor = .clear
         scrollView.alwaysBounceVertical = true
         view.addSubview(scrollView)
         
@@ -201,7 +195,6 @@ class CommunityFeedViewController: UIViewController {
         fixedHeaderView.addSubview(profileBar)
         fixedHeaderView.addSubview(tagsView)
 
-        // --- 5. Apply Constraints ---
         setupConstraints()
     }
     
@@ -243,7 +236,6 @@ class CommunityFeedViewController: UIViewController {
             fixedHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
         
-        // --- Fixed Header Internal Constraints ---
         NSLayoutConstraint.activate([
             profileBar.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 5),
             profileBar.leadingAnchor.constraint(equalTo: fixedHeaderView.leadingAnchor),
@@ -255,7 +247,7 @@ class CommunityFeedViewController: UIViewController {
             tagsView.bottomAnchor.constraint(equalTo: fixedHeaderView.bottomAnchor, constant: -15),
         ])
         
-        // --- Scroll View Constraints (Full Screen) ---
+        // --- Scroll View Constraints ---
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -277,9 +269,6 @@ class CommunityFeedViewController: UIViewController {
         contentStackView.isLayoutMarginsRelativeArrangement = true
     }
     
-
-    
-    // Utility to wrap a view and apply padding
     private func createWrapperView(for view: UIView, horizontalPadding: CGFloat) -> UIView {
         let wrapper = UIView()
         wrapper.translatesAutoresizingMaskIntoConstraints = false
@@ -292,7 +281,6 @@ class CommunityFeedViewController: UIViewController {
             view.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -horizontalPadding),
         ])
         
-        // Ensures the wrapper height wraps the internal view's height
         wrapper.heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
         
         return wrapper
@@ -305,7 +293,7 @@ class CommunityFeedViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         view.heightAnchor.constraint(equalToConstant: 60).isActive = true
 
-        // Profile Avatar (Aviral Sharma)
+        // Profile Avatar
         let avatar = UIImageView(image: UIImage(named: "illustrations/homePets/profile"))
         avatar.translatesAutoresizingMaskIntoConstraints = false
         avatar.contentMode = .scaleAspectFill
@@ -380,7 +368,7 @@ class CommunityFeedViewController: UIViewController {
         tagsScrollView.showsHorizontalScrollIndicator = false
         view.addSubview(tagsScrollView)
         
-        // Tags Stack View (inside tagsScrollView)
+        // Tags Stack View
         let tags = ["TRENDING", "STRESS", "ANXIETY", "AFFIRMATION", "GRATITUDE", "DAILY"]
         let tagsStackView = UIStackView()
         tagsStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -426,18 +414,15 @@ class CommunityFeedViewController: UIViewController {
         var config = UIButton.Configuration.filled()
         config.title = title
         
-        // FIX: Apply smaller size (13pt)
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
             outgoing.font = .systemFont(ofSize: 13, weight: .semibold)
             return outgoing
         }
         
-        // FIX: Reduced padding for smaller button size
+
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
         
-        // Apply "colors/Primary/Darker" color
-        // Apply lighter color as requested (blue-500)
         config.baseBackgroundColor = UIColor.white.withAlphaComponent(0.2)
         config.baseForegroundColor = .white
         config.cornerStyle = .capsule
@@ -640,9 +625,7 @@ class SinglePhotoViewController: UIViewController {
         } else if urlString.hasPrefix("file://"), let url = URL(string: urlString), let data = try? Data(contentsOf: url) {
             imageView.image = UIImage(data: data)
         } else if urlString.hasPrefix("http") {
-             // Placeholder for async loading
              imageView.image = UIImage(systemName: "photo")
-             // In real app use Kingfisher or SDWebImage
              DispatchQueue.global().async {
                  if let url = URL(string: self.urlString), let data = try? Data(contentsOf: url) {
                      DispatchQueue.main.async {

@@ -4,6 +4,7 @@ class NotificationService {
     static let shared = NotificationService()
     private init() {}
     
+    // grabbing the latest notifications from the server
     func getNotifications(completion: @escaping (Result<[NotificationItem], Error>) -> Void) {
         APIService.shared.makeRequest(endpoint: "/notifications", method: "GET") { (result: Result<APIResponse<[NotificationItem]>, Error>) in
             switch result {
