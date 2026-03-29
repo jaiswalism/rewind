@@ -34,15 +34,24 @@ class PetAvatarView: SCNView {
     
     private func commonInit() {
         self.backgroundColor = .clear
-        self.allowsCameraControl = true
+        self.allowsCameraControl = false
         self.autoenablesDefaultLighting = true
         self.antialiasingMode = .multisampling4X
+        self.isPlaying = false
         
         let scene = SCNScene()
         self.scene = scene
         
         setupLighting(in: scene)
         loadPetModel()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Safe to start rendering now that AutoLayout has given us a real frame
+        if bounds.width > 0, bounds.height > 0, !isPlaying {
+            isPlaying = true
+        }
     }
     
     // MARK: - Setup
