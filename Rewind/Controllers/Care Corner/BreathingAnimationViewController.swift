@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class BreathingAnimationViewController: UIViewController {
+    
+    // MARK: - ViewModels
+    private let careCornerViewModel = CareCornerViewModel()
     
     // MARK: - UI Components
     private let backButton: UIButton = {
@@ -107,6 +111,7 @@ class BreathingAnimationViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupActions()
     }
@@ -304,22 +309,27 @@ class BreathingAnimationViewController: UIViewController {
         // Use totalSeconds if available, else fallback
         let duration = self.totalSeconds ?? 300 // Fallback 5 mins
         
-        CareCornerService.shared.recordBreathing(durationSeconds: duration) { [weak self] result in
-            DispatchQueue.main.async {
-                let pawsEarned: Int
-                switch result {
-                case .success(let earned):
-                    pawsEarned = earned
-                case .failure(let error):
-                    print("Error recording breathing: \(error)")
-                    pawsEarned = (duration / 60) * 10 // Fallback calc
+        Task {
+            do {
+                let pawsEarned = try await careCornerViewModel.recordBreathing(durationSeconds: duration)
+                await MainActor.run {
+                    let durationMinutes = duration / 60
+                    let durationString = "\(durationMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
                 }
-                
-                let durationMinutes = duration / 60
-                let durationString = "\(durationMinutes)M"
-                
-                let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
-                self?.navigationController?.pushViewController(completedVC, animated: true)
+            } catch {
+                await MainActor.run {
+                    print("Error recording breathing: \(error)")
+                    let pawsEarned = (duration / 60) * 10 // Fallback calc
+                    
+                    let durationMinutes = duration / 60
+                    let durationString = "\(durationMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
+                }
             }
         }
     }

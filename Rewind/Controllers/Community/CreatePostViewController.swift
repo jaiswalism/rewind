@@ -7,8 +7,13 @@
 
 import UIKit
 import PhotosUI
+import Combine
 
 class CreatePostViewController: UIViewController {
+    
+    // MARK: - ViewModels
+    private let communityViewModel = CommunityViewModel()
+    private let userViewModel = UserViewModel()
 
     // MARK: - UI Components
     
@@ -247,7 +252,7 @@ class CreatePostViewController: UIViewController {
     }()
     
     
-    private var currentUser: User?
+    private var currentUser: DBUser?
     private var postToEdit: CommunityPost? // Edit Mode Property
     
     init(postToEdit: CommunityPost? = nil) {
@@ -288,16 +293,14 @@ class CreatePostViewController: UIViewController {
     
     
     private func fetchUserProfile() {
-        UserService.shared.getProfile { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let user):
-                    self?.currentUser = user
-                    if !(self?.anonymousSwitch.isOn ?? false) {
-                        self?.nameLabel.text = user.name
+        Task {
+            await userViewModel.fetchProfile()
+            await MainActor.run {
+                if let user = userViewModel.user {
+                    self.currentUser = user
+                    if !(self.anonymousSwitch.isOn ?? false) {
+                        self.nameLabel.text = user.name
                     }
-                case .failure(let error):
-                    print("Error fetching profile: \(error)")
                 }
             }
         }
@@ -502,16 +505,19 @@ class CreatePostViewController: UIViewController {
         postButton.isEnabled = false
         
         if let post = postToEdit {
-            CommunityService.shared.updatePost(id: post.id, content: content, tags: tags) { [weak self] result in
-                DispatchQueue.main.async {
-                    self?.postButton.isEnabled = true
-                    switch result {
-                    case .success:
+            Task {
+                do {
+                    _ = try await communityViewModel.updatePost(id: post.id, content: content, tags: tags)
+                    await MainActor.run {
+                        self.postButton.isEnabled = true
                         print("Post updated successfully")
-                        NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil) // Triggers refresh
-                        self?.navigationController?.popViewController(animated: true)
-                    case .failure(let error):
-                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                        NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.postButton.isEnabled = true
+                        self.showAlert(title: "Error", message: error.localizedDescription)
                     }
                 }
             }
@@ -539,16 +545,19 @@ class CreatePostViewController: UIViewController {
             }
         }
         
-        CommunityService.shared.createPost(content: content, isAnonymous: isAnonymous, tags: tags, mediaUrls: mediaUrls) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.postButton.isEnabled = true
-                switch result {
-                case .success(_):
+        Task {
+            do {
+                _ = try await communityViewModel.createPost(content: content, isAnonymous: isAnonymous, tags: tags, mediaUrls: mediaUrls)
+                await MainActor.run {
+                    self.postButton.isEnabled = true
                     print("Post created successfully")
-                    NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil) // Refresh feed
-                    self?.navigationController?.popViewController(animated: true)
-                case .failure(let error):
-                    self?.showAlert(title: "Error", message: error.localizedDescription)
+                    NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
+                    self.navigationController?.popViewController(animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    self.postButton.isEnabled = true
+                    self.showAlert(title: "Error", message: error.localizedDescription)
                 }
             }
         }

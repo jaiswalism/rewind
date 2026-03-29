@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI // 1. Import SwiftUI
 
 class OnboardingScreenViewController: UIViewController {
 
@@ -14,16 +15,12 @@ class OnboardingScreenViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
         
-        // This tells the system we wll define constraints for this button in code.
+        // Your existing code
         nextBtn1.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Activate width and height constraints.
         NSLayoutConstraint.activate([
-            nextBtn1.widthAnchor.constraint(equalToConstant: 80), // Your desired width
-            nextBtn1.heightAnchor.constraint(equalToConstant: 80)   // Your desired height
+            nextBtn1.widthAnchor.constraint(equalToConstant: 80),
+            nextBtn1.heightAnchor.constraint(equalToConstant: 80)
         ])
     }
     
@@ -31,8 +28,18 @@ class OnboardingScreenViewController: UIViewController {
         super.viewDidLayoutSubviews()
     }
     
-
-    
+    // 2. This is the new hand-off action
+    // We will connect the FINAL button in the storyboard to this
+    @IBAction func finishOnboardingTapped(_ sender: Any) {
+        let loginVC = LoginViewController()
+          
+          // Present it full screen
+          loginVC.modalPresentationStyle = .fullScreen
+          self.present(loginVC, animated: true, completion: nil)
+          
+          // Optional: Mark onboarding as complete (if you plan to skip next time)
+          UserDefaults.standard.set(true, forKey: "onboardingCompleted")
+      }
 
     /*
     // MARK: - Navigation

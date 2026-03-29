@@ -17,3 +17,19 @@ struct UpdatePetRequest: Codable {
 
     let color: String?
 }
+
+struct ChatRequest: Codable {
+    let content: String
+}
+
+struct ChatResponse: Codable {
+    let text_response: String?
+    let emotion: PetEmotion?
+    let policy: String?
+}
+
+struct PetEmotion: Codable {
+    let primary: String
+    let intensity: Double
+    let confidence: Double
+}

@@ -9,7 +9,7 @@ import UIKit
 
 class JournalDetailViewViewController: UIViewController {
 
-    var journal: Journal?
+    var journal: DBJournal?
     
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -110,7 +110,7 @@ class JournalDetailViewViewController: UIViewController {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .short
-        let dateString = journal.createdDate.map { formatter.string(from: $0) } ?? "Unknown Date"
+        let dateString = journal.createdDate.map { formatter.string(from: $0) } ?? journal.createdAt
         
         dateLabel.text = dateString.uppercased()
         dateLabel.font = .systemFont(ofSize: 13, weight: .semibold)
@@ -126,8 +126,8 @@ class JournalDetailViewViewController: UIViewController {
         titleLabel.numberOfLines = 0
         mainStackView.addArrangedSubview(titleLabel)
         
-        // 3. Moods Section
-        if let moods = journal.moodTags, !moods.isEmpty {
+        // 3. Emotion Section
+        if let emotion = journal.emotion, !emotion.isEmpty {
             let moodScrollView = UIScrollView()
             moodScrollView.showsHorizontalScrollIndicator = false
             moodScrollView.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -137,10 +137,8 @@ class JournalDetailViewViewController: UIViewController {
             moodStack.spacing = 10
             moodStack.translatesAutoresizingMaskIntoConstraints = false
             
-            for mood in moods {
-                let pill = createMoodPill(text: mood)
-                moodStack.addArrangedSubview(pill)
-            }
+            let pill = createMoodPill(text: emotion)
+            moodStack.addArrangedSubview(pill)
             
             moodScrollView.addSubview(moodStack)
             NSLayoutConstraint.activate([
@@ -177,7 +175,8 @@ class JournalDetailViewViewController: UIViewController {
         mainStackView.addArrangedSubview(bodyContainer)
         
         // 5. Images Section
-        if let mediaUrls = journal.mediaUrls, !mediaUrls.isEmpty {
+        let mediaUrls = journal.mediaUrls ?? []
+        if !mediaUrls.isEmpty {
             let imageLabel = UILabel()
             imageLabel.text = "Attached Photos"
             imageLabel.font = .systemFont(ofSize: 18, weight: .bold)

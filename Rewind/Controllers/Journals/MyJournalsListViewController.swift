@@ -1,5 +1,6 @@
 import UIKit
 import AVFoundation
+import Combine
 
 class MyJournalsListViewController: UIViewController {
 
@@ -14,15 +15,43 @@ class MyJournalsListViewController: UIViewController {
         ("Sun", "1")
     ]
     
-    var journalEntries: [Journal] = [] // API Data
+    private let journalViewModel = JournalViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
-    // Audio Playback
+    var journalEntries: [DBJournal] = []
+    
     var audioPlayer: AVPlayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupBackButton()
+        bindViewModel()
+    }
+    
+    private func bindViewModel() {
+        journalViewModel.$journals
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] journals in
+                self?.journalEntries = journals
+                self?.timelineTableView.reloadData()
+            }
+            .store(in: &cancellables)
+        
+        journalViewModel.$error
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.showError(error)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func showError(_ message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -32,16 +61,8 @@ class MyJournalsListViewController: UIViewController {
     }
     
     private func fetchJournals() {
-        JournalService.shared.getJournals { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let journals):
-                    self?.journalEntries = journals
-                    self?.timelineTableView.reloadData()
-                case .failure(let error):
-                    print("Error fetching journals: \(error)")
-                }
-            }
+        Task {
+            await journalViewModel.fetchJournals()
         }
     }
     
@@ -83,7 +104,6 @@ class MyJournalsListViewController: UIViewController {
         setupFloatingActionButton()
     }
     
-    // floating button
     private func setupFloatingActionButton() {
         let fab = UIButton(type: .system)
         fab.translatesAutoresizingMaskIntoConstraints = false
@@ -105,7 +125,6 @@ class MyJournalsListViewController: UIViewController {
         
         view.addSubview(fab)
         
-        // Constraints
         NSLayoutConstraint.activate([
             fab.widthAnchor.constraint(equalToConstant: 56),
             fab.heightAnchor.constraint(equalToConstant: 56),
@@ -123,7 +142,6 @@ class MyJournalsListViewController: UIViewController {
         navigationController?.popViewController(animated: true)
     }
     
-    // MARK: - Playback Logic
     func playVoice(url: String) {
         guard let mediaURL = URL(string: url) else { return }
         
@@ -133,7 +151,6 @@ class MyJournalsListViewController: UIViewController {
     }
 }
 
-// MARK: - UICollectionViewDataSource & Delegate
 extension MyJournalsListViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -155,8 +172,6 @@ extension MyJournalsListViewController: UICollectionViewDataSource, UICollection
         return cell
     }
 }
-
-// table view
 
 extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelegate {
     
@@ -182,19 +197,15 @@ extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelega
         formatter.dateFormat = "HH:mm"
         let timeString = entry.createdDate.map { formatter.string(from: $0) } ?? "Now"
         
-        let moodHeadline = entry.moodTags?.first ?? entry.title
-        
-        let hasVoice = entry.voiceRecordingUrl != nil && !entry.voiceRecordingUrl!.isEmpty
+        let moodHeadline = entry.emotion ?? entry.title
         
         cell.configure(time: timeString,
                        mood: moodHeadline,
                        entry: entry.content,
                        isFirst: isFirst,
                        isLast: isLast,
-                       showPlayButton: hasVoice,
-                       onPlay: hasVoice ? { [weak self] in
-                           self?.playVoice(url: entry.voiceRecordingUrl!)
-                       } : nil)
+                       showPlayButton: false,
+                       onPlay: nil)
         
         return cell
     }

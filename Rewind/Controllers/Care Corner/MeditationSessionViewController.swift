@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class MeditationSessionViewController: UIViewController {
+    
+    // MARK: - ViewModels
+    private let careCornerViewModel = CareCornerViewModel()
     
     // MARK: - UI Components
     private let backButton: UIButton = {
@@ -345,22 +349,27 @@ class MeditationSessionViewController: UIViewController {
         // calculating duration
         let duration = totalSeconds
         
-        CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: soundName) { [weak self] result in
-            DispatchQueue.main.async {
-                let pawsEarned: Int
-                switch result {
-                case .success(let earned):
-                    pawsEarned = earned
-                case .failure(let error):
-                    print("Error recording meditation: \(error)")
-                    pawsEarned = (duration / 60) * 10 
+        Task {
+            do {
+                let pawsEarned = try await careCornerViewModel.recordMeditation(durationSeconds: duration, soundName: soundName)
+                await MainActor.run {
+                    let completedMinutes = duration / 60
+                    let durationString = "\(completedMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
                 }
-                
-                let completedMinutes = duration / 60
-                let durationString = "\(completedMinutes)M"
-                
-                let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
-                self?.navigationController?.pushViewController(completedVC, animated: true)
+            } catch {
+                await MainActor.run {
+                    print("Error recording meditation: \(error)")
+                    let pawsEarned = (duration / 60) * 10
+                    
+                    let completedMinutes = duration / 60
+                    let durationString = "\(completedMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
+                }
             }
         }
     }
@@ -422,21 +431,26 @@ class MeditationSessionViewController: UIViewController {
 
             let duration = elapsedSeconds
             
-            CareCornerService.shared.recordMeditation(durationSeconds: duration, soundName: self.soundName) { [weak self] result in
-                DispatchQueue.main.async {
-                    let pawsEarned: Int
-                    switch result {
-                    case .success(let earned):
-                        pawsEarned = earned
-                    case .failure( _):
-                        pawsEarned = (duration / 60) * 10
+            Task {
+                do {
+                    let pawsEarned = try await self.careCornerViewModel.recordMeditation(durationSeconds: duration, soundName: self.soundName)
+                    await MainActor.run {
+                        let elapsedMinutes = max(1, elapsedSeconds / 60)
+                        let durationString = "\(elapsedMinutes)M"
+                        
+                        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                        self.navigationController?.pushViewController(completedVC, animated: true)
                     }
-                    
-                    let elapsedMinutes = max(1, elapsedSeconds / 60)
-                    let durationString = "\(elapsedMinutes)M"
-                    
-                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
-                    self?.navigationController?.pushViewController(completedVC, animated: true)
+                } catch {
+                    await MainActor.run {
+                        let pawsEarned = (duration / 60) * 10
+                        
+                        let elapsedMinutes = max(1, elapsedSeconds / 60)
+                        let durationString = "\(elapsedMinutes)M"
+                        
+                        let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                        self.navigationController?.pushViewController(completedVC, animated: true)
+                    }
                 }
             }
         })

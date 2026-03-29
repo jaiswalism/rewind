@@ -81,15 +81,15 @@ class CommentTableViewCell: UITableViewCell {
         ])
     }
     
-    func configure(with comment: Comment) {
+    func configure(with commentItem: CommunityViewModel.CommentWithUser) {
         // Handle anonymous or user-provided names
-        if let user = comment.user {
+        if let user = commentItem.user {
              usernameLabel.text = user.name
         } else {
              usernameLabel.text = "Anonymous"
         }
         
-        commentLabel.text = comment.commentText
+        commentLabel.text = commentItem.comment.content
         // Time logic (placeholder)
         timeLabel.text = "Just now" 
     }

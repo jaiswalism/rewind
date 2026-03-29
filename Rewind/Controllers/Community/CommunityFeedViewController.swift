@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 class CommunityFeedViewController: UIViewController {
 
@@ -46,6 +47,8 @@ class CommunityFeedViewController: UIViewController {
     // MARK: - Data
     private var posts: [CommunityPost] = []
     private let refreshControl = UIRefreshControl()
+    private let communityViewModel = CommunityViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -81,25 +84,59 @@ class CommunityFeedViewController: UIViewController {
     }
     
     private func fetchPosts() {
-        CommunityService.shared.getPosts { [weak self] result in
-            DispatchQueue.main.async {
-                self?.refreshControl.endRefreshing()
-                switch result {
-                case .success(let fetchedPosts):
-                    print("📥 Fetched \(fetchedPosts.count) posts") // Debug Log
-                    self?.posts = fetchedPosts
-                    self?.setupContent()
-                case .failure(let error):
-                    print("❌ Error fetching posts: \(error)")
+        Task {
+            await communityViewModel.fetchPosts()
+            await MainActor.run {
+                self.refreshControl.endRefreshing()
+                if let posts = self.communityViewModel.posts as? [CommunityViewModel.CommunityPostWithUser] {
+                    self.posts = posts.map { self.convertToPost($0) }
+                    self.setupContent()
                 }
             }
         }
     }
     
+    private func convertToPost(_ postWithUser: CommunityViewModel.CommunityPostWithUser) -> CommunityPost {
+        let post = postWithUser.post
+        return CommunityPost(
+            id: post.id.uuidString,
+            userId: postWithUser.user?.id.uuidString,
+            content: post.content,
+            isAnonymous: post.isAnonymous,
+            tags: post.tags,
+            mediaUrls: post.mediaUrls,
+            likeCount: post.likeCount,
+            commentCount: post.commentCount,
+            createdAt: post.createdAt,
+            user: postWithUser.user != nil ? User(
+                id: postWithUser.user!.id.uuidString,
+                name: postWithUser.user!.name,
+                email: postWithUser.user!.email,
+                phone: postWithUser.user!.phone,
+                profileImageUrl: postWithUser.user!.profileImageUrl,
+                location: postWithUser.user!.location,
+                dateOfBirth: postWithUser.user!.dateOfBirth,
+                gender: postWithUser.user!.gender,
+                age: postWithUser.user!.age,
+                healthGoal: postWithUser.user!.healthGoal,
+                seekingProfessionalHelp: postWithUser.user!.seekingProfessionalHelp ?? false,
+                pawsBalance: postWithUser.user!.pawsBalance ?? 0,
+                totalPosts: postWithUser.user!.totalPosts ?? 0,
+                onboardingCompleted: postWithUser.user!.onboardingCompleted ?? false,
+                createdAt: postWithUser.user!.createdAt,
+                updatedAt: postWithUser.user!.updatedAt
+            ) : nil,
+            isLikedByMe: postWithUser.isLiked,
+            isMine: postWithUser.isMine
+        )
+    }
+    
     private func updateProfileBar() {
-        UserService.shared.getProfile { result in
-            DispatchQueue.main.async {
-                if case .success(let user) = result {
+        let userViewModel = UserViewModel()
+        Task {
+            await userViewModel.fetchProfile()
+            await MainActor.run {
+                if let user = userViewModel.user {
                     print("User profile loaded: \(user.name)")
                 }
             }

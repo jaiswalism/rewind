@@ -14,14 +14,13 @@ class ForgotPasswordViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
         emailPhoneField.styleRoundedInput()
     }
 
     @IBAction func backButton(_ sender: Any) {
         // back to login
 
-             let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
+             let loginVC = LoginViewController()
              
              loginVC.modalPresentationStyle = .fullScreen
              present(loginVC, animated: true, completion: nil)

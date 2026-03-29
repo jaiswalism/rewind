@@ -6,8 +6,13 @@
 //
 
 import UIKit
+import Combine
+import Foundation
 
 class CareCornerViewController: UIViewController {
+    
+    private let careCornerViewModel = CareCornerViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
@@ -125,6 +130,18 @@ class CareCornerViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupActions()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        Task {
+            await careCornerViewModel.fetchDailyChallenge()
+            await MainActor.run {
+                if let challenge = careCornerViewModel.dailyChallenge {
+                    self.challengeTextLabel.text = challenge.title + "\n" + challenge.description
+                }
+            }
+        }
     }
     
     // MARK: - Setup
@@ -281,8 +298,26 @@ class CareCornerViewController: UIViewController {
     // navigation
 
     @objc private func tellCommunityTapped() {
-        let createPostVC = CreatePostViewController()
-        navigationController?.pushViewController(createPostVC, animated: true)
+        Task {
+            do {
+                try await careCornerViewModel.completeChallenge()
+                await MainActor.run {
+                    self.showChallengeCompletedAlert()
+                }
+            } catch {
+                // Handle error silently or show alert
+            }
+        }
+    }
+    
+    private func showChallengeCompletedAlert() {
+        let alert = UIAlertController(
+            title: "Challenge Completed!",
+            message: "Great job! You've earned 10 paws.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     @objc private func breathingTapped() {

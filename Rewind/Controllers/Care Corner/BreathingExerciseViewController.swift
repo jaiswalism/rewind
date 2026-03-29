@@ -85,6 +85,7 @@ class BreathingExerciseViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupActions()
         setupGestures()

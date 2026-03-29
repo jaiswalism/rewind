@@ -7,8 +7,13 @@
 
 import UIKit
 import SceneKit
+import Combine
+import Foundation
 
 class HomePetsViewController: UIViewController {
+    
+    private let petViewModel = PetViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Properties
     
@@ -24,7 +29,6 @@ class HomePetsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupTabBar()
         
         // Ensure buttons stay on top of the 3D view
         view.subviews.forEach { subview in
@@ -111,78 +115,25 @@ class HomePetsViewController: UIViewController {
     }
 
     
-    // MARK: - Tab Bar Setup
-    private func setupTabBar() {
-        let tabBarController = UITabBarController()
-        
-        let customTabBar = CustomTabBar()
-        tabBarController.setValue(customTabBar, forKey: "tabBar")
-        
-        // Create navigation controllers for each tab
-        let homePetsVC = self
-        homePetsVC.tabBarItem = UITabBarItem(
-            title: "Home",
-            image: UIImage(systemName: "pawprint"),
-            selectedImage: UIImage(systemName: "pawprint.fill")
-        )
-        let homePetsNav = UINavigationController(rootViewController: homePetsVC)
-        
-        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
-        journalsVC.tabBarItem = UITabBarItem(
-            title: "Journal",
-            image: UIImage(systemName: "doc.text"),
-            selectedImage: UIImage(systemName: "doc.text.fill")
-        )
-        let journalsNav = UINavigationController(rootViewController: journalsVC)
-        
-        let careCornerVC = CareCornerViewController()
-        careCornerVC.tabBarItem = UITabBarItem(
-            title: "Care",
-            image: UIImage(systemName: "brain.head.profile"),
-            selectedImage: UIImage(systemName: "brain.head.profile.fill")
-        )
-        let careCornerNav = UINavigationController(rootViewController: careCornerVC)
-        
-        let communityVC = CommunityFeedViewController(nibName: "CommunityFeedViewController", bundle: nil)
-        communityVC.tabBarItem = UITabBarItem(
-            title: "Community",
-            image: UIImage(systemName: "person.2"),
-            selectedImage: UIImage(systemName: "person.2.fill")
-        )
-        let communityNav = UINavigationController(rootViewController: communityVC)
-        
-        // Set view controllers - Home is now at index 0
-        tabBarController.viewControllers = [homePetsNav, journalsNav, careCornerNav, communityNav]
-        tabBarController.selectedIndex = 0 // Select Home tab (now at index 0)
-        
-        // Present the tab bar controller
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            window.rootViewController = tabBarController
-        }
-    }
-    
     // MARK: - API
     private func fetchPetData() {
-        HomePetService.shared.getPet { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let pet):
-                    self?.updatePetUI(pet)
-                case .failure(let error):
-                    print("Error fetching pet: \(error)")
-
-                    self?.nameLabel.text = "My Pet"
+        Task {
+            await petViewModel.fetchPet()
+            await MainActor.run {
+                if let pet = petViewModel.pet {
+                    updatePetUI(pet)
+                } else {
+                    nameLabel.text = "My Pet"
                 }
             }
         }
     }
     
-    private func updatePetUI(_ pet: Pet) {
+    private func updatePetUI(_ pet: PetViewModel.PetData) {
         nameLabel.text = pet.name
         levelLabel.text = "Level \(pet.level)"
         
-        let imageName = pet.type.lowercased() == "cat" ? "cat.fill" : "dog.fill"
+        let imageName = pet.type.lowercased() == "cat" ? "cat.fill" : "hare.fill"
         if let assetImage = UIImage(named: "illustrations/homePets/\(pet.type)") {
              petImageView.image = assetImage
         } else {

@@ -7,8 +7,12 @@
 
 import UIKit
 import PhotosUI
+import Combine
 
 class AddTextJournalViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
+    
+    private let journalViewModel = JournalViewModel()
+    private var cancellables = Set<AnyCancellable>()
         
         @IBOutlet weak var titleTextField: UITextField!
         @IBOutlet weak var entryTextView: UITextView!
@@ -333,16 +337,16 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                 return
             }
             
-            // Determine mood from selected emotion button
-            var moodTags: [String] = []
+            // Determine emotion from selected emotion button
+            var selectedEmotion: String? = nil
             if let selectedButton = emotionButtons.first(where: { $0.isSelected }) {
                 switch selectedButton.tag {
-                case 0: moodTags.append("Happy")
-                case 1: moodTags.append("Calm")
-                case 2: moodTags.append("Sad")
-                case 3: moodTags.append("Angry")
-                case 4: moodTags.append("Anxious")
-                default: moodTags.append("Neutral")
+                case 0: selectedEmotion = "Happy"
+                case 1: selectedEmotion = "Calm"
+                case 2: selectedEmotion = "Sad"
+                case 3: selectedEmotion = "Angry"
+                case 4: selectedEmotion = "Anxious"
+                default: selectedEmotion = "Neutral"
                 }
             }
             
@@ -365,22 +369,23 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                 }
             }
             
-            JournalService.shared.createJournal(
-                title: title,
-                content: content,
-                type: .text,
-                moodTags: moodTags,
-                voiceUrl: nil,
-                mediaUrls: mediaUrls,
-                transcription: nil
-            ) { [weak self] result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(_):
+            Task {
+                do {
+                    _ = try await journalViewModel.createJournal(
+                        title: title,
+                        content: content,
+                        emotion: selectedEmotion,
+                        tags: nil,
+                        mediaUrls: mediaUrls.isEmpty ? nil : mediaUrls,
+                        isFavorite: false
+                    )
+                    await MainActor.run {
                         print("Journal created successfully")
-                        self?.navigationController?.popViewController(animated: true)
-                    case .failure(let error):
-                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.showAlert(title: "Error", message: error.localizedDescription)
                     }
                 }
             }
