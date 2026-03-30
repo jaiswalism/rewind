@@ -11,6 +11,7 @@ class NewJournalTypeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupBackButton()
     }
     

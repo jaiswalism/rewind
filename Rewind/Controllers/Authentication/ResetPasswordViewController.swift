@@ -15,13 +15,12 @@ class ResetPasswordViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
         let fields = [passwordField, confirmPasswordField]
             fields.forEach { $0?.styleRoundedInput() }
     }
 
     @IBAction func backButton(_ sender: Any) {
-        // Navigate back to OTPVerifyViewController (XIB)
+        // Navigate back to OTPVerifyViewController
                let otpVC = OTPVerifyViewController(nibName: "OTPVerifyViewController", bundle: nil)
                otpVC.modalPresentationStyle = .fullScreen
                present(otpVC, animated: true, completion: nil)

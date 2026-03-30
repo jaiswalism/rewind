@@ -1,6 +1,7 @@
 import Foundation
 
-// MARK: - API Response Wrapper
+// api wrapper
+
 struct APIResponse<T: Codable>: Codable {
     let success: Bool
     let data: T?

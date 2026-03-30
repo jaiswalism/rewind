@@ -79,7 +79,8 @@ class ExerciseCompletedViewController: UIViewController {
         return label
     }()
     
-    // Stack View to horizontally center the icon and label within the badge
+    // centering the icon and label
+
     private let durationStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -154,7 +155,8 @@ class ExerciseCompletedViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initial Nav Bar Hide (Optional, but good practice)
+        // hiding nav bar for immersion
+
         self.navigationController?.setNavigationBarHidden(true, animated: false)
         
         setupUI()
@@ -164,25 +166,21 @@ class ExerciseCompletedViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Aggressively hide the navigation bar to remove the system-generated chevron
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
-    // MARK: - Setup
     private func setupUI() {
-        // Set main background color
         view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
         
-        // 1. ADD ILLUSTRATION FIRST to the main view (static background)
+        // ADD ILLUSTRATION FIRST to the main view (static background)
         view.insertSubview(illustrationImageView, at: 0)
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        // 2. ADD MAIN ACTION BUTTON to the main view (pinned bottom)
         view.addSubview(backButton)
         
-        // 3. ADD CONTENT ELEMENTS to the contentView (layered on top)
+        // ADD CONTENT ELEMENTS to the contentView (layered on top)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
         
@@ -204,21 +202,17 @@ class ExerciseCompletedViewController: UIViewController {
         
         // Constraints for the primary screen structure
         NSLayoutConstraint.activate([
-            // --- Static Illustration Constraints (FIXED HEIGHT) ---
             illustrationImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             illustrationImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             illustrationImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            // FINAL MODIFIED: Fixed height to 480 points to position it correctly below the badges
             illustrationImageView.heightAnchor.constraint(equalToConstant: 480),
 
             // --- Scroll View ---
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            // Stop scrolling area above the main action button
             scrollView.bottomAnchor.constraint(equalTo: backButton.topAnchor, constant: -20),
             
-            // --- Content View (Sets the overall size for scrollable content) ---
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
@@ -278,7 +272,7 @@ class ExerciseCompletedViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
-        // Navigate back to Care Corner (pop to CareCornerViewController)
+        // Navigate back to Care Corner
         if let navigationController = navigationController {
             for viewController in navigationController.viewControllers.reversed() {
                 if viewController is CareCornerViewController {
@@ -286,10 +280,8 @@ class ExerciseCompletedViewController: UIViewController {
                     return
                 }
             }
-            // If CareCornerViewController is not found, pop to root
             navigationController.popToRootViewController(animated: true)
         } else {
-             // If presented modally, dismiss
             self.dismiss(animated: true, completion: nil)
         }
     }

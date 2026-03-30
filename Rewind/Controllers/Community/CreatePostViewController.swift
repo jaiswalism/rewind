@@ -7,15 +7,19 @@
 
 import UIKit
 import PhotosUI
+import Combine
 
 class CreatePostViewController: UIViewController {
+    
+    // MARK: - ViewModels
+    private let communityViewModel = CommunityViewModel()
+    private let userViewModel = UserViewModel()
 
     // MARK: - UI Components
     
     // Gradient Background
     private let gradientLayer = CAGradientLayer()
     
-    // Header
     private let headerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -100,7 +104,7 @@ class CreatePostViewController: UIViewController {
     
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.text = "Shyam" // Placeholder
+        label.text = "Aviral Sharma"
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.textColor = .white
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -161,7 +165,8 @@ class CreatePostViewController: UIViewController {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 10
-        stack.alignment = .center // Fix: alignment .center avoids forcing children to fill height (100 vs 80)
+        stack.alignment = .center
+
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }()
@@ -246,14 +251,10 @@ class CreatePostViewController: UIViewController {
         return s
     }()
     
-    // MARK: - Lifecycle
     
-    private var currentUser: User?
+    private var currentUser: DBUser?
     private var postToEdit: CommunityPost? // Edit Mode Property
     
-    // MARK: - Lifecycle
-    
-    // Custom Init for Edit Mode
     init(postToEdit: CommunityPost? = nil) {
         self.postToEdit = postToEdit
         super.init(nibName: nil, bundle: nil)
@@ -269,7 +270,6 @@ class CreatePostViewController: UIViewController {
         setupActions()
         fetchUserProfile()
         
-        // Populate if Editing
         if let post = postToEdit {
             setupEditMode(post: post)
         }
@@ -286,28 +286,21 @@ class CreatePostViewController: UIViewController {
         // Trigger toggle logic manually to update UI labels
         anonymousToggled(anonymousSwitch)
         
-        // Disable media editing for now if complex
         addMediaButton.isHidden = true 
         mediaLabel.text = "Media (Editing not supported yet)"
         
-        // Pre-select tags logic would go here if tags were structured data
-        // For now, user has to re-select or we match strings
     }
     
-    // ... existing layout methods ...
     
     private func fetchUserProfile() {
-        UserService.shared.getProfile { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let user):
-                    self?.currentUser = user
-                    if !(self?.anonymousSwitch.isOn ?? false) {
-                        self?.nameLabel.text = user.name
-                        // Avatar loading logic if URL exists, else default
+        Task {
+            await userViewModel.fetchProfile()
+            await MainActor.run {
+                if let user = userViewModel.user {
+                    self.currentUser = user
+                    if !(self.anonymousSwitch.isOn ?? false) {
+                        self.nameLabel.text = user.name
                     }
-                case .failure(let error):
-                    print("Error fetching profile: \(error)")
                 }
             }
         }
@@ -315,7 +308,6 @@ class CreatePostViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // Ensure nav bar is hidden to prevent double headers and layout loops with safe area
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
@@ -337,37 +329,32 @@ class CreatePostViewController: UIViewController {
         headerView.addSubview(postButton)
         
         // Main Content
-        scrollView.contentInsetAdjustmentBehavior = .never // Prevent system safe area conflicts
+        scrollView.contentInsetAdjustmentBehavior = .never
+
         view.addSubview(scrollView)
         scrollView.addSubview(contentStack)
         
-        // 1. Profile Section
         contentStack.addArrangedSubview(profileContainer)
         profileContainer.addSubview(avatarImageView)
         profileContainer.addSubview(nameLabel)
         profileContainer.addSubview(privacyLabel)
         
-        // 2. Text Input
         let textContainer = UIView()
         textContainer.translatesAutoresizingMaskIntoConstraints = false
         textContainer.addSubview(textView)
         textContainer.addSubview(placeholderLabel)
         contentStack.addArrangedSubview(textContainer)
         
-        // 3. Media Section
         contentStack.addArrangedSubview(mediaLabel)
         contentStack.addArrangedSubview(mediaScrollView)
         mediaScrollView.addSubview(mediaStack)
-        // Add the 'Add' button initially
         mediaStack.addArrangedSubview(addMediaButton)
         
-        // 4. Tags Section
         contentStack.addArrangedSubview(tagsLabel)
         contentStack.addArrangedSubview(tagsScrollView)
         tagsScrollView.addSubview(tagsStack)
         populateTags()
         
-        // 5. Anonymous Toggle
         contentStack.addArrangedSubview(anonymousContainer)
         anonymousContainer.addSubview(anonymousIcon)
         anonymousContainer.addSubview(anonymousLabel)
@@ -380,7 +367,6 @@ class CreatePostViewController: UIViewController {
         let safeArea = view.safeAreaLayoutGuide
         
         NSLayoutConstraint.activate([
-            // Header
             headerView.topAnchor.constraint(equalTo: safeArea.topAnchor),
             headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -506,7 +492,7 @@ class CreatePostViewController: UIViewController {
 
     @objc private func postButtonTapped() {
         guard let content = textView.text?.trimmingCharacters(in: .whitespacesAndNewlines), !content.isEmpty else {
-            return // Or show alert
+            return 
         }
         
         let isAnonymous = anonymousSwitch.isOn
@@ -515,21 +501,23 @@ class CreatePostViewController: UIViewController {
             tags.append(selectedTag)
         }
         
-        // Disable button to prevent double post
+        // prevent double tapping
         postButton.isEnabled = false
         
-        // UPDATE MODE
         if let post = postToEdit {
-            CommunityService.shared.updatePost(id: post.id, content: content, tags: tags) { [weak self] result in
-                DispatchQueue.main.async {
-                    self?.postButton.isEnabled = true
-                    switch result {
-                    case .success:
+            Task {
+                do {
+                    _ = try await communityViewModel.updatePost(id: post.id, content: content, tags: tags)
+                    await MainActor.run {
+                        self.postButton.isEnabled = true
                         print("Post updated successfully")
-                        NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil) // Triggers refresh
-                        self?.navigationController?.popViewController(animated: true)
-                    case .failure(let error):
-                        self?.showAlert(title: "Error", message: error.localizedDescription)
+                        NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.postButton.isEnabled = true
+                        self.showAlert(title: "Error", message: error.localizedDescription)
                     }
                 }
             }
@@ -537,7 +525,6 @@ class CreatePostViewController: UIViewController {
         }
         
         // CREATE MODE
-        // Mock Media URLs (Since we lack a real upload server)
         var mediaUrls: [String] = []
         if !selectedImages.isEmpty {
             // Save to Documents Directory for persistence
@@ -558,16 +545,19 @@ class CreatePostViewController: UIViewController {
             }
         }
         
-        CommunityService.shared.createPost(content: content, isAnonymous: isAnonymous, tags: tags, mediaUrls: mediaUrls) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.postButton.isEnabled = true
-                switch result {
-                case .success(_):
+        Task {
+            do {
+                _ = try await communityViewModel.createPost(content: content, isAnonymous: isAnonymous, tags: tags, mediaUrls: mediaUrls)
+                await MainActor.run {
+                    self.postButton.isEnabled = true
                     print("Post created successfully")
-                    NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil) // Refresh feed
-                    self?.navigationController?.popViewController(animated: true)
-                case .failure(let error):
-                    self?.showAlert(title: "Error", message: error.localizedDescription)
+                    NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
+                    self.navigationController?.popViewController(animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    self.postButton.isEnabled = true
+                    self.showAlert(title: "Error", message: error.localizedDescription)
                 }
             }
         }
@@ -613,7 +603,8 @@ extension CreatePostViewController: UITextViewDelegate {
     }
 }
 
-// MARK: - PHPickerViewControllerDelegate
+// picker delegate stuff
+
 extension CreatePostViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
@@ -640,11 +631,9 @@ extension CreatePostViewController: PHPickerViewControllerDelegate {
         imageView.widthAnchor.constraint(equalToConstant: 80).isActive = true
         imageView.heightAnchor.constraint(equalToConstant: 80).isActive = true
         
-        // Insert before the add button
         let insertIndex = mediaStack.arrangedSubviews.count - 1
         mediaStack.insertArrangedSubview(imageView, at: insertIndex)
         
-        // Disable add button if limit reached
         if selectedImages.count >= 4 {
             addMediaButton.isHidden = true
         }

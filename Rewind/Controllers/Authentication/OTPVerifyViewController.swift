@@ -22,13 +22,12 @@ class OTPVerifyViewController: UIViewController {
         fields.forEach { $0?.styleRoundedInput() }
     }
     @IBAction func backButton(_ sender: Any) {
-        // Navigate back to ForgotPasswordViewController (XIB)
+        // Navigate back to ForgotPasswordViewController 
               let forgotVC = ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil)
               forgotVC.modalPresentationStyle = .fullScreen
               present(forgotVC, animated: true, completion: nil)
           }
     @IBAction func verifyCodeButton(_ sender: Any) {
-        // Navigate to ResetPasswordViewController (XIB)
               let resetVC = ResetPasswordViewController(nibName: "ResetPasswordViewController", bundle: nil)
               resetVC.modalPresentationStyle = .fullScreen
               present(resetVC, animated: true, completion: nil)

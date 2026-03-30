@@ -1,11 +1,6 @@
-//
-//  MyJournalsListViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 11/11/25.
-//
-
 import UIKit
+import AVFoundation
+import Combine
 
 class MyJournalsListViewController: UIViewController {
 
@@ -20,18 +15,43 @@ class MyJournalsListViewController: UIViewController {
         ("Sun", "1")
     ]
     
-    var journalEntries: [Journal] = [] // API Data
+    private let journalViewModel = JournalViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
-    // Removed legacy hardcoded data
-    // let days ... (Keeping days for now if needed for calendar, but fetching entries is priority)
+    var journalEntries: [DBJournal] = []
     
-    // Hardcoded days for UI (could be dynamic later)
-
+    var audioPlayer: AVPlayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupBackButton()
+        bindViewModel()
+    }
+    
+    private func bindViewModel() {
+        journalViewModel.$journals
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] journals in
+                self?.journalEntries = journals
+                self?.timelineTableView.reloadData()
+            }
+            .store(in: &cancellables)
+        
+        journalViewModel.$error
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.showError(error)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func showError(_ message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -41,17 +61,8 @@ class MyJournalsListViewController: UIViewController {
     }
     
     private func fetchJournals() {
-        JournalService.shared.getJournals { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let journals):
-                    self?.journalEntries = journals
-                    self?.timelineTableView.reloadData()
-                case .failure(let error):
-                    print("Error fetching journals: \(error)")
-                    // Optionally show empty state
-                }
-            }
+        Task {
+            await journalViewModel.fetchJournals()
         }
     }
     
@@ -93,33 +104,27 @@ class MyJournalsListViewController: UIViewController {
         setupFloatingActionButton()
     }
     
-    // MARK: - Floating Action Button
     private func setupFloatingActionButton() {
         let fab = UIButton(type: .system)
         fab.translatesAutoresizingMaskIntoConstraints = false
         
-        // Icon
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let plusImage = UIImage(systemName: "plus", withConfiguration: config)
         fab.setImage(plusImage, for: .normal)
         fab.tintColor = .white
         
-        // Style
-        fab.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") // Use app theme color
-        fab.layer.cornerRadius = 28 // Half of 56 width
+        fab.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+        fab.layer.cornerRadius = 28
         
-        // Shadow
         fab.layer.shadowColor = UIColor.black.cgColor
         fab.layer.shadowOpacity = 0.3
         fab.layer.shadowOffset = CGSize(width: 0, height: 4)
         fab.layer.shadowRadius = 5
         
-        // Action
         fab.addTarget(self, action: #selector(fabTapped), for: .touchUpInside)
         
         view.addSubview(fab)
         
-        // Constraints
         NSLayoutConstraint.activate([
             fab.widthAnchor.constraint(equalToConstant: 56),
             fab.heightAnchor.constraint(equalToConstant: 56),
@@ -129,20 +134,23 @@ class MyJournalsListViewController: UIViewController {
     }
     
     @objc private func fabTapped() {
-        // Navigate to New Journal Type selection or directly to Add Journal
         let vc = NewJournalTypeViewController(nibName: "NewJournalTypeViewController", bundle: nil)
-        
-        // If the user wants to keep ONLY the plus button, ensuring no other navigation happens from other places.
-        // Assuming this is the primary entry point now.
         navigationController?.pushViewController(vc, animated: true)
     }
     
     @objc func backButtonTapped(_ sender: Any) {
         navigationController?.popViewController(animated: true)
     }
+    
+    func playVoice(url: String) {
+        guard let mediaURL = URL(string: url) else { return }
+        
+        let playerItem = AVPlayerItem(url: mediaURL)
+        audioPlayer = AVPlayer(playerItem: playerItem)
+        audioPlayer?.play()
+    }
 }
 
-// MARK: - UICollectionViewDataSource & Delegate
 extension MyJournalsListViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -165,7 +173,6 @@ extension MyJournalsListViewController: UICollectionViewDataSource, UICollection
     }
 }
 
-// MARK: - UITableViewDataSource & Delegate
 extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -190,14 +197,15 @@ extension MyJournalsListViewController: UITableViewDataSource, UITableViewDelega
         formatter.dateFormat = "HH:mm"
         let timeString = entry.createdDate.map { formatter.string(from: $0) } ?? "Now"
         
-        // Use title as Mood/Headline for now, or use first mood tag
-        let moodHeadline = entry.moodTags?.first ?? entry.title
+        let moodHeadline = entry.emotion ?? entry.title
         
         cell.configure(time: timeString,
                        mood: moodHeadline,
                        entry: entry.content,
                        isFirst: isFirst,
-                       isLast: isLast)
+                       isLast: isLast,
+                       showPlayButton: false,
+                       onPlay: nil)
         
         return cell
     }

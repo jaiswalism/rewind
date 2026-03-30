@@ -6,13 +6,15 @@
 //
 
 import UIKit
+import Combine
+import Foundation
 
 class CommentSheetViewController: UIViewController {
-    
     // MARK: - Properties
     var postId: String!
-    private var comments: [Comment] = []
-    
+    private let communityViewModel = CommunityViewModel()
+    private var cancellables = Set<AnyCancellable>()
+
     // MARK: - UI Components
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -22,7 +24,7 @@ class CommentSheetViewController: UIViewController {
         label.textColor = .white
         return label
     }()
-    
+
     private let closeButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -31,7 +33,7 @@ class CommentSheetViewController: UIViewController {
         button.tintColor = .white
         return button
     }()
-    
+
     private let activityIndicator: UIActivityIndicatorView = {
         let indicator = UIActivityIndicatorView(style: .medium)
         indicator.translatesAutoresizingMaskIntoConstraints = false
@@ -39,7 +41,7 @@ class CommentSheetViewController: UIViewController {
         indicator.hidesWhenStopped = true
         return indicator
     }()
-    
+
     private let commentsTableView: UITableView = {
         let tableView = UITableView()
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -49,47 +51,73 @@ class CommentSheetViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         return tableView
     }()
-    
-    // The gray bar at the bottom
+
     private let commentInputView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover") // Ensure this color exists
+        view.backgroundColor = UIColor(named: "colors/Primary/Dark :hover")
         return view
     }()
-    
+
     private let inputTextField = UITextField()
     private let sendButton = UIButton(type: .system)
 
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Assign delegates and register cell
         commentsTableView.dataSource = self
         commentsTableView.register(CommentTableViewCell.self, forCellReuseIdentifier: CommentTableViewCell.reuseIdentifier)
-        
-        // Add targets
         closeButton.addTarget(self, action: #selector(dismissView), for: .touchUpInside)
-        
         setupUI()
         setupInputViewContent()
-        
+        bindViewModel()
         fetchComments()
     }
-    
+
+    private func bindViewModel() {
+        communityViewModel.$comments
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.commentsTableView.reloadData()
+            }
+            .store(in: &cancellables)
+    }
+
     private func fetchComments() {
-        guard let postId = postId else { return }
+        guard let postId = postId, let uuid = UUID(uuidString: postId) else { return }
         activityIndicator.startAnimating()
-        CommunityService.shared.getComments(postId: postId) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.activityIndicator.stopAnimating()
-                switch result {
-                case .success(let fetchedComments):
-                    self?.comments = fetchedComments
-                    self?.commentsTableView.reloadData()
-                case .failure(let error):
-                    print("Error fetching comments: \(error)")
+        Task {
+            await communityViewModel.fetchComments(postId: uuid)
+            await MainActor.run {
+                self.activityIndicator.stopAnimating()
+            }
+        }
+    }
+
+    // ...existing code...
+
+    @objc private func sendComment() {
+        guard let text = inputTextField.text, !text.isEmpty, let postId = postId, let uuid = UUID(uuidString: postId) else { return }
+        sendButton.isEnabled = false
+        Task {
+            do {
+                let newComment = try await communityViewModel.addComment(postId: uuid, text: text)
+                await MainActor.run {
+                    self.sendButton.isEnabled = true
+                    self.inputTextField.text = ""
+                    self.commentsTableView.reloadData()
+                    let count = self.communityViewModel.comments.count
+                    if count > 0 {
+                        let indexPath = IndexPath(row: count - 1, section: 0)
+                        self.commentsTableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.sendButton.isEnabled = true
+                    
+                    let alert = UIAlertController(title: "Failed to Post", message: error.localizedDescription, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                    self.present(alert, animated: true)
                 }
             }
         }
@@ -188,43 +216,19 @@ class CommentSheetViewController: UIViewController {
     @objc private func dismissView() {
         dismiss(animated: true, completion: nil)
     }
-    
-    @objc private func sendComment() {
-        guard let text = inputTextField.text, !text.isEmpty, let postId = postId else { return }
-        
-        sendButton.isEnabled = false
-        CommunityService.shared.addComment(postId: postId, text: text) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.sendButton.isEnabled = true
-                switch result {
-                case .success(let newComment):
-                    self?.comments.append(newComment)
-                    self?.inputTextField.text = ""
-                    self?.commentsTableView.reloadData()
-                    if let count = self?.comments.count, count > 0 {
-                        let indexPath = IndexPath(row: count - 1, section: 0)
-                        self?.commentsTableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
-                    }
-                case .failure(let error):
-                    print("Error posting comment: \(error)")
-                    // Show alert
-                }
-            }
-        }
-    }
 }
 
 // MARK: - UITableViewDataSource
 extension CommentSheetViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return comments.count
+        return communityViewModel.comments.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CommentTableViewCell.reuseIdentifier, for: indexPath) as? CommentTableViewCell else {
             return UITableViewCell()
         }
-        let comment = comments[indexPath.row]
+        let comment = communityViewModel.comments[indexPath.row]
         cell.configure(with: comment)
         return cell
     }

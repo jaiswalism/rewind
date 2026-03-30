@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 
 // Utility extension to find the nearest presenting UIViewController in the view hierarchy.
 extension UIView {
@@ -29,6 +30,9 @@ class CommunityPostView: UIView {
     let isMine: Bool 
     let mediaUrls: [String]
     let tags: [String]
+    
+    // MARK: - ViewModels
+    private let communityViewModel = CommunityViewModel()
     
     // Internal state for the like button
     private var currentLikeState: Bool = false 
@@ -173,47 +177,28 @@ class CommunityPostView: UIView {
     // MARK: - Action Handlers
     
     @objc private func likeButtonTapped(sender: UIButton) {
+        guard let postIdUUID = UUID(uuidString: postId) else { return }
         // Optimistic UI Update
         currentLikeState.toggle()
-        if currentLikeState {
-            likeCount += 1
-            CommunityService.shared.likePost(id: postId) { [weak self] result in
-                guard let self = self else { return }
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let response):
-                        self.likeCount = response.likeCount // Sync with server
-                        self.updateLikeButton(sender: sender)
-                    case .failure(let error):
-                        print("Error liking post: \(error)")
-                        // Revert
-                        self.currentLikeState.toggle()
-                        self.likeCount -= 1
-                        self.updateLikeButton(sender: sender)
-                    }
+        likeCount += currentLikeState ? 1 : -1
+        updateLikeButton(sender: sender)
+        
+        Task {
+            do {
+                let response = try await communityViewModel.toggleLike(postId: postIdUUID)
+                await MainActor.run {
+                    self.currentLikeState = response.liked
+                    self.likeCount = response.count
+                    self.updateLikeButton(sender: sender)
                 }
-            }
-        } else {
-            likeCount -= 1
-            CommunityService.shared.unlikePost(id: postId) { [weak self] result in
-                guard let self = self else { return }
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let response):
-                        self.likeCount = response.likeCount // Sync with server
-                        self.updateLikeButton(sender: sender)
-                    case .failure(let error):
-                        print("Error unliking post: \(error)")
-                        // Revert
-                        self.currentLikeState.toggle()
-                        self.likeCount += 1
-                        self.updateLikeButton(sender: sender)
-                    }
+            } catch {
+                await MainActor.run {
+                    self.currentLikeState.toggle()
+                    self.likeCount += self.currentLikeState ? 1 : -1
+                    self.updateLikeButton(sender: sender)
                 }
             }
         }
-        
-        updateLikeButton(sender: sender)
         
         // Animation
         UIView.animate(withDuration: 0.1, animations: {
@@ -304,6 +289,7 @@ class CommunityPostView: UIView {
                 // Reconstruct CommunityPost object for editing
                 let post = CommunityPost(
                     id: self.postId,
+                    userId: nil,
                     content: self.postText,
                     isAnonymous: self.isAnonymous,
                     tags: self.tags,
@@ -635,13 +621,16 @@ class CommunityPostView: UIView {
     }
     
     private func deletePost() {
-        CommunityService.shared.deletePost(id: postId) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success:
+        Task {
+            do {
+                guard let postIdUUID = UUID(uuidString: postId) else { return }
+                _ = try await communityViewModel.deletePost(id: postIdUUID)
+                await MainActor.run {
                     print("Post deleted successfully")
                     NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
-                case .failure(let error):
+                }
+            } catch {
+                await MainActor.run {
                     print("Error deleting post: \(error)")
                 }
             }

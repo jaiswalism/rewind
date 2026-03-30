@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import Combine
+import Foundation
 
 final class NotificationCardView: UIView {
     private let container = UIView()
@@ -108,6 +110,9 @@ final class NotificationCardView: UIView {
 
 class NotificationsViewController: UIViewController {
 
+    private let notificationViewModel = NotificationViewModel()
+    private var cancellables = Set<AnyCancellable>()
+    
     // keep legacy outlet so existing xib/storyboard connections don't crash
     @IBOutlet weak var tag: UILabel?
 
@@ -243,22 +248,28 @@ class NotificationsViewController: UIViewController {
     }
 
     private func fetchNotifications() {
-        NotificationService.shared.getNotifications { [weak self] result in
-            DispatchQueue.main.async {
-                self?.refreshControl.endRefreshing()
-                switch result {
-                case .success(let items):
-                    self?.populateNotifications(items)
-                case .failure(let error):
-                    print("Error fetching notifications: \(error)")
-                }
+        Task {
+            await notificationViewModel.fetchNotifications()
+            await MainActor.run {
+                self.refreshControl.endRefreshing()
+                self.populateNotifications()
             }
         }
     }
     
-    private func populateNotifications(_ items: [NotificationItem]) {
-        // Clear Stack
+    private func populateNotifications() {
         stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        let items = notificationViewModel.notifications.map { notif in
+            NotificationItem(
+                id: notif.id.uuidString,
+                title: notif.title,
+                message: notif.body,
+                type: notif.type,
+                isRead: notif.isRead,
+                createdAt: notif.createdAt
+            )
+        }
         
         if items.isEmpty {
             let emptyLabel = UILabel()

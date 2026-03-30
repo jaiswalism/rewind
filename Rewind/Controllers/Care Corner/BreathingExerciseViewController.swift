@@ -85,6 +85,7 @@ class BreathingExerciseViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupActions()
         setupGestures()
@@ -177,7 +178,8 @@ class BreathingExerciseViewController: UIViewController {
         minutesSwipeDown.direction = .down
         minutesContainer.addGestureRecognizer(minutesSwipeDown)
         
-        // Add swipe gestures for seconds
+        // swipe up to increase seconds
+
         let secondsSwipeUp = UISwipeGestureRecognizer(target: self, action: #selector(secondsSwipedUp))
         secondsSwipeUp.direction = .up
         secondsContainer.addGestureRecognizer(secondsSwipeUp)
@@ -186,7 +188,8 @@ class BreathingExerciseViewController: UIViewController {
         secondsSwipeDown.direction = .down
         secondsContainer.addGestureRecognizer(secondsSwipeDown)
         
-        // Add tap gestures for direct interaction
+        // tap to cycle through values
+
         let minutesTap = UITapGestureRecognizer(target: self, action: #selector(minutesTapped))
         minutesContainer.addGestureRecognizer(minutesTap)
         

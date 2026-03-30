@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class BreathingAnimationViewController: UIViewController {
+    
+    // MARK: - ViewModels
+    private let careCornerViewModel = CareCornerViewModel()
     
     // MARK: - UI Components
     private let backButton: UIButton = {
@@ -107,6 +111,7 @@ class BreathingAnimationViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupActions()
     }
@@ -162,13 +167,15 @@ class BreathingAnimationViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Back Button
+            // back button
+
             backButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             backButton.widthAnchor.constraint(equalToConstant: 44),
             backButton.heightAnchor.constraint(equalToConstant: 44),
             
-            // Breathing Blob Container
+            // the breathing blob container
+
             breathingBlobContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             breathingBlobContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             breathingBlobContainer.widthAnchor.constraint(equalToConstant: 500),
@@ -302,22 +309,27 @@ class BreathingAnimationViewController: UIViewController {
         // Use totalSeconds if available, else fallback
         let duration = self.totalSeconds ?? 300 // Fallback 5 mins
         
-        CareCornerService.shared.recordBreathing(durationSeconds: duration) { [weak self] result in
-            DispatchQueue.main.async {
-                let pawsEarned: Int
-                switch result {
-                case .success(let earned):
-                    pawsEarned = earned
-                case .failure(let error):
-                    print("Error recording breathing: \(error)")
-                    pawsEarned = (duration / 60) * 10 // Fallback calc
+        Task {
+            do {
+                let pawsEarned = try await careCornerViewModel.recordBreathing(durationSeconds: duration)
+                await MainActor.run {
+                    let durationMinutes = duration / 60
+                    let durationString = "\(durationMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
                 }
-                
-                let durationMinutes = duration / 60
-                let durationString = "\(durationMinutes)M"
-                
-                let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
-                self?.navigationController?.pushViewController(completedVC, animated: true)
+            } catch {
+                await MainActor.run {
+                    print("Error recording breathing: \(error)")
+                    let pawsEarned = (duration / 60) * 10 // Fallback calc
+                    
+                    let durationMinutes = duration / 60
+                    let durationString = "\(durationMinutes)M"
+                    
+                    let completedVC = ExerciseCompletedViewController(duration: durationString, pawsEarned: pawsEarned)
+                    self.navigationController?.pushViewController(completedVC, animated: true)
+                }
             }
         }
     }

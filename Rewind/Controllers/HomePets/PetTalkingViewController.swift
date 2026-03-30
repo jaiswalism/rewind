@@ -9,6 +9,7 @@ import UIKit
 import Speech
 import AVFoundation
 import SceneKit
+import Combine
 
 class PetTalkingViewController: UIViewController {
     
@@ -26,23 +27,36 @@ class PetTalkingViewController: UIViewController {
     // MARK: - Constants
     private let petBaseScale: Float = 0.13
     
+    // MARK: - ViewModels
+    private let petViewModel = PetViewModel()
+    
     // MARK: - UI Components
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-        let image = UIImage(systemName: "chevron.left", withConfiguration: config)
-        button.setImage(image, for: .normal)
-        button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
+        
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+            config.image = UIImage(systemName: "chevron.left", withConfiguration: imageConfig)
+            config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+            button.configuration = config
+        } else {
+            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+            let image = UIImage(systemName: "chevron.left", withConfiguration: config)
+            button.setImage(image, for: .normal)
+            button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
+            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        }
+        
         button.backgroundColor = UIColor.clear
         button.isUserInteractionEnabled = true
         button.isEnabled = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         return button
     }()
     
     private let petView = PetAvatarView()
-    // Removed: private let penguinSceneView: SCNView
     
     private let animatedBlobContainer: UIView = {
         let view = UIView()
@@ -102,34 +116,154 @@ class PetTalkingViewController: UIViewController {
         return button
     }()
     
-    // MARK: - Properties
+    // variables
+
     private var gradientLayer: CAGradientLayer?
     private var animationTimer: Timer?
     private var isAnimating = false
     
     // Speech Recognition Properties
-    private lazy var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    // Use system default locale to match Siri language settings
+    private lazy var speechRecognizer = SFSpeechRecognizer()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private lazy var audioEngine = AVAudioEngine()
     private var isRecording = false
     private var audioLevelTimer: Timer?
     
+    // Permission states
+    private var micPermissionGranted = false
+    private var speechPermissionGranted = false
+    
     // 3D Model Properties
     private var idleAnimation: SCNAction?
     
-    // MARK: - Lifecycle
+    // TTS Properties
+    private let speechSynthesizer = AVSpeechSynthesizer()
+    
+    // lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupActions()
         setup3DPenguin()
+        setupAudioRouteChangeNotifications()
+        printAudioDiagnostics()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         startBlobAnimation()
         requestSpeechPermission()
+    }
+    
+    // MARK: - Audio Diagnostics
+    private func printAudioDiagnostics() {
+        print("[PetTalking] ========== AUDIO DIAGNOSTICS ==========")
+        
+        #if targetEnvironment(simulator)
+        print("[PetTalking] Running on iOS SIMULATOR")
+        print("[PetTalking] NOTE: Simulator uses Mac's microphone. Ensure:")
+        print("[PetTalking]   1. Mac's System Preferences > Security & Privacy > Microphone allows Xcode/Simulator")
+        print("[PetTalking]   2. Mac has a working audio input device selected")
+        print("[PetTalking]   3. Try: System Preferences > Sound > Input - check if input level moves")
+        #else
+        print("[PetTalking] Running on PHYSICAL DEVICE")
+        #endif
+        
+        let audioSession = AVAudioSession.sharedInstance()
+        print("[PetTalking] Current category: \(audioSession.category.rawValue)")
+        print("[PetTalking] Current mode: \(audioSession.mode.rawValue)")
+        print("[PetTalking] Input available: \(audioSession.isInputAvailable)")
+        print("[PetTalking] Sample rate: \(audioSession.sampleRate)")
+        print("[PetTalking] Input channels: \(audioSession.inputNumberOfChannels)")
+        
+        if let inputs = audioSession.availableInputs {
+            print("[PetTalking] Available audio inputs (\(inputs.count)):")
+            for (index, input) in inputs.enumerated() {
+                print("[PetTalking]   [\(index)] \(input.portName) (\(input.portType.rawValue))")
+            }
+        } else {
+            print("[PetTalking] WARNING: No available audio inputs!")
+        }
+        
+        if let currentInput = audioSession.currentRoute.inputs.first {
+            print("[PetTalking] Current input: \(currentInput.portName) (\(currentInput.portType.rawValue))")
+        } else {
+            print("[PetTalking] WARNING: No current input route!")
+        }
+        
+        print("[PetTalking] ================================================")
+    }
+    
+    private func setupAudioRouteChangeNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioRouteChange),
+            name: AVAudioSession.routeChangeNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleAudioRouteChange(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+        
+        print("[PetTalking] Audio route changed: \(reason.rawValue)")
+        
+        switch reason {
+        case .newDeviceAvailable:
+            print("[PetTalking] New audio device available")
+            printAudioDiagnostics()
+        case .oldDeviceUnavailable:
+            print("[PetTalking] Audio device removed")
+            if isRecording {
+                DispatchQueue.main.async {
+                    self.stopRecording()
+                    self.transcriptionLabel.text = "Audio device disconnected"
+                }
+            }
+        case .categoryChange:
+            print("[PetTalking] Audio category changed")
+        default:
+            break
+        }
+    }
+    
+    @objc private func handleAudioInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        
+        switch type {
+        case .began:
+            print("[PetTalking] Audio interruption BEGAN")
+            if isRecording {
+                DispatchQueue.main.async {
+                    self.stopRecording()
+                    self.transcriptionLabel.text = "Interrupted"
+                }
+            }
+        case .ended:
+            print("[PetTalking] Audio interruption ENDED")
+        @unknown default:
+            break
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -151,10 +285,8 @@ class PetTalkingViewController: UIViewController {
     
     // MARK: - Setup
     private func setupUI() {
-        // Set background color matching app theme
         view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? UIColor(red: 0.38, green: 0.38, blue: 1.0, alpha: 1.0)
         
-        // Add gradient background similar to other screens
         let gradient = CAGradientLayer()
         gradient.frame = view.bounds
         gradient.colors = [
@@ -165,10 +297,8 @@ class PetTalkingViewController: UIViewController {
         view.layer.insertSublayer(gradient, at: 0)
         gradientLayer = gradient
         
-        // Hide navigation bar to match app style
         navigationController?.setNavigationBarHidden(true, animated: false)
         
-        // Add views in correct order
         petView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(petView)
         view.addSubview(transcriptionLabel)
@@ -176,13 +306,11 @@ class PetTalkingViewController: UIViewController {
         view.addSubview(micButton)
         view.addSubview(backButton)
         
-        // Add blob elements to container
         animatedBlobContainer.addSubview(outerBlob)
         animatedBlobContainer.addSubview(middleBlob)
         animatedBlobContainer.addSubview(innerBlob)
         animatedBlobContainer.addSubview(centerDot)
-        
-        // Ensure buttons are on top
+  
         view.bringSubviewToFront(micButton)
         view.bringSubviewToFront(backButton)
         
@@ -197,25 +325,25 @@ class PetTalkingViewController: UIViewController {
             backButton.widthAnchor.constraint(equalToConstant: 50),
             backButton.heightAnchor.constraint(equalToConstant: 50),
             
-            // Penguin 3D Scene View - larger to show full model
+            // Penguin 3D Scene View 
             petView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             petView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             petView.widthAnchor.constraint(equalToConstant: 350),
             petView.heightAnchor.constraint(equalToConstant: 350),
             
-            // Transcription Label - centered
+            // Transcription Label 
             transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             transcriptionLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: 30),
             transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             
-            // Mic Button - below transcription
+            // Mic Button 
             micButton.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 60),
             micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             micButton.widthAnchor.constraint(equalToConstant: 60),
             micButton.heightAnchor.constraint(equalToConstant: 60),
             
-            // Animated Blob Container - behind mic button
+            // Animated Blob Container 
             animatedBlobContainer.centerXAnchor.constraint(equalTo: micButton.centerXAnchor),
             animatedBlobContainer.centerYAnchor.constraint(equalTo: micButton.centerYAnchor),
             animatedBlobContainer.widthAnchor.constraint(equalToConstant: 120),
@@ -252,29 +380,19 @@ class PetTalkingViewController: UIViewController {
         micButton.addTarget(self, action: #selector(micButtonTapped), for: .touchUpInside)
     }
     
-    // MARK: - 3D Penguin Setup
-    // MARK: - 3D Penguin Setup
+    // 3d penguin stuff
+
     private func setup3DPenguin() {
-        // Re-enable default interaction to match Home screen
         petView.enableCameraControl(true)
         
-        // Use default camera (remove explicit setupCamera call)
-        
-        // Configure pet view
-        // Position at -1.8 y (matching Home screen)
-        // x: 0 to strict center (constraints ensure view is centered)
         petView.configure(scale: petBaseScale, position: SCNVector3(0, -1.8, 0))
     }
-    
-    // Removed loadPenguinModel, showPlaceholderPenguin, startPenguinIdleAnimation 
-    // as they are handled by PetAvatarView
     
     private func animatePenguinForVoice(intensity: Float) {
         guard let penguin = petView.penguinNode else { return }
         
         
         // Scale animation based on voice intensity
-        // Pulse around the base scale
         let scale = CGFloat(petBaseScale) * (1.0 + (CGFloat(intensity) * 0.3))
         let scaleAction = SCNAction.scale(to: scale, duration: 0.1)
         penguin.runAction(scaleAction, forKey: "voiceScale")
@@ -287,12 +405,12 @@ class PetTalkingViewController: UIViewController {
         }
     }
     
-    // MARK: - Blob Animation
+    // blob animation
+
     private func startBlobAnimation() {
         guard !isAnimating else { return }
         isAnimating = true
         
-        // Hide blob initially
         outerBlob.alpha = 0
         middleBlob.alpha = 0
         innerBlob.alpha = 0
@@ -335,91 +453,320 @@ class PetTalkingViewController: UIViewController {
     
     // MARK: - Speech Recognition
     private func requestSpeechPermission() {
+        print("[PetTalking] Requesting permissions...")
+        
+        // Request Speech Recognition Permission
         SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
+            print("[PetTalking] Speech recognition authorization status: \(authStatus.rawValue)")
             DispatchQueue.main.async {
                 switch authStatus {
                 case .authorized:
-                    print("Speech recognition authorized")
+                    print("[PetTalking] Speech recognition AUTHORIZED")
+                    self?.speechPermissionGranted = true
+                    self?.updatePermissionStatus()
                 case .denied:
+                    print("[PetTalking] Speech recognition DENIED")
+                    self?.speechPermissionGranted = false
                     self?.transcriptionLabel.text = "Speech recognition denied"
                 case .restricted:
+                    print("[PetTalking] Speech recognition RESTRICTED")
+                    self?.speechPermissionGranted = false
                     self?.transcriptionLabel.text = "Speech recognition restricted"
                 case .notDetermined:
+                    print("[PetTalking] Speech recognition NOT DETERMINED")
+                    self?.speechPermissionGranted = false
                     self?.transcriptionLabel.text = "Speech recognition not available"
                 @unknown default:
                     break
                 }
             }
         }
+        
+        // Request Microphone Permission
+        if #available(iOS 17.0, *) {
+            AVAudioApplication.requestRecordPermission { [weak self] allowed in
+                print("[PetTalking] Microphone permission (iOS 17+): \(allowed ? "GRANTED" : "DENIED")")
+                DispatchQueue.main.async {
+                    self?.micPermissionGranted = allowed
+                    if !allowed {
+                        self?.transcriptionLabel.text = "Microphone permission needed"
+                    } else {
+                        self?.updatePermissionStatus()
+                    }
+                }
+            }
+        } else {
+            AVAudioSession.sharedInstance().requestRecordPermission { [weak self] allowed in
+                print("[PetTalking] Microphone permission: \(allowed ? "GRANTED" : "DENIED")")
+                DispatchQueue.main.async {
+                    self?.micPermissionGranted = allowed
+                    if !allowed {
+                        self?.transcriptionLabel.text = "Microphone permission needed"
+                    } else {
+                        self?.updatePermissionStatus()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func updatePermissionStatus() {
+        if micPermissionGranted && speechPermissionGranted {
+            print("[PetTalking] All permissions granted - Ready to record")
+            transcriptionLabel.text = "Tap to start talking..."
+        }
+    }
+    
+    private func verifyPermissionsBeforeRecording() -> Bool {
+        print("[PetTalking] Verifying permissions before recording...")
+        
+        // Check Speech Recognition
+        let speechStatus = SFSpeechRecognizer.authorizationStatus()
+        print("[PetTalking] Speech recognition status: \(speechStatus.rawValue)")
+        guard speechStatus == .authorized else {
+            print("[PetTalking] ERROR: Speech recognition not authorized")
+            transcriptionLabel.text = "Speech permission required"
+            return false
+        }
+        
+        // Check Microphone
+        var micGranted = false
+        if #available(iOS 17.0, *) {
+            let micStatus = AVAudioApplication.shared.recordPermission
+            micGranted = (micStatus == .granted)
+            print("[PetTalking] Microphone permission status (iOS 17+): \(micStatus)")
+        } else {
+            let micStatus = AVAudioSession.sharedInstance().recordPermission
+            micGranted = (micStatus == .granted)
+            print("[PetTalking] Microphone permission status: \(micStatus.rawValue)")
+        }
+        guard micGranted else {
+            print("[PetTalking] ERROR: Microphone permission not granted")
+            transcriptionLabel.text = "Microphone permission required"
+            return false
+        }
+        
+        // Check SpeechRecognizer availability
+        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
+            print("[PetTalking] ERROR: Speech recognizer not available")
+            transcriptionLabel.text = "Speech recognition unavailable"
+            return false
+        }
+        print("[PetTalking] Speech recognizer available: \(recognizer.isAvailable)")
+        
+        print("[PetTalking] All permissions verified - ready to record")
+        return true
     }
     
     private func startRecording() {
-        guard !isRecording else { return }
-        
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("Audio session setup failed: \(error)")
+        print("[PetTalking] ========== START RECORDING ==========")
+        guard !isRecording else {
+            print("[PetTalking] Already recording, ignoring start request")
             return
         }
         
+        // Verify permissions before starting
+        guard verifyPermissionsBeforeRecording() else {
+            print("[PetTalking] ERROR: Permissions not verified, aborting recording")
+            return
+        }
+        
+        // Stop any existing recording first
+        if audioEngine.isRunning {
+            print("[PetTalking] WARNING: Audio engine already running, stopping first")
+            audioEngine.stop()
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
+        
+        // Cancel any previous recognition task
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        
+        // Setup audio session - Use playAndRecord for compatibility with playback
+        let audioSession = AVAudioSession.sharedInstance()
+        print("[PetTalking] Configuring audio session...")
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            print("[PetTalking] Audio session category set: playAndRecord, mode: measurement")
+            
+            // CRITICAL: Activate the session BEFORE checking inputs
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("[PetTalking] Audio session ACTIVATED successfully")
+            
+            // Explicitly select the preferred input (important for Simulator)
+            if let availableInputs = audioSession.availableInputs, !availableInputs.isEmpty {
+                print("[PetTalking] Found \(availableInputs.count) available input(s)")
+                
+                let preferredInput = availableInputs.first { input in
+                    input.portType == .builtInMic
+                } ?? availableInputs.first
+                
+                if let input = preferredInput {
+                    try audioSession.setPreferredInput(input)
+                    print("[PetTalking] Preferred input set to: \(input.portName) (\(input.portType.rawValue))")
+                }
+            } else {
+                print("[PetTalking] WARNING: No available inputs found!")
+                #if targetEnvironment(simulator)
+                print("[PetTalking] SIMULATOR: Check that your Mac's microphone is enabled and Xcode has microphone permission")
+                #endif
+            }
+            
+            print("[PetTalking] Sample rate: \(audioSession.sampleRate)")
+            print("[PetTalking] Input available: \(audioSession.isInputAvailable)")
+            print("[PetTalking] Input channels: \(audioSession.inputNumberOfChannels)")
+            
+            let currentRoute = audioSession.currentRoute
+            print("[PetTalking] Current audio route inputs: \(currentRoute.inputs.map { $0.portName })")
+            print("[PetTalking] Current audio route outputs: \(currentRoute.outputs.map { $0.portName })")
+            
+            if let inputDataSource = audioSession.inputDataSource {
+                print("[PetTalking] Input data source: \(inputDataSource.dataSourceName)")
+            }
+            
+            guard audioSession.isInputAvailable else {
+                print("[PetTalking] ERROR: No audio input available after activation!")
+                transcriptionLabel.text = "No microphone available"
+                return
+            }
+        } catch {
+            print("[PetTalking] ERROR: Audio session setup failed: \(error.localizedDescription)")
+            print("[PetTalking] Error details: \(error)")
+            transcriptionLabel.text = "Audio setup failed"
+            return
+        }
+        
+        // Setup recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else { return }
-        
+        guard let recognitionRequest = recognitionRequest else {
+            print("[PetTalking] ERROR: Could not create recognition request")
+            transcriptionLabel.text = "Recognition setup failed"
+            return
+        }
         recognitionRequest.shouldReportPartialResults = true
+        print("[PetTalking] Recognition request created")
         
+        // Setup Audio Engine Input
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         
+        // CRITICAL: Validate recording format
+        print("[PetTalking] Recording format: \(recordingFormat)")
+        print("[PetTalking] Format sample rate: \(recordingFormat.sampleRate)")
+        print("[PetTalking] Format channel count: \(recordingFormat.channelCount)")
+        
+        guard recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 else {
+            print("[PetTalking] ERROR: Invalid recording format - sample rate or channels is 0")
+            print("[PetTalking] Format details: \(recordingFormat.description)")
+            print("[PetTalking] This typically means no audio input is available")
+            
+            #if targetEnvironment(simulator)
+            print("[PetTalking] ==================== SIMULATOR TROUBLESHOOTING ====================")
+            print("[PetTalking] The iOS Simulator uses your Mac's microphone.")
+            print("[PetTalking] Please check the following:")
+            print("[PetTalking]   1. System Preferences > Security & Privacy > Privacy > Microphone")
+            print("[PetTalking]      - Ensure Xcode is listed and ENABLED")
+            print("[PetTalking]   2. System Preferences > Sound > Input")
+            print("[PetTalking]      - Select a working input device")
+            print("[PetTalking]      - Check if input level indicator moves when you speak")
+            print("[PetTalking]   3. Try restarting the Simulator")
+            print("[PetTalking]   4. Try running on a physical device instead")
+            print("[PetTalking] =================================================================")
+            transcriptionLabel.text = "Simulator: Check Mac microphone"
+            #else
+            transcriptionLabel.text = "No audio input available"
+            #endif
+            
+            // Try to show available inputs for debugging
+            if let availableInputs = audioSession.availableInputs {
+                print("[PetTalking] Available inputs: \(availableInputs.map { "\($0.portName) (\($0.portType.rawValue))" })")
+            } else {
+                print("[PetTalking] No available inputs detected")
+            }
+            
+            // Log current route
+            let currentRoute = audioSession.currentRoute
+            print("[PetTalking] Current route inputs: \(currentRoute.inputs)")
+            print("[PetTalking] Current route outputs: \(currentRoute.outputs)")
+            
+            return
+        }
+        
+        // Remove existing tap and install new one
+        inputNode.removeTap(onBus: 0)
+        print("[PetTalking] Installing audio tap...")
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
             recognitionRequest.append(buffer)
             self?.processAudioLevel(buffer: buffer)
         }
+        print("[PetTalking] Audio tap installed")
         
+        // Start audio engine
         audioEngine.prepare()
+        print("[PetTalking] Audio engine prepared")
         
         do {
             try audioEngine.start()
+            print("[PetTalking] Audio engine STARTED successfully")
         } catch {
-            print("Audio engine start failed: \(error)")
+            print("[PetTalking] ERROR: Audio engine start failed: \(error.localizedDescription)")
+            transcriptionLabel.text = "Audio engine failed to start"
+            inputNode.removeTap(onBus: 0)
             return
         }
         
+        // Start Recognition Task
+        print("[PetTalking] Starting recognition task...")
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
+            if let error = error {
+                print("[PetTalking] Recognition error: \(error.localizedDescription)")
+            }
+            
             DispatchQueue.main.async {
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
                     self?.transcriptionLabel.text = transcription
+                    print("[PetTalking] Transcription: \(transcription)")
                 }
                 
                 if error != nil || result?.isFinal == true {
+                    print("[PetTalking] Recognition ended, stopping recording")
                     self?.stopRecording()
                 }
             }
+        }
+        
+        if recognitionTask == nil {
+            print("[PetTalking] WARNING: Recognition task is nil - speech recognizer may be unavailable")
+        } else {
+            print("[PetTalking] Recognition task started")
         }
         
         isRecording = true
         updateMicButton()
         transcriptionLabel.text = "Listening..."
         showBlobForRecording()
+        print("[PetTalking] Recording started successfully")
     }
     
     private func stopRecording() {
-        guard isRecording else { return }
+        print("[PetTalking] ========== STOP RECORDING ==========")
+        guard isRecording else {
+            print("[PetTalking] Not currently recording, ignoring stop request")
+            return
+        }
         
+        print("[PetTalking] Stopping audio engine...")
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
+        print("[PetTalking] Audio engine stopped, tap removed")
         
         recognitionRequest?.endAudio()
         recognitionRequest = nil
         
         recognitionTask?.cancel()
         recognitionTask = nil
+        print("[PetTalking] Recognition request ended, task cancelled")
         
         audioLevelTimer?.invalidate()
         audioLevelTimer = nil
@@ -427,11 +774,55 @@ class PetTalkingViewController: UIViewController {
         isRecording = false
         updateMicButton()
         
-        if transcriptionLabel.text == "Listening..." {
+        // Get transcription before resetting
+        let currentText = transcriptionLabel.text ?? ""
+        
+        if currentText == "Listening..." {
             transcriptionLabel.text = "Tap to start talking..."
+        } else if !currentText.isEmpty && currentText != "Tap to start talking..." {
+            // Send transcription to backend
+            print("[PetTalking] Sending transcription to backend: \(currentText)")
+            sendToBackend(text: currentText)
         }
         
         hideBlobAfterRecording()
+        print("[PetTalking] Recording stopped successfully")
+    }
+    
+    private func sendToBackend(text: String) {
+        transcriptionLabel.text = "Thinking..."
+        
+        Task {
+            do {
+                let (response, emotion, policy) = try await petViewModel.sendMessage(text)
+                await MainActor.run {
+                    self.transcriptionLabel.text = response
+                    self.speak(text: response)
+                }
+            } catch {
+                await MainActor.run {
+                    print("Chat error: \(error)")
+                    self.transcriptionLabel.text = "Thinking failed."
+                }
+            }
+        }
+    }
+    
+    private func speak(text: String) {
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.5
+        utterance.pitchMultiplier = 1.2 // Slightly higher pitch for cute penguin
+        
+        // Ensure audio session is correct for playback
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Audio session error for playback: \(error)")
+        }
+        
+        speechSynthesizer.speak(utterance)
     }
     
     private func processAudioLevel(buffer: AVAudioPCMBuffer) {
@@ -470,7 +861,6 @@ class PetTalkingViewController: UIViewController {
             self.centerDot.alpha = 1.0
         })
         
-        // Animate penguin based on voice
         animatePenguinForVoice(intensity: level)
     }
     
@@ -521,6 +911,9 @@ class PetTalkingViewController: UIViewController {
         
         if isRecording {
             stopRecording()
+            if let text = transcriptionLabel.text, !text.isEmpty, text != "Listening...", text != "Tap to start talking..." {
+                 sendToBackend(text: text)
+            }
         } else {
             startRecording()
         }

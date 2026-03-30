@@ -31,7 +31,7 @@ class MainTabBarController: UITabBarController {
         let journalsNav = UINavigationController(rootViewController: journalsVC)
         
         // Home/Pets Tab
-        let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
+        let homePetsVC = HomePetsViewController()
         homePetsVC.tabBarItem = UITabBarItem(
             title: "Home",
             image: UIImage(systemName: "pawprint"),

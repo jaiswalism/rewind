@@ -1,9 +1,13 @@
 import Foundation
+import Combine
 
 class OnboardingDataManager {
     static let shared = OnboardingDataManager()
     private init() {}
     
+    private let authViewModel = AuthViewModel()
+    
+    // storing the user's choices
     var healthGoal: String?
     var gender: String?
     var age: Int?
@@ -20,21 +24,24 @@ class OnboardingDataManager {
         return healthGoal != nil && gender != nil && age != nil && seekingProfessionalHelp != nil
     }
     
-    func submit(completion: @escaping (Result<User, Error>) -> Void) {
+    func submit() async throws -> DBUser {
         guard let healthGoal = healthGoal,
               let gender = gender,
               let age = age,
               let help = seekingProfessionalHelp else {
-            completion(.failure(APIError.serverError(message: "Missing onboarding data")))
-            return
+            throw NSError(domain: "Onboarding", code: 400, userInfo: [NSLocalizedDescriptionKey: "Missing onboarding data"])
         }
         
-        UserService.shared.saveOnboarding(
+        try await authViewModel.completeOnboarding(
             healthGoal: healthGoal,
             gender: gender,
             age: age,
-            seekingProfessionalHelp: help,
-            completion: completion
+            seekingProfessionalHelp: help
         )
+        guard let user = authViewModel.currentUser else {
+            throw NSError(domain: "Onboarding", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to load user profile after onboarding setup."])
+        }
+        
+        return user
     }
 }

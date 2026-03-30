@@ -1,63 +1,34 @@
-//
-//  SignupViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 06/11/25.
-//
-
 import UIKit
+import SwiftUI
 
-class SignupViewController: UIViewController {
-
+class SignupViewController: UIHostingController<SignupView> {
     
-    @IBOutlet var nameInput: UITextField!
-    @IBOutlet var emailPhoneField: UITextField!
-    @IBOutlet var passwordField: UITextField!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
-        let fields = [nameInput, emailPhoneField, passwordField]
-            fields.forEach { $0?.styleRoundedInput() }
-
-            passwordField.enablePasswordToggle()
+    init() {
+        var signupView = SignupView()
+        super.init(rootView: signupView)
+        setupCallbacks(for: &signupView)
+        self.rootView = signupView
     }
     
-    @IBAction func signInButton(_ sender: Any) { //  // Navigate to  // Navigate to LoginViewController (XIB-based)
-        let loginVC = LoginViewController(nibName: "LoginViewController", bundle: nil)
-        loginVC.modalPresentationStyle = .fullScreen
-        present(loginVC, animated: true, completion: nil)
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
-    @IBAction func createAccountButton(_ sender: Any) {
-        // Validate input
-        guard let name = nameInput.text, !name.isEmpty,
-              let email = emailPhoneField.text, !email.isEmpty,
-              let password = passwordField.text, !password.isEmpty else {
-            showAlert(title: "Error", message: "Please fill in all fields.")
-            return
+    
+    private func setupCallbacks(for view: inout SignupView) {
+        view.onSignUpSuccess = { [weak self] in
+            DispatchQueue.main.async {
+                let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                goalVC.modalPresentationStyle = .fullScreen
+                self?.present(goalVC, animated: true, completion: nil)
+            }
         }
         
-        AuthService.shared.register(name: name, email: email, password: password) { [weak self] result in
+        view.onSignInTapped = { [weak self] in
             DispatchQueue.main.async {
-                switch result {
-                case .success(let user):
-                    print("Registered user: \(user.name)")
-                    // Navigate to OnboardingHealthGoalViewController (XIB)
-                    let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-                    goalVC.modalPresentationStyle = .fullScreen
-                    self?.present(goalVC, animated: true, completion: nil)
-                    
-                case .failure(let error):
-                    self?.showAlert(title: "Registration Failed", message: error.localizedDescription)
-                }
+                let loginVC = LoginViewController()
+                loginVC.modalPresentationStyle = .fullScreen
+                self?.present(loginVC, animated: true, completion: nil)
             }
         }
     }
-    
-    private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-        }
+}

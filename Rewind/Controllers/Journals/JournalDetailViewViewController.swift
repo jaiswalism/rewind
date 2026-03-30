@@ -9,9 +9,8 @@ import UIKit
 
 class JournalDetailViewViewController: UIViewController {
 
-    var journal: Journal?
+    var journal: DBJournal?
     
-    // MARK: - UI Components
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.translatesAutoresizingMaskIntoConstraints = false
@@ -34,12 +33,10 @@ class JournalDetailViewViewController: UIViewController {
         return stack
     }()
     
-    // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white // Ensure light background base
-        setupPremiumBackground()
+        view.backgroundColor = .white
+        setupBackground()
         setupBackButton()
         setupUI()
         configureData()
@@ -52,11 +49,9 @@ class JournalDetailViewViewController: UIViewController {
     
     // MARK: - Setup UI
     
-    private func setupPremiumBackground() {
-        // Gradient Background
+    private func setupBackground() {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = view.bounds
-        // Vibrant Light Theme: Soft Blue to Lavender/Pinkish
         gradientLayer.colors = [
             UIColor(red: 0.85, green: 0.93, blue: 1.0, alpha: 1.0).cgColor, // Vibrant Sky Blue
             UIColor(red: 0.92, green: 0.88, blue: 1.0, alpha: 1.0).cgColor  // Vibrant Lavender
@@ -65,27 +60,17 @@ class JournalDetailViewViewController: UIViewController {
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         view.layer.insertSublayer(gradientLayer, at: 0)
         
-        // Add Blur Effect (Light style for brightness)
-        // Reduced opacity of blur to let more color popping through if needed, 
-        // but standard UIBlurEffect doesn't have opacity. 
-        // We use .systemThinMaterialLight to be slightly less opaque than UltraThin if we want more blur, 
-        // but to see MORE color, UltraThin is good, or we might want to skip the blur layer if the gradient is the star.
-        // Let's keep UltraThinLight but maybe strict it to just Bounds.
         let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialLight)
         let blurView = UIVisualEffectView(effect: blurEffect)
         blurView.frame = view.bounds
         blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.insertSubview(blurView, at: 1)
         
-        // Clear XIB subviews if any (optional safety)
         view.subviews.forEach { if $0 != blurView && $0.layer != gradientLayer { $0.removeFromSuperview() } }
     }
     
     private func setupBackButton() {
         GlassBackButton.add(to: self, action: #selector(backButtonTapped))
-        // We might need to ensure the back button icon is visible on light background.
-        // Assuming GlassBackButton handles contrast or has a dark mode. 
-        // If not, we rely on its blurring to provide contrast.
     }
     
     @objc func backButtonTapped() {
@@ -116,36 +101,33 @@ class JournalDetailViewViewController: UIViewController {
         ])
     }
     
-    // MARK: - Data Configuration
-    
+    // loading data
     private func configureData() {
         guard let journal = journal else { return }
         
-        // 1. Date Label
+        // Date Label
         let dateLabel = UILabel()
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .short
-        let dateString = journal.createdDate.map { formatter.string(from: $0) } ?? "Unknown Date"
+        let dateString = journal.createdDate.map { formatter.string(from: $0) } ?? journal.createdAt
         
         dateLabel.text = dateString.uppercased()
         dateLabel.font = .systemFont(ofSize: 13, weight: .semibold)
-        // Dark gray for light theme
         dateLabel.textColor = UIColor.black.withAlphaComponent(0.5) 
         dateLabel.numberOfLines = 1
         mainStackView.addArrangedSubview(dateLabel)
         
-        // 2. Title Label
+        // Title Label
         let titleLabel = UILabel()
         titleLabel.text = journal.title
         titleLabel.font = .systemFont(ofSize: 34, weight: .bold)
-        // Black for light theme
         titleLabel.textColor = .black 
         titleLabel.numberOfLines = 0
         mainStackView.addArrangedSubview(titleLabel)
         
-        // 3. Moods Section (Horizontal Stack)
-        if let moods = journal.moodTags, !moods.isEmpty {
+        // 3. Emotion Section
+        if let emotion = journal.emotion, !emotion.isEmpty {
             let moodScrollView = UIScrollView()
             moodScrollView.showsHorizontalScrollIndicator = false
             moodScrollView.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -155,10 +137,8 @@ class JournalDetailViewViewController: UIViewController {
             moodStack.spacing = 10
             moodStack.translatesAutoresizingMaskIntoConstraints = false
             
-            for mood in moods {
-                let pill = createMoodPill(text: mood)
-                moodStack.addArrangedSubview(pill)
-            }
+            let pill = createMoodPill(text: emotion)
+            moodStack.addArrangedSubview(pill)
             
             moodScrollView.addSubview(moodStack)
             NSLayoutConstraint.activate([
@@ -171,19 +151,15 @@ class JournalDetailViewViewController: UIViewController {
             mainStackView.addArrangedSubview(moodScrollView)
         }
         
-        // 4. Content Body (Glassmorphism Container)
         let bodyContainer = UIView()
-        // More visible glass effect: White tint
         bodyContainer.backgroundColor = UIColor.white.withAlphaComponent(0.4) 
         bodyContainer.layer.cornerRadius = 20
         bodyContainer.layer.borderWidth = 1
-        // White border for crispness
         bodyContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.6).cgColor 
         
         let bodyLabel = UILabel()
         bodyLabel.text = journal.content
         bodyLabel.font = .systemFont(ofSize: 17, weight: .regular)
-        // Dark text equivalent to .label
         bodyLabel.textColor = UIColor.black.withAlphaComponent(0.85) 
         bodyLabel.numberOfLines = 0
         bodyLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -199,7 +175,8 @@ class JournalDetailViewViewController: UIViewController {
         mainStackView.addArrangedSubview(bodyContainer)
         
         // 5. Images Section
-        if let mediaUrls = journal.mediaUrls, !mediaUrls.isEmpty {
+        let mediaUrls = journal.mediaUrls ?? []
+        if !mediaUrls.isEmpty {
             let imageLabel = UILabel()
             imageLabel.text = "Attached Photos"
             imageLabel.font = .systemFont(ofSize: 18, weight: .bold)
@@ -232,11 +209,8 @@ class JournalDetailViewViewController: UIViewController {
         }
     }
     
-    // MARK: - Helper Views
-    
     private func createMoodPill(text: String) -> UIView {
         let container = UIView()
-        // Use primary blue but lighter/transparent for pill background
         container.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.1) ?? .systemBlue.withAlphaComponent(0.1)
         container.layer.cornerRadius = 16
         container.layer.borderWidth = 1
@@ -245,7 +219,6 @@ class JournalDetailViewViewController: UIViewController {
         let label = UILabel()
         label.text = text
         label.font = .systemFont(ofSize: 14, weight: .medium)
-        // Darker blue text for readability
         label.textColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? .systemBlue 
         label.translatesAutoresizingMaskIntoConstraints = false
         
@@ -267,17 +240,14 @@ class JournalDetailViewViewController: UIViewController {
         container.heightAnchor.constraint(equalToConstant: 200).isActive = true
         container.layer.cornerRadius = 16
         container.clipsToBounds = true
-        // Light gray placeholder bg
         container.backgroundColor = UIColor.black.withAlphaComponent(0.05) 
         
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFill
-        imageView.image = UIImage(systemName: "photo") // Placeholder
+        imageView.image = UIImage(systemName: "photo")
         imageView.tintColor = .black.withAlphaComponent(0.2)
         
-        // Normally we would async load the image here
-        // ImageLoader.shared.loadImage(from: urlString) { ... }
         
         container.addSubview(imageView)
         NSLayoutConstraint.activate([

@@ -30,26 +30,23 @@ class OnboardingProfHelpViewController: UIViewController {
     
     private func submitOnboarding(seekingHelp: Bool) {
         OnboardingDataManager.shared.seekingProfessionalHelp = seekingHelp
-        
-        // Show loading if possible
-        
-        OnboardingDataManager.shared.submit { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(_):
-                    let homePetsVC = HomePetsViewController(nibName: "HomePetsViewController", bundle: nil)
-                    homePetsVC.modalPresentationStyle = .fullScreen
-                    self?.present(homePetsVC, animated: true, completion: nil)
-                    
-                case .failure(let error):
-                    let message = (error as? APIError).map {
-                        if case .serverError(let msg) = $0 { return msg }
-                        return error.localizedDescription
-                    } ?? error.localizedDescription
-                    
-                    let alert = UIAlertController(title: "Onboarding Failed", message: message, preferredStyle: .alert)
+        Task {
+            do {
+                let _ = try await OnboardingDataManager.shared.submit()
+                await MainActor.run {
+                    let mainTabVC = MainTabBarController()
+                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                        sceneDelegate.setRoot(mainTabVC)
+                    } else {
+                        mainTabVC.modalPresentationStyle = .fullScreen
+                        self.present(mainTabVC, animated: true, completion: nil)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    let alert = UIAlertController(title: "Onboarding Failed", message: error.localizedDescription, preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self?.present(alert, animated: true)
+                    self.present(alert, animated: true)
                 }
             }
         }

@@ -6,8 +6,13 @@
 //
 
 import UIKit
+import Combine
+import Foundation
 
 class PersonalInformationViewController: UIViewController {
+    
+    private let userViewModel = UserViewModel()
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
@@ -324,12 +329,17 @@ class PersonalInformationViewController: UIViewController {
     }
     
     private func loadUserData() {
-        // TODO: Load actual user data from UserDefaults, database, or API
-        // For now, using placeholder data
-        nameTextField?.text = "Aviral Sharma"
-        emailTextField?.text = "diaryofmind@gmail.com"
-        locationTextField?.text = "Chennai, India"
-        dobTextField?.text = "Jun 24, 2004"
+        Task {
+            await userViewModel.fetchProfile()
+            await MainActor.run {
+                if let user = userViewModel.user {
+                    nameTextField?.text = user.name
+                    emailTextField?.text = user.email
+                    locationTextField?.text = user.location
+                    dobTextField?.text = user.dateOfBirth
+                }
+            }
+        }
     }
     
     private func setupActions() {
@@ -361,15 +371,25 @@ class PersonalInformationViewController: UIViewController {
     }
     
     @objc private func saveButtonTapped() {
-        // TODO: Implement save functionality
-        print("Save tapped")
-        print("Name: \(nameTextField?.text ?? "")")
-        print("Email: \(emailTextField?.text ?? "")")
-        print("Location: \(locationTextField?.text ?? "")")
-        print("DOB: \(dobTextField?.text ?? "")")
-        
-        // Show success feedback
-        let alert = UIAlertController(title: "Success", message: "Your information has been updated", preferredStyle: .alert)
+        Task {
+            do {
+                try await userViewModel.updateProfile(
+                    name: nameTextField?.text,
+                    location: locationTextField?.text
+                )
+                await MainActor.run {
+                    showAlert(title: "Success", message: "Profile updated successfully")
+                }
+            } catch {
+                await MainActor.run {
+                    showAlert(title: "Error", message: error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    private func showAlert(title: String?, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
