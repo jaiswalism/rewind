@@ -106,8 +106,8 @@ final class UserViewModel: ObservableObject {
         
         do {
             try await supabase.storage.from("avatars").upload(
-                path: fileName,
-                file: imageData,
+                fileName,
+                data: imageData,
                 options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg", upsert: true)
             )
         } catch {

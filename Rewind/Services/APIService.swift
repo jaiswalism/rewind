@@ -93,8 +93,8 @@ class APIService {
                 let decodedResponse = try JSONDecoder().decode(T.self, from: data)
                 completion(.success(decodedResponse))
             } catch {
-                if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                    completion(.failure(APIError.serverError(message: errorResponse.error.message)))
+                if let message = Self.serverErrorMessage(from: data) {
+                    completion(.failure(APIError.serverError(message: message)))
                 } else {
                     if let responseString = String(data: data, encoding: .utf8) {
                         print("❌ Decoding Error. Raw Response: \(responseString)")
@@ -177,8 +177,8 @@ class APIService {
                 let decodedResponse = try JSONDecoder().decode(T.self, from: data)
                 completion(.success(decodedResponse))
             } catch {
-                if let errorResponse = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
-                    completion(.failure(APIError.serverError(message: errorResponse.error.message)))
+                if let message = Self.serverErrorMessage(from: data) {
+                    completion(.failure(APIError.serverError(message: message)))
                 } else {
                     print("❌ Decoding Error. Detail: \(error)")
                     completion(.failure(APIError.decodingError))
@@ -186,14 +186,14 @@ class APIService {
             }
         }.resume()
     }
-}
 
-struct ErrorResponse: Codable, Sendable {
-    let success: Bool
-    let error: ErrorDetail
-}
-
-struct ErrorDetail: Codable, Sendable {
-    let code: String
-    let message: String
+    /// Parses `{ "error": { "message": "..." } }` without `Decodable` so it stays valid under default `MainActor` isolation.
+    nonisolated private static func serverErrorMessage(from data: Data) -> String? {
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let err = obj["error"] as? [String: Any],
+              let message = err["message"] as? String else {
+            return nil
+        }
+        return message
+    }
 }

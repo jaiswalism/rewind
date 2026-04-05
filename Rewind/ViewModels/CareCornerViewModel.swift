@@ -71,7 +71,7 @@ final class CareCornerViewModel: ObservableObject {
             
             let responseResp: [DBDailyChallenge] = try await supabase.from("daily_challenges")
                 .select("*")
-                .like("challenge_date", value: "\(today)%")
+                .like("challenge_date", pattern: "\(today)%")
                 .execute()
                 .value
             let response = responseResp
@@ -157,8 +157,6 @@ final class CareCornerViewModel: ObservableObject {
         let minutes = durationSeconds / 60
         let pawsEarned = minutes * 2 // 2 paws per minute
         
-        let durationString = String(format: "%d:%02d", minutes, durationSeconds % 60)
-        
         let exercise = DBBreathingExercise(
             id: UUID(),
             userId: session.user.id,
@@ -188,8 +186,6 @@ final class CareCornerViewModel: ObservableObject {
         
         let minutes = durationSeconds / 60
         let pawsEarned = minutes * 3 // 3 paws per minute
-        
-        let durationString = String(format: "%d:%02d", minutes, durationSeconds % 60)
         
         let sessionData = DBMeditationSession(
             id: UUID(),

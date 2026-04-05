@@ -115,9 +115,13 @@ struct CreatePostView: View {
 
             Spacer()
 
-            Text(isEditMode ? "Edit Post" : "Create Post")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(.primary)
+            Text("Create Post")
+                .opacity(isEditMode ? 0 : 1)
+                .overlay {
+                    Text(isEditMode ? "Edit Post" : "Create Post")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.primary)
+                }
 
             Spacer()
 
@@ -348,7 +352,7 @@ struct CreatePostView: View {
                                     )
                             )
                         }
-                        .onChange(of: selectedItems) { items in
+                        .onChange(of: selectedItems) { _, items in
                             Task { await loadImages(from: items) }
                         }
                     }
@@ -443,8 +447,8 @@ struct CreatePostView: View {
                         let filename = "\(userIdStr)/\(UUID().uuidString.lowercased()).jpg"
                         do {
                             try await bucket.upload(
-                                path: filename,
-                                file: data,
+                                filename,
+                                data: data,
                                 options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg")
                             )
                             let publicUrl = try bucket.getPublicURL(path: filename).absoluteString

@@ -1,3 +1,6 @@
+# macOS
+.DS_Store
+
 # Xcode
 build/
 *.pbxuser
@@ -19,3 +22,6 @@ DerivedData
 
 # Secrets
 SupabaseSecrets.swift
+
+# Penguin intelligence microservice (Node) — not tracked on this branch
+Rewind/penguin-intelligence-service/

@@ -354,8 +354,8 @@ final class JournalViewModel: ObservableObject {
         let path = "\(userIdStr)/\(journalId.uuidString.lowercased())_\(fileName)"
         
         try await supabase.storage.from("journal-media").upload(
-            path: path,
-            file: fileData,
+            path,
+            data: fileData,
             options: SupabaseConfig.Client.UploadOptions(contentType: contentType, upsert: false)
         )
         

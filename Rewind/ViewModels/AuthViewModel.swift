@@ -18,12 +18,10 @@ final class AuthViewModel: ObservableObject {
     }
     
     func checkCurrentSession() async {
-        do {
-            if let _ = try? await supabase.auth.session {
-                isLoggedIn = true
-                await fetchCurrentUser()
-            }
-        } catch {
+        if (try? await supabase.auth.session) != nil {
+            isLoggedIn = true
+            await fetchCurrentUser()
+        } else {
             isLoggedIn = false
         }
     }
@@ -39,7 +37,6 @@ final class AuthViewModel: ObservableObject {
                 data: ["name": .string(name)]
             )
             
-            let userId = session.user.id.uuidString
             let now = ISO8601DateFormatter().string(from: Date())
             
             let newUser = DBUser(
@@ -81,11 +78,11 @@ final class AuthViewModel: ObservableObject {
         error = nil
         
         do {
-            let session = try await supabase.auth.signIn(
+            _ = try await supabase.auth.signIn(
                 email: email,
                 password: password
             )
-            
+
             isLoggedIn = true
             await fetchCurrentUser()
         } catch {
