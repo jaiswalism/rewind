@@ -58,7 +58,8 @@ final class CommunityViewModel: ObservableObject {
                 .eq("is_deleted", value: false)
             
             if let tag = tag, !tag.isEmpty {
-                query = query.like("tags", value: "%\(tag)%")
+                // `tags` is a TEXT[] column; use array contains for exact tag matching.
+                query = query.contains("tags", value: [tag])
             }
             
             let postData: [DBCommunityPost] = try await query
