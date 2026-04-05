@@ -3,88 +3,104 @@ import SwiftUI
 struct CommunityView: View {
     @StateObject private var communityViewModel = CommunityViewModel()
     @StateObject private var userViewModel = UserViewModel.shared
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var showingCreatePost = false
+    @State private var showingCommentSheet = false
+    @State private var selectedPostIdForComments: String? = nil
     
-    // Default tags based on the original UI
-    let tags = ["TRENDING", "STRESS", "ANXIETY", "AFFIRMATION", "GRATITUDE", "DAILY"]
+    // Tags matching the Create Post screen
+    let tags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
+    @State private var selectedTags: Set<String> = []
     
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack {
             EliteBackgroundView()
             
-            VStack(spacing: 0) {
-                // Fixed Header
-                headerView
-                    .padding(.top, 60)
-                    .padding(.bottom, 10)
-                    .zIndex(10)
-                
-                // Content
-                ScrollView(showsIndicators: false) {
-                    LazyVStack(spacing: 20) {
-                        if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
-                            // Empty State
-                            VStack(spacing: 16) {
-                                Image(systemName: "person.2.square.stack")
-                                    .font(.system(size: 48))
-                                    .foregroundStyle(.secondary)
-                                Text("No posts found. Be the first to share!")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.top, 100)
-                        } else {
-                            ForEach(communityViewModel.posts) { post in
-                                CommunityPostCard(
-                                    postWithUser: post,
-                                    onLike: {
-                                        Task {
-                                            try? await communityViewModel.toggleLike(postId: post.id)
-                                        }
-                                    },
-                                    onComment: {
-                                        // TODO: Show comment sheet
-                                        print("Comment tapped")
-                                    },
-                                    onShare: {
-                                        sharePost(post: post)
-                                    },
-                                    onMenuTapped: {
-                                        // TODO: Show action sheet
-                                        print("Menu tapped")
-                                    }
-                                )
-                                .padding(.horizontal, 20)
-                            }
+            // Scrollable content
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 20) {
+                    if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
+                        VStack(spacing: 16) {
+                            Image(systemName: "person.2.square.stack")
+                                .font(.system(size: 48))
+                                .foregroundStyle(.secondary)
+                            Text("No posts found. Be the first to share!")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.top, 60)
+                    } else {
+                        ForEach(communityViewModel.posts) { post in
+                            CommunityPostCard(
+                                postWithUser: post,
+                                onLike: {
+                                    Task { try? await communityViewModel.toggleLike(postId: post.id) }
+                                },
+                                onComment: {
+                                    selectedPostIdForComments = post.id.uuidString
+                                    showingCommentSheet = true
+                                },
+                                onShare: { sharePost(post: post) },
+                                onReport: { print("Report tapped") },
+                                onDelete: {
+                                    Task { try? await communityViewModel.deletePost(id: post.id) }
+                                }
+                            )
+                            .padding(.horizontal, 20)
                         }
                     }
-                    .padding(.top, 12)
-                    .padding(.bottom, 120) // Extra padding for Tab Bar
                 }
-                .refreshable {
-                    await communityViewModel.fetchPosts(refresh: true)
+                .padding(.bottom, 120)
+                .padding(.top, 20)
+            }
+            .safeAreaInset(edge: .top) {
+                VStack(spacing: 0) {
+                    headerView
+                        .padding(.top, 60)
+                        .padding(.bottom, 10)
+                        .background(colorScheme == .dark ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(red: 0.94, green: 0.96, blue: 1.0).opacity(0.95)))
                 }
             }
-        }
-        .ignoresSafeArea(.all, edges: .top)
-        .task {
-            // Initial fetch
-            if communityViewModel.posts.isEmpty {
-                await communityViewModel.fetchPosts()
-            }
-            if userViewModel.user == nil {
+            .refreshable {
+                await communityViewModel.fetchPosts(refresh: true)
                 await userViewModel.fetchProfile()
             }
         }
-        // Native bridging to original CreatePostViewController via UIViewControllerRepresentable
+        .ignoresSafeArea(.all, edges: .top)
+        .preferredColorScheme(.dark)
+        .onAppear {
+            // Only fetch on first load, not every tab switch
+            guard communityViewModel.posts.isEmpty else { return }
+            Task {
+                await communityViewModel.fetchPosts()
+                if userViewModel.user == nil {
+                    await userViewModel.fetchProfile()
+                }
+            }
+        }
         .sheet(isPresented: $showingCreatePost, onDismiss: {
             Task {
                 await communityViewModel.fetchPosts(refresh: true)
+                await userViewModel.fetchProfile()
             }
         }) {
-            CreatePostViewBridge()
-                .ignoresSafeArea()
+            CreatePostView()
+                .presentationCornerRadius(28)
+        }
+        .onChange(of: showingCommentSheet) { showing in
+            // Fallback clear logic string
+            if !showing {
+                selectedPostIdForComments = nil
+            }
+        }
+        .sheet(isPresented: $showingCommentSheet) {
+            if let postId = selectedPostIdForComments {
+                CommentSheetView(postId: postId, communityViewModel: communityViewModel)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(24)
+            }
         }
     }
     
@@ -130,35 +146,92 @@ struct CommunityView: View {
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(.primary)
                         .frame(width: 44, height: 44)
-                        .background(.regularMaterial, in: Circle())
-                        .overlay(Circle().stroke(Color.secondary.opacity(0.15), lineWidth: 0.5))
+                        .background(colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white), in: Circle())
+                        .overlay(Circle().stroke(Color.secondary.opacity(0.2), lineWidth: 0.5))
+                        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.06 : 0.1), radius: 6, x: 0, y: 3)
                 }
             }
             .padding(.horizontal, 20)
             
-            // Browse By Section
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Browse By")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 20)
+            // Filter By Tag Section
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Filter by Tag")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.primary)
+                    if !selectedTags.isEmpty {
+                        Text("\(selectedTags.count) selected")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.eliteAccentPrimary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.eliteAccentPrimary.opacity(0.15), in: Capsule())
+                    }
+                }
+                .padding(.horizontal, 20)
                 
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
+                        // "All" clear chip
+                        Button(action: {
+                            if !selectedTags.isEmpty {
+                                selectedTags = []
+                                Task { await communityViewModel.fetchPosts(refresh: true) }
+                            }
+                        }) {
+                            Text("ALL")
+                                .font(.system(size: 12, weight: .bold))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                                .background(
+                                    selectedTags.isEmpty
+                                        ? AnyShapeStyle(Color.eliteAccentPrimary)
+                                        : AnyShapeStyle(colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white.opacity(0.9))),
+                                    in: Capsule()
+                                )
+                                .overlay(Capsule().stroke(selectedTags.isEmpty ? Color.clear : Color.secondary.opacity(0.2), lineWidth: 0.5))
+                                .foregroundStyle(selectedTags.isEmpty ? Color.white : Color.primary)
+                        }
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: selectedTags.isEmpty)
+                        
                         ForEach(tags, id: \.self) { tag in
+                            let isSelected = selectedTags.contains(tag)
                             Button(action: {
+                                // Capture new state after toggle
+                                var newSelection = selectedTags
+                                if isSelected {
+                                    newSelection.remove(tag)
+                                } else {
+                                    newSelection.insert(tag)
+                                }
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedTags = newSelection
+                                }
                                 Task {
-                                   await communityViewModel.fetchPosts(page: 1, tag: tag, refresh: true)
+                                    if newSelection.isEmpty {
+                                        await communityViewModel.fetchPosts(refresh: true)
+                                    } else {
+                                        // Use sorted first for deterministic filter
+                                        await communityViewModel.fetchPosts(page: 1, tag: newSelection.sorted().first, refresh: true)
+                                    }
                                 }
                             }) {
                                 Text(tag)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(.regularMaterial, in: Capsule())
-                                    .overlay(Capsule().stroke(Color.secondary.opacity(0.15), lineWidth: 0.5))
-                                    .foregroundStyle(.primary)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 7)
+                                    .background(
+                                        isSelected
+                                            ? AnyShapeStyle(Color.eliteAccentPrimary)
+                                            : AnyShapeStyle(colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white.opacity(0.9))),
+                                        in: Capsule()
+                                    )
+                                    .overlay(Capsule().stroke(isSelected ? Color.clear : Color.secondary.opacity(0.2), lineWidth: 0.5))
+                                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.06 : 0.08), radius: 5, x: 0, y: 2)
+                                    .foregroundStyle(isSelected ? Color.white : Color.primary)
+                                    .scaleEffect(isSelected ? 1.04 : 1.0)
                             }
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
                         }
                     }
                     .padding(.horizontal, 20)

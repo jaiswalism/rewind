@@ -12,7 +12,7 @@ import Foundation
 class CommentSheetViewController: UIViewController {
     // MARK: - Properties
     var postId: String!
-    private let communityViewModel = CommunityViewModel()
+    var communityViewModel: CommunityViewModel!
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - UI Components
@@ -104,7 +104,6 @@ class CommentSheetViewController: UIViewController {
                 await MainActor.run {
                     self.sendButton.isEnabled = true
                     self.inputTextField.text = ""
-                    self.commentsTableView.reloadData()
                     let count = self.communityViewModel.comments.count
                     if count > 0 {
                         let indexPath = IndexPath(row: count - 1, section: 0)

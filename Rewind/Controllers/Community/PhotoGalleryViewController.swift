@@ -172,20 +172,9 @@ class SinglePhotoViewController: UIViewController {
     }
     
     private func loadImage() {
-        if urlString.hasPrefix("local-image://") {
-            let filename = urlString.replacingOccurrences(of: "local-image://", with: "")
-            if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-                let fileUrl = documentsDirectory.appendingPathComponent(filename)
-                if let data = try? Data(contentsOf: fileUrl) {
-                    imageView.image = UIImage(data: data)
-                } else {
-                     imageView.image = UIImage(systemName: "photo")
-                }
-            }
-        } else if urlString.hasPrefix("file://"), let url = URL(string: urlString), let data = try? Data(contentsOf: url) {
-            imageView.image = UIImage(data: data)
-        } else if urlString.hasPrefix("http") {
-             imageView.image = UIImage(systemName: "photo")
+        imageView.image = UIImage(systemName: "photo")
+        
+        if urlString.hasPrefix("http") {
              DispatchQueue.global().async {
                  if let url = URL(string: self.urlString), let data = try? Data(contentsOf: url) {
                      DispatchQueue.main.async {
@@ -193,8 +182,6 @@ class SinglePhotoViewController: UIViewController {
                      }
                  }
              }
-        } else {
-             imageView.image = UIImage(systemName: "photo")
         }
     }
 }

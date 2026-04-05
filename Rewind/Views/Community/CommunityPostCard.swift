@@ -5,7 +5,18 @@ struct CommunityPostCard: View {
     let onLike: () -> Void
     let onComment: () -> Void
     let onShare: () -> Void
-    let onMenuTapped: () -> Void
+    let onReport: () -> Void
+    let onDelete: () -> Void
+    
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private var cardBackground: some ShapeStyle {
+        colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white)
+    }
+    
+    private var cardBorderColor: Color {
+        colorScheme == .dark ? Color.secondary.opacity(0.2) : Color.black.opacity(0.08)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -50,7 +61,17 @@ struct CommunityPostCard: View {
                 
                 Spacer()
                 
-                Button(action: onMenuTapped) {
+                Menu {
+                    if postWithUser.isMine {
+                        Button("Delete Post", role: .destructive) {
+                            onDelete()
+                        }
+                    } else {
+                        Button("Report Post", role: .destructive) {
+                            onReport()
+                        }
+                    }
+                } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 20))
                         .foregroundStyle(.secondary)
@@ -66,32 +87,8 @@ struct CommunityPostCard: View {
             
             // Media Preview (if available)
             if let firstMediaUrlString = postWithUser.post.mediaUrls.first,
-               let firstMediaUrl = URL(string: firstMediaUrlString) {
-                AsyncImage(url: firstMediaUrl) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity, maxHeight: 240)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    } else if phase.error != nil {
-                        // Show placeholder or hide if error
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.secondary.opacity(0.1))
-                            .frame(maxWidth: .infinity, idealHeight: 200)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .font(.system(size: 30))
-                                    .foregroundStyle(.secondary)
-                            )
-                    } else {
-                        // Loading view
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.secondary.opacity(0.1))
-                            .frame(maxWidth: .infinity, idealHeight: 200)
-                            .overlay(ProgressView())
-                    }
-                }
+               !firstMediaUrlString.isEmpty {
+                PostMediaView(urlString: firstMediaUrlString)
                 .overlay(
                     Group {
                         if postWithUser.post.mediaUrls.count > 1 {
@@ -137,14 +134,17 @@ struct CommunityPostCard: View {
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(.primary)
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(20)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white),
+                    in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 0.5)
+                .stroke(cardBorderColor, lineWidth: colorScheme == .dark ? 0.5 : 1)
         )
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.08 : 0.1), radius: 12, x: 0, y: 6)
     }
     
     private var fallbackAvatar: some View {
@@ -184,5 +184,45 @@ struct CommunityPostCard: View {
         let relativeFormatter = RelativeDateTimeFormatter()
         relativeFormatter.unitsStyle = .abbreviated
         return relativeFormatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+struct PostMediaView: View {
+    let urlString: String
+    
+    var body: some View {
+        Group {
+            if urlString.hasPrefix("http"), let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity, maxHeight: 240)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    } else if phase.error != nil {
+                        placeholder
+                    } else {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.secondary.opacity(0.1))
+                            .frame(maxWidth: .infinity, idealHeight: 200)
+                            .overlay(ProgressView())
+                    }
+                }
+            } else {
+                placeholder
+            }
+        }
+    }
+    
+    private var placeholder: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(Color.secondary.opacity(0.1))
+            .frame(maxWidth: .infinity, idealHeight: 200)
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.secondary)
+            )
     }
 }

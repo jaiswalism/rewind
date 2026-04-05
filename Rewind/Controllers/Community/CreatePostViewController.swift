@@ -8,6 +8,7 @@
 import UIKit
 import PhotosUI
 import Combine
+import Supabase
 
 class CreatePostViewController: UIViewController {
     
@@ -213,8 +214,8 @@ class CreatePostViewController: UIViewController {
         return stack
     }()
     
-    private let availableTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "HEALTH"]
-    private var selectedTagButton: UIButton?
+    private let availableTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
+    private var selectedTags: Set<String> = []
     
     // Anonymous Toggle
     private let anonymousContainer: UIView = {
@@ -462,9 +463,11 @@ class CreatePostViewController: UIViewController {
             let button = UIButton(type: .system)
             button.setTitle(tag, for: .normal)
             button.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
-            button.tintColor = .white
-            button.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+            button.setTitleColor(.white, for: .normal)
+            button.backgroundColor = UIColor.white.withAlphaComponent(0.12)
             button.layer.cornerRadius = 16
+            button.layer.borderWidth = 1
+            button.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
             button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
             button.addTarget(self, action: #selector(tagTapped(_:)), for: .touchUpInside)
             tagsStack.addArrangedSubview(button)
@@ -496,10 +499,7 @@ class CreatePostViewController: UIViewController {
         }
         
         let isAnonymous = anonymousSwitch.isOn
-        var tags: [String] = []
-        if let selectedTag = selectedTagButton?.titleLabel?.text {
-            tags.append(selectedTag)
-        }
+        let tags = Array(selectedTags)
         
         // prevent double tapping
         postButton.isEnabled = false
@@ -525,31 +525,39 @@ class CreatePostViewController: UIViewController {
         }
         
         // CREATE MODE
-        var mediaUrls: [String] = []
-        if !selectedImages.isEmpty {
-            // Save to Documents Directory for persistence
-            guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-            
-            for (index, image) in selectedImages.enumerated() {
-                if let data = image.jpegData(compressionQuality: 0.8) {
-                    let filename = UUID().uuidString + ".jpg"
-                    let fileUrl = documentsDirectory.appendingPathComponent(filename)
-                    
-                    do {
-                        try data.write(to: fileUrl)
-                        mediaUrls.append("local-image://\(filename)")
-                    } catch {
-                        print("Error saving image: \(error)")
+        // We'll run the networking in a Task
+        postButton.setTitle("Posting...", for: .normal)
+        
+        Task {
+            var mediaUrls: [String] = []
+            if !selectedImages.isEmpty {
+                let bucket = SupabaseConfig.shared.client.storage.from("community-media")
+                let session = try? await SupabaseConfig.shared.client.auth.session
+                let userIdStr = session?.user.id.uuidString.lowercased() ?? UUID().uuidString.lowercased()
+                
+                for image in selectedImages {
+                    if let data = image.jpegData(compressionQuality: 0.8) {
+                        let filename = "\(userIdStr)/\(UUID().uuidString.lowercased()).jpg"
+                        do {
+                            try await bucket.upload(
+                                path: filename,
+                                file: data,
+                                options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg")
+                            )
+                            let publicUrl = try bucket.getPublicURL(path: filename).absoluteString
+                            mediaUrls.append(publicUrl)
+                        } catch {
+                            print("Error uploading image: \(error)")
+                        }
                     }
                 }
             }
-        }
-        
-        Task {
+            
             do {
                 _ = try await communityViewModel.createPost(content: content, isAnonymous: isAnonymous, tags: tags, mediaUrls: mediaUrls)
                 await MainActor.run {
                     self.postButton.isEnabled = true
+                    self.postButton.setTitle("Post", for: .normal)
                     print("Post created successfully")
                     NotificationCenter.default.post(name: NSNotification.Name("CommunityPostDeleted"), object: nil)
                     self.navigationController?.popViewController(animated: true)
@@ -557,6 +565,7 @@ class CreatePostViewController: UIViewController {
             } catch {
                 await MainActor.run {
                     self.postButton.isEnabled = true
+                    self.postButton.setTitle("Post", for: .normal)
                     self.showAlert(title: "Error", message: error.localizedDescription)
                 }
             }
@@ -570,16 +579,31 @@ class CreatePostViewController: UIViewController {
     }
 
     @objc private func tagTapped(_ sender: UIButton) {
-        // Deselect previous
-        if let previous = selectedTagButton {
-            previous.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-            previous.setTitleColor(.white, for: .normal)
-        }
+        guard let tag = sender.titleLabel?.text else { return }
         
-        // Select new
-        sender.backgroundColor = .white
-        sender.setTitleColor(UIColor(named: "colors/Blue&Shades/blue-500"), for: .normal)
-        selectedTagButton = sender
+        if selectedTags.contains(tag) {
+            // Deselect
+            selectedTags.remove(tag)
+            UIView.animate(withDuration: 0.2) {
+                sender.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+                sender.setTitleColor(.white, for: .normal)
+                sender.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+                sender.transform = .identity
+            }
+        } else {
+            // Select
+            selectedTags.insert(tag)
+            UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
+                sender.backgroundColor = .white
+                sender.setTitleColor(UIColor(named: "colors/Blue&Shades/blue-500") ?? UIColor.systemIndigo, for: .normal)
+                sender.layer.borderColor = UIColor.clear.cgColor
+                sender.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
+            } completion: { _ in
+                UIView.animate(withDuration: 0.1) {
+                    sender.transform = .identity
+                }
+            }
+        }
     }
     
     @objc private func anonymousToggled(_ sender: UISwitch) {

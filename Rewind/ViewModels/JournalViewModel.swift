@@ -133,6 +133,34 @@ final class JournalViewModel: ObservableObject {
         guard let session = try? await supabase.auth.session else { return }
         _ = session
         
+        // Delete associated media files from storage before deleting the journal
+        if let journal = journals.first(where: { $0.id == id }) {
+            let mediaUrls = journal.mediaUrls
+            if !mediaUrls.isEmpty {
+                let bucket = SupabaseConfig.shared.client.storage.from("journal-media")
+                var pathsToDelete: [String] = []
+                
+                for urlStr in mediaUrls {
+                    if let url = URL(string: urlStr) {
+                        let pathComponents = url.pathComponents
+                        if let bucketIndex = pathComponents.lastIndex(of: "journal-media"),
+                           bucketIndex + 1 < pathComponents.count {
+                            let relativePath = pathComponents[(bucketIndex + 1)...].joined(separator: "/")
+                            pathsToDelete.append(relativePath)
+                        }
+                    }
+                }
+                
+                if !pathsToDelete.isEmpty {
+                    do {
+                        _ = try await bucket.remove(paths: pathsToDelete)
+                    } catch {
+                        print("Error deleting journal media files: \(error)")
+                    }
+                }
+            }
+        }
+        
         try await supabase.from("journals")
             .delete()
             .eq("id", value: id.uuidString)
@@ -142,7 +170,9 @@ final class JournalViewModel: ObservableObject {
     }
     
     func uploadMedia(journalId: UUID, fileData: Data, fileName: String) async throws -> String {
-        let path = "\(journalId.uuidString)/\(fileName)"
+        let session = try? await supabase.auth.session
+        let userIdStr = session?.user.id.uuidString.lowercased() ?? UUID().uuidString.lowercased()
+        let path = "\(userIdStr)/\(journalId.uuidString.lowercased())_\(fileName)"
         
         try await supabase.storage.from("journal-media").upload(
             path: path,
