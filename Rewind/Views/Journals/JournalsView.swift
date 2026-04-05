@@ -13,6 +13,12 @@ struct JournalsView: View {
     init(onJournalTapped: ((DBJournal) -> Void)? = nil) {
         self.onJournalTapped = onJournalTapped
     }
+
+    private struct JournalDaySection: Identifiable {
+        let id: String
+        let title: String
+        let journals: [DBJournal]
+    }
     
     var body: some View {
         NavigationStack {
@@ -120,22 +126,28 @@ struct JournalsView: View {
     // MARK: - Journal List
     
     private var journalListView: some View {
-        let sorted = journalViewModel.journals.sorted {
-            ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast)
-        }
+        let sections = groupedSections(from: journalViewModel.journals)
         
         return ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(sorted, id: \.id) { journal in
-                    journalRowView(journal)
-                        .onTapGesture {
-                            selectedJournal = journal
-                            if onJournalTapped != nil {
-                                onJournalTapped?(journal)
-                            } else {
-                                showSelectedJournal = true
+            LazyVStack(alignment: .leading, spacing: 18) {
+                ForEach(sections) { section in
+                    VStack(alignment: .leading, spacing: 10) {
+                        sectionHeader(title: section.title)
+
+                        VStack(spacing: 12) {
+                            ForEach(section.journals, id: \.id) { journal in
+                                journalRowView(journal)
+                                    .onTapGesture {
+                                        selectedJournal = journal
+                                        if onJournalTapped != nil {
+                                            onJournalTapped?(journal)
+                                        } else {
+                                            showSelectedJournal = true
+                                        }
+                                    }
                             }
                         }
+                    }
                 }
             }
             .padding(16)
@@ -151,7 +163,7 @@ struct JournalsView: View {
         VStack(alignment: .leading, spacing: 8) {
             // Date & Mood
             HStack(spacing: 12) {
-                Text(formattedDate(journal.createdDate))
+                Text(formattedTime(journal.createdDate))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 
@@ -204,25 +216,69 @@ struct JournalsView: View {
     }
     
     // MARK: - Helpers
-    
-    private func formattedDate(_ date: Date?) -> String {
-        guard let date else { return "Unknown date" }
-        
+
+    private func groupedSections(from journals: [DBJournal]) -> [JournalDaySection] {
         let calendar = Calendar.current
+
+        let grouped = Dictionary(grouping: journals) { journal -> Date in
+            let created = journal.createdDate ?? .distantPast
+            return calendar.startOfDay(for: created)
+        }
+
+        return grouped
+            .map { day, dayJournals in
+                let sortedJournals = dayJournals.sorted {
+                    ($0.createdDate ?? .distantPast) > ($1.createdDate ?? .distantPast)
+                }
+
+                return JournalDaySection(
+                    id: sectionIdentifier(for: day),
+                    title: sectionTitle(for: day),
+                    journals: sortedJournals
+                )
+            }
+            .sorted { lhs, rhs in
+                let leftDate = lhs.journals.first?.createdDate ?? .distantPast
+                let rightDate = rhs.journals.first?.createdDate ?? .distantPast
+                return leftDate > rightDate
+            }
+    }
+
+    private func sectionHeader(title: String) -> some View {
+        Text(title)
+            .font(.system(size: 15, weight: .bold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 2)
+    }
+
+    private func sectionIdentifier(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+
+    private func sectionTitle(for date: Date) -> String {
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            return "Today"
+        }
+
+        if calendar.isDateInYesterday(date) {
+            return "Yesterday"
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        return formatter.string(from: date)
+    }
+    
+    private func formattedTime(_ date: Date?) -> String {
+        guard let date else { return "Unknown date" }
+
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "h:mm a"
-        
-        if calendar.isDateInToday(date) {
-            return "Today • \(timeFormatter.string(from: date))"
-        }
-        
-        if calendar.isDateInYesterday(date) {
-            return "Yesterday • \(timeFormatter.string(from: date))"
-        }
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d"
-        return "\(dateFormatter.string(from: date)) • \(timeFormatter.string(from: date))"
+        return timeFormatter.string(from: date)
     }
 }
 

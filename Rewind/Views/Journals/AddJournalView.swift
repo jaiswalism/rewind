@@ -497,7 +497,7 @@ struct AddJournalView: View {
 						Color.clear
 							.frame(height: 44)
 					} else {
-						let date = Calendar.current.date(byAdding: .day, value: day.day, to: firstDayOfMonth(selectedDate)) ?? selectedDate
+						let date = Calendar.current.date(byAdding: .day, value: day.day - 1, to: firstDayOfMonth(selectedDate)) ?? selectedDate
 						let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
 						let isFutureDate = date > Calendar.current.startOfDay(for: Date())
 
