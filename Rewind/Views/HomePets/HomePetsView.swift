@@ -4,22 +4,46 @@ import SceneKit
 // MARK: - Mood State
 
 private struct MoodState {
-    let quote: String
+    let quotes: [String]
+
+    func randomQuote() -> String {
+        quotes.randomElement() ?? "Tell me about your day."
+    }
 
     static func from(_ pet: PetViewModel.PetData?) -> MoodState {
         let emotion = pet?.memory?.dominantEmotion?.lowercased() ?? ""
         let mood = pet?.state.mood ?? 65
         switch true {
         case emotion.contains("sad") || emotion.contains("melanchol") || mood < 30:
-            return MoodState(quote: "I could use some company today.")
+            return MoodState(quotes: [
+                "I could use some company today.",
+                "Can we stay close for a bit?",
+                "A little chat would cheer me up."
+            ])
         case emotion.contains("excit") || emotion.contains("joy") || mood > 80:
-            return MoodState(quote: "So happy you're here! ✨")
+            return MoodState(quotes: [
+                "So happy you're here! ✨",
+                "Yay, you're back!",
+                "Best part of my day is you."
+            ])
         case emotion.contains("sleep") || emotion.contains("tired") || mood < 48:
-            return MoodState(quote: "Feeling a little sleepy… 🌙")
+            return MoodState(quotes: [
+                "Feeling a little sleepy...",
+                "Can we keep it cozy today?",
+                "Low-energy mode, but still here with you."
+            ])
         case emotion.contains("curious"):
-            return MoodState(quote: "Wondering what you'll share.")
+            return MoodState(quotes: [
+                "Wondering what you'll share.",
+                "Tell me something interesting.",
+                "I'm curious about your day."
+            ])
         default:
-            return MoodState(quote: "Tell me about your day.")
+            return MoodState(quotes: [
+                "Tell me about your day.",
+                "How's everything going?",
+                "I'm listening whenever you're ready."
+            ])
         }
     }
 }
@@ -37,6 +61,8 @@ struct HomePetsView: View {
 
     @State private var showBubble = false
     @State private var isTalking  = false   // drives the inline panel
+    @State private var bubbleQuote = ""
+    @State private var hasInitializedData = false
 
     init() {
         let pet = PetViewModel()
@@ -75,9 +101,20 @@ struct HomePetsView: View {
                 }
             }
         }
-        .task { await viewModel.fetchPet() }
+        .task {
+            guard !hasInitializedData else { return }
+            hasInitializedData = true
+
+            await viewModel.fetchPet()
+            await MainActor.run {
+                bubbleQuote = mood.randomQuote()
+            }
+        }
         .task { await userViewModel.fetchProfile() }
         .onAppear {
+            if bubbleQuote.isEmpty {
+                bubbleQuote = mood.randomQuote()
+            }
             withAnimation(.spring(response: 0.55, dampingFraction: 0.72).delay(0.35)) {
                 showBubble = true
             }
@@ -159,13 +196,13 @@ struct HomePetsView: View {
                 .frame(maxWidth: .infinity, idealHeight: 340)
                 .frame(height: 340)
                 .clipped()
-                .offset(y: 30)
+                .offset(x: -14, y: 30)
 
             Ellipse()
                 .fill(Color.black.opacity(colorScheme == .dark ? 0.28 : 0.09))
                 .frame(width: 110, height: 13)
                 .blur(radius: 7)
-                .offset(y: 198)
+                .offset(x: -14, y: 198)
 
             if showBubble && !isTalking {
                 speechBubble
@@ -189,7 +226,7 @@ struct HomePetsView: View {
     // MARK: - Speech Bubble
 
     private var speechBubble: some View {
-        Text(mood.quote)
+        Text(bubbleQuote.isEmpty ? (mood.quotes.first ?? "Tell me about your day.") : bubbleQuote)
             .font(.system(size: 13, weight: .medium))
             .foregroundStyle(.primary)
             .multilineTextAlignment(.leading)

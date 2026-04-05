@@ -8,6 +8,7 @@ final class PetViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var isTyping = false
+    private var hasLoadedPet = false
     
     private let supabase = SupabaseConfig.shared.client
     
@@ -75,7 +76,11 @@ final class PetViewModel: ObservableObject {
         }
     }
     
-    func fetchPet() async {
+    func fetchPet(force: Bool = false) async {
+        if hasLoadedPet && !force {
+            return
+        }
+
         isLoading = true
         
         do {
@@ -116,6 +121,8 @@ final class PetViewModel: ObservableObject {
                     talkPreference: nil
                 ) : nil
             )
+
+            hasLoadedPet = true
         } catch {
             self.error = error.localizedDescription
         }

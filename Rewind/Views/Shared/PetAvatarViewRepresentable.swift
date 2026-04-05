@@ -16,6 +16,7 @@ struct PetAvatarViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: PetAvatarView, context: Context) {
-        // Configuration is applied once on makeUIView; no need to re-apply here.
+        // Re-apply in updates so position/scale tweaks take effect without forcing view recreation.
+        uiView.configure(scale: scale, position: position)
     }
 }

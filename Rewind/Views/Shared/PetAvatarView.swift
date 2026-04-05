@@ -75,8 +75,14 @@ class PetAvatarView: SCNView {
     private func loadPetModel() {
         // Try different paths - prioritized list
         var modelURL: URL?
-        
-        if let url = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
+
+        if let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "wavingPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
             modelURL = url
         } else if let url = Bundle.main.url(forResource: "penguin", withExtension: "usdz") {
             modelURL = url
@@ -87,7 +93,7 @@ class PetAvatarView: SCNView {
         if let validURL = modelURL {
             loadModel(from: validURL)
         } else {
-            print("❌ PetAvatarView: Failed to find penguin.usdz file")
+            print("PetAvatarView: Failed to find panda/penguin model file")
             // Could implement a fallback placeholder here if desired
         }
     }
@@ -163,10 +169,11 @@ class PetAvatarView: SCNView {
     func startIdleAnimation() {
         guard let penguin = penguinNode else { return }
         penguin.removeAction(forKey: "idle")
-        
-        let moveUp = SCNAction.moveBy(x: 0, y: 0.05, z: 0, duration: 2.0)
+
+        // Keep a subtle breathing motion so larger Panda assets do not look like they are floating.
+        let moveUp = SCNAction.moveBy(x: 0, y: 0.015, z: 0, duration: 2.4)
         moveUp.timingMode = .easeInEaseOut
-        let moveDown = SCNAction.moveBy(x: 0, y: -0.05, z: 0, duration: 2.0)
+        let moveDown = SCNAction.moveBy(x: 0, y: -0.015, z: 0, duration: 2.4)
         moveDown.timingMode = .easeInEaseOut
         let bobSequence = SCNAction.sequence([moveUp, moveDown])
         let repeatBob = SCNAction.repeatForever(bobSequence)
