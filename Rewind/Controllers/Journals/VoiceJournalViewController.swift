@@ -201,7 +201,7 @@ class VoiceJournalViewController: UIViewController {
         
         for _ in 0..<18 {
             let bar = UIView()
-            bar.backgroundColor = UIColor.white.withAlphaComponent(0.3)
+            bar.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.3) ?? UIColor.gray.withAlphaComponent(0.3)
             bar.layer.cornerRadius = 9
             bar.translatesAutoresizingMaskIntoConstraints = false
             
@@ -635,7 +635,12 @@ class VoiceJournalViewController: UIViewController {
                     emotion: nil,
                     tags: nil,
                     mediaUrls: nil,
-                    isFavorite: false
+                    isFavorite: false,
+                    entryType: "voice",
+                    voiceRecordingUrl: nil,
+                    transcriptionText: transcript,
+                    feelings: nil,
+                    activities: nil
                 )
                 await MainActor.run {
                     self.uploadAudio(journalId: journal.id.uuidString, fileUrl: fileURL)
@@ -655,7 +660,12 @@ class VoiceJournalViewController: UIViewController {
         Task {
             do {
                 let data = try Data(contentsOf: fileUrl)
-                _ = try await journalViewModel.uploadMedia(journalId: UUID(uuidString: journalId)!, fileData: data, fileName: fileUrl.lastPathComponent)
+                let publicUrl = try await journalViewModel.uploadMedia(journalId: UUID(uuidString: journalId)!, fileData: data, fileName: fileUrl.lastPathComponent)
+                try await journalViewModel.updateVoiceJournalMedia(
+                    id: UUID(uuidString: journalId)!,
+                    voiceRecordingUrl: publicUrl,
+                    mediaUrls: [publicUrl]
+                )
                 await MainActor.run {
                     self.statusLabel.text = "Saved!"
                     let vc = MyJournalsListViewController(nibName: "MyJournalsListViewController", bundle: nil)
@@ -685,11 +695,11 @@ class VoiceJournalViewController: UIViewController {
                 }
                 self.statusLabel.text = "Ready"
                 self.stopWaveformAnimation()
-                self.micButton.backgroundColor = UIColor(named: "colors/Primary/Dark")?.withAlphaComponent(0.3)
+                self.micButton.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")?.withAlphaComponent(0.7)
                 
             case .recording:
                 self.statusLabel.text = "Listening..."
-                self.micButton.backgroundColor = .red.withAlphaComponent(0.5)
+                self.micButton.backgroundColor = .systemRed.withAlphaComponent(0.7)
             }
         }, completion: nil)
     }

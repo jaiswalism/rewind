@@ -15,7 +15,7 @@ class MainTabBarController: UITabBarController {
 
     private func setupViewControllers() {
         // Journal Tab
-        let journalsVC = JournalsHomeViewController(nibName: "JournalsHomeViewController", bundle: nil)
+        let journalsVC = JournalsViewController()
         journalsVC.tabBarItem = UITabBarItem(
             title: "Journal",
             image: UIImage(systemName: "doc.text"),

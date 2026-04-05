@@ -10,68 +10,59 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MyJournalsListViewController" customModule="Rewind" customModuleProvider="target">
             <connections>
-                <outlet property="dateCollectionView" destination="HV4-Rv-hjn" id="ufQ-Jv-DZb"/>
-                <outlet property="timelineTableView" destination="s2p-iF-FhS" id="c4r-8a-D5G"/>
-                <outlet property="titleLabel" destination="Uld-Uh-gIo" id="Y0N-yk-666"/>
-                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+                <outlet property="subtitleLabel" destination="sub-title-label" id="sub-title-outlet"/>
+                <outlet property="timelineTableView" destination="timeline-table" id="timeline-outlet"/>
+                <outlet property="titleLabel" destination="title-label" id="title-outlet"/>
+                <outlet property="view" destination="main-view" id="view-outlet"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="main-view">
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wHh-CX-iMl">
-                    <rect key="frame" x="0.0" y="0.0" width="393" height="320"/>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="header-view">
+                    <rect key="frame" x="0.0" y="0.0" width="393" height="188"/>
                     <subviews>
-                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="My Journals" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uld-Uh-gIo">
-                            <rect key="frame" x="24" y="133" width="345" height="57.333333333333343"/>
-                            <constraints>
-                                <constraint firstAttribute="width" constant="345" id="Rvu-rP-X4B"/>
-                            </constraints>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="My Journals" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="title-label">
+                            <rect key="frame" x="24" y="74" width="345" height="57"/>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="48"/>
                             <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="none" translatesAutoresizingMaskIntoConstraints="NO" id="HV4-Rv-hjn">
-                            <rect key="frame" x="0.0" y="220.33333333333334" width="393" height="79.666666666666657"/>
-                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="79.666666666666629" id="iJi-17-FTx"/>
-                            </constraints>
-                            <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" minimumLineSpacing="12" minimumInteritemSpacing="0.0" id="tNM-na-XYi">
-                                <size key="itemSize" width="128" height="128"/>
-                                <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                                <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                                <inset key="sectionInset" minX="12" minY="0.0" maxX="0.0" maxY="0.0"/>
-                            </collectionViewFlowLayout>
-                        </collectionView>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0 entries - Latest first" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sub-title-label">
+                            <rect key="frame" x="24" y="137" width="345" height="20"/>
+                            <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="15"/>
+                            <color key="textColor" white="1" alpha="0.82" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <nil key="highlightedColor"/>
+                        </label>
                     </subviews>
                     <color key="backgroundColor" name="colors/Blue&amp;Shades/blue-400"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="320" id="FHq-N0-1ox"/>
-                        <constraint firstAttribute="trailing" secondItem="HV4-Rv-hjn" secondAttribute="trailing" id="Fwe-G5-5Qh"/>
-                        <constraint firstItem="HV4-Rv-hjn" firstAttribute="leading" secondItem="wHh-CX-iMl" secondAttribute="leading" id="Jet-Hz-yhD"/>
-                        <constraint firstItem="Uld-Uh-gIo" firstAttribute="centerX" secondItem="wHh-CX-iMl" secondAttribute="centerX" id="Lwe-AH-b3g"/>
-                        <constraint firstAttribute="bottom" secondItem="HV4-Rv-hjn" secondAttribute="bottom" constant="20" id="TFt-Li-rVK"/>
-                        <constraint firstItem="HV4-Rv-hjn" firstAttribute="top" secondItem="Uld-Uh-gIo" secondAttribute="bottom" constant="30" id="yaM-YP-AxI"/>
+                        <constraint firstAttribute="height" constant="188" id="header-height"/>
+                        <constraint firstItem="sub-title-label" firstAttribute="top" secondItem="title-label" secondAttribute="bottom" constant="6" id="subtitle-top"/>
+                        <constraint firstItem="sub-title-label" firstAttribute="leading" secondItem="header-view" secondAttribute="leading" constant="24" id="subtitle-leading"/>
+                        <constraint firstAttribute="trailing" secondItem="sub-title-label" secondAttribute="trailing" constant="24" id="subtitle-trailing"/>
+                        <constraint firstItem="title-label" firstAttribute="leading" secondItem="header-view" secondAttribute="leading" constant="24" id="title-leading"/>
+                        <constraint firstAttribute="trailing" secondItem="title-label" secondAttribute="trailing" constant="24" id="title-trailing"/>
+                        <constraint firstItem="title-label" firstAttribute="top" secondItem="header-view" secondAttribute="top" constant="74" id="title-top"/>
                     </constraints>
                 </view>
-                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="s2p-iF-FhS">
-                    <rect key="frame" x="0.0" y="320" width="393" height="464"/>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="timeline-table">
+                    <rect key="frame" x="0.0" y="188" width="393" height="630"/>
                     <color key="backgroundColor" name="colors/Primary/Dark"/>
                 </tableView>
             </subviews>
-            <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>
+            <viewLayoutGuide key="safeArea" id="safe-area"/>
             <color key="backgroundColor" name="colors/Primary/Dark"/>
             <constraints>
-                <constraint firstItem="wHh-CX-iMl" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="8RP-46-P0v"/>
-                <constraint firstItem="s2p-iF-FhS" firstAttribute="top" secondItem="wHh-CX-iMl" secondAttribute="bottom" id="D3m-b3-s5L"/>
-                <constraint firstItem="s2p-iF-FhS" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="Q4C-0q-dFm"/>
-                <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="wHh-CX-iMl" secondAttribute="trailing" id="cPX-E0-fjN"/>
-                <constraint firstItem="wHh-CX-iMl" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="cdj-07-bgt"/>
-                <constraint firstItem="s2p-iF-FhS" firstAttribute="trailing" secondItem="fnl-2z-Ty3" secondAttribute="trailing" id="d8w-hY-H9f"/>
-                <constraint firstItem="fnl-2z-Ty3" firstAttribute="bottom" secondItem="s2p-iF-FhS" secondAttribute="bottom" id="dcx-t2-vQ9"/>
+                <constraint firstItem="header-view" firstAttribute="leading" secondItem="safe-area" secondAttribute="leading" id="header-leading"/>
+                <constraint firstItem="safe-area" firstAttribute="trailing" secondItem="header-view" secondAttribute="trailing" id="header-trailing"/>
+                <constraint firstItem="header-view" firstAttribute="top" secondItem="main-view" secondAttribute="top" id="header-top"/>
+                <constraint firstItem="timeline-table" firstAttribute="top" secondItem="header-view" secondAttribute="bottom" id="table-top"/>
+                <constraint firstItem="timeline-table" firstAttribute="leading" secondItem="safe-area" secondAttribute="leading" id="table-leading"/>
+                <constraint firstItem="safe-area" firstAttribute="trailing" secondItem="timeline-table" secondAttribute="trailing" id="table-trailing"/>
+                <constraint firstItem="safe-area" firstAttribute="bottom" secondItem="timeline-table" secondAttribute="bottom" id="table-bottom"/>
             </constraints>
             <point key="canvasLocation" x="-57" y="154"/>
         </view>

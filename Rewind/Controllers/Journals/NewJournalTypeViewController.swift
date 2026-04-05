@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 class NewJournalTypeViewController: UIViewController {
 
@@ -28,11 +29,15 @@ class NewJournalTypeViewController: UIViewController {
         navigationController?.popViewController(animated: true)
     }
     @IBAction func voiceButton(_ sender: Any) {
-        let vc = VoiceJournalViewController(nibName: "VoiceJournalViewController", bundle: nil)
-           navigationController?.pushViewController(vc, animated: true)
+        let swiftUIView = AddJournalView()
+        let hostingController = UIHostingController(rootView: swiftUIView)
+        hostingController.modalPresentationStyle = .fullScreen
+        self.present(hostingController, animated: true)
     }
     @IBAction func textButton(_ sender: Any) {
-        let vc = AddTextJournalViewController(nibName: "AddTextJournalViewController", bundle: nil)
-            navigationController?.pushViewController(vc, animated: true)
+        let swiftUIView = AddJournalView()
+        let hostingController = UIHostingController(rootView: swiftUIView)
+        hostingController.modalPresentationStyle = .fullScreen
+        self.present(hostingController, animated: true)
     }
 }
