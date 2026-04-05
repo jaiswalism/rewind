@@ -13,7 +13,7 @@ class CreatePostViewController: UIViewController {
     
     // MARK: - ViewModels
     private let communityViewModel = CommunityViewModel()
-    private let userViewModel = UserViewModel()
+    private let userViewModel = UserViewModel.shared
 
     // MARK: - UI Components
     

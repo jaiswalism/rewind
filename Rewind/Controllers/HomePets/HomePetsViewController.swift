@@ -35,22 +35,11 @@ class HomePetsViewController: UIHostingController<HomePetsView> {
         connectedView.onSettingsTapped = { [weak self] in
             guard let self = self else { return }
             let settingsVC = SettingsViewController()
+            settingsVC.hidesBottomBarWhenPushed = true
             if let navController = self.navigationController {
                 navController.pushViewController(settingsVC, animated: true)
             } else {
                 let navController = UINavigationController(rootViewController: settingsVC)
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true)
-            }
-        }
-
-        connectedView.onNotificationsTapped = { [weak self] in
-            guard let self = self else { return }
-            let notificationsVC = NotificationsViewController()
-            if let navController = self.navigationController {
-                navController.pushViewController(notificationsVC, animated: true)
-            } else {
-                let navController = UINavigationController(rootViewController: notificationsVC)
                 navController.modalPresentationStyle = .fullScreen
                 self.present(navController, animated: true)
             }

@@ -29,10 +29,10 @@ private struct MoodState {
 struct HomePetsView: View {
     @StateObject private var viewModel:   PetViewModel
     @StateObject private var talkSession: PetTalkSessionViewModel
+    @StateObject private var userViewModel: UserViewModel
     @Environment(\.colorScheme) private var colorScheme
 
     var onSettingsTapped:      () -> Void = {}
-    var onNotificationsTapped: () -> Void = {}
     // onMicTapped removed – talk is now inline
 
     @State private var showBubble = false
@@ -42,6 +42,7 @@ struct HomePetsView: View {
         let pet = PetViewModel()
         _viewModel   = StateObject(wrappedValue: pet)
         _talkSession = StateObject(wrappedValue: PetTalkSessionViewModel(petViewModel: pet))
+        _userViewModel = StateObject(wrappedValue: UserViewModel.shared)
     }
 
     private var mood: MoodState { MoodState.from(viewModel.pet) }
@@ -75,6 +76,7 @@ struct HomePetsView: View {
             }
         }
         .task { await viewModel.fetchPet() }
+        .task { await userViewModel.fetchProfile() }
         .onAppear {
             withAnimation(.spring(response: 0.55, dampingFraction: 0.72).delay(0.35)) {
                 showBubble = true
@@ -88,9 +90,36 @@ struct HomePetsView: View {
     private var topBar: some View {
         HStack {
             Button(action: onSettingsTapped) {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.primary)
+                if let urlString = userViewModel.user?.profileImageUrl,
+                   !urlString.isEmpty,
+                   let url = URL(string: urlString) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            Circle()
+                                .fill(Color.primary.opacity(0.1))
+                                .frame(width: 32, height: 32)
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 32, height: 32)
+                                .clipShape(Circle())
+                        case .failure:
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.primary)
+                        @unknown default:
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                } else {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.primary)
+                }
             }
 
             Spacer()
@@ -108,12 +137,6 @@ struct HomePetsView: View {
             }
 
             Spacer()
-
-            Button(action: onNotificationsTapped) {
-                Image(systemName: "bell.fill")
-                    .font(.system(size: 22))
-                    .foregroundStyle(.primary)
-            }
         }
     }
 
@@ -207,7 +230,7 @@ struct HomePetsView: View {
             }
             .buttonStyle(ElitePrimaryButtonStyle())
 
-            Button(action: onNotificationsTapped) {
+            Button(action: {}) {
                 HStack(spacing: 8) {
                     Image(systemName: "bag")
                         .font(.system(size: 14, weight: .medium))

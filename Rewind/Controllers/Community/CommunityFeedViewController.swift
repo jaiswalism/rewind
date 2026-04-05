@@ -132,7 +132,7 @@ class CommunityFeedViewController: UIViewController {
     }
     
     private func updateProfileBar() {
-        let userViewModel = UserViewModel()
+        let userViewModel = UserViewModel.shared
         Task {
             await userViewModel.fetchProfile()
             await MainActor.run {
