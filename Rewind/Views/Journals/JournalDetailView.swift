@@ -22,6 +22,7 @@ struct JournalDetailView: View {
     @State private var localJournal: DBJournal?
     @State private var audioPlayer: AVPlayer?
     @State private var isAudioPlaying = false
+    @State private var showImageViewer = false
 
     private var displayJournal: DBJournal {
         localJournal ?? journal
@@ -240,29 +241,35 @@ struct JournalDetailView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(displayImageURLs, id: \.absoluteString) { url in
-                                if url.isFileURL, let image = UIImage(contentsOfFile: url.path) {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 96, height: 96)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                                } else {
-                                    AsyncImage(url: url) { image in
-                                        image
+                                Button(action: { showImageViewer = true }) {
+                                    if url.isFileURL, let image = UIImage(contentsOfFile: url.path) {
+                                        Image(uiImage: image)
                                             .resizable()
                                             .scaledToFill()
-                                    } placeholder: {
-                                        ZStack {
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.eliteSurface)
-                                            ProgressView()
+                                            .frame(width: 96, height: 96)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    } else {
+                                        AsyncImage(url: url) { image in
+                                            image
+                                                .resizable()
+                                                .scaledToFill()
+                                        } placeholder: {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(Color.eliteSurface)
+                                                ProgressView()
+                                            }
                                         }
+                                        .frame(width: 96, height: 96)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
                                     }
-                                    .frame(width: 96, height: 96)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
+                    }
+                    .fullScreenCover(isPresented: $showImageViewer) {
+                        ImageViewerView(imageURLs: displayImageURLs)
                     }
                 }
             }

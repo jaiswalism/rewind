@@ -10,6 +10,7 @@ struct CommunityPostCard: View {
     let onDelete: () -> Void
     
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showImageViewer = false
     
     private var cardBackground: some ShapeStyle {
         colorScheme == .dark ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(Color.white)
@@ -79,7 +80,7 @@ struct CommunityPostCard: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                         .frame(width: 48, height: 48)
                         .contentShape(Rectangle())
                 }
@@ -97,20 +98,23 @@ struct CommunityPostCard: View {
             // Media Preview (if available)
             if let firstMediaUrlString = postWithUser.post.mediaUrls.first,
                !firstMediaUrlString.isEmpty {
-                PostMediaView(urlString: firstMediaUrlString)
-                .overlay(
-                    Group {
-                        if postWithUser.post.mediaUrls.count > 1 {
-                            Text("+\(postWithUser.post.mediaUrls.count - 1)")
-                                .font(.system(size: 14, weight: .bold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.thinMaterial, in: Capsule())
-                                .padding(12)
-                        }
-                    },
-                    alignment: .bottomTrailing
-                )
+                Button(action: { showImageViewer = true }) {
+                    PostMediaView(urlString: firstMediaUrlString)
+                        .overlay(
+                            Group {
+                                if postWithUser.post.mediaUrls.count > 1 {
+                                    Text("+\(postWithUser.post.mediaUrls.count - 1)")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(.thinMaterial, in: Capsule())
+                                        .padding(12)
+                                }
+                            },
+                            alignment: .bottomTrailing
+                        )
+                }
+                .buttonStyle(.plain)
             }
             
             // Divider
@@ -154,6 +158,12 @@ struct CommunityPostCard: View {
                 .stroke(cardBorderColor, lineWidth: colorScheme == .dark ? 0.5 : 1)
         )
         .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.08 : 0.1), radius: 12, x: 0, y: 6)
+        .fullScreenCover(isPresented: $showImageViewer) {
+            let imageURLs = postWithUser.post.mediaUrls.compactMap { URL(string: $0) }
+            if !imageURLs.isEmpty {
+                ImageViewerView(imageURLs: imageURLs)
+            }
+        }
     }
     
     private var fallbackAvatar: some View {

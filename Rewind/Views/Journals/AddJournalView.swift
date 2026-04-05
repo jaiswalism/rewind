@@ -785,12 +785,43 @@ struct AddJournalView: View {
 		return date
 	}
 
+	private func optimizedImageData(from image: UIImage) -> Data? {
+		let resized = resizedImageIfNeeded(image, maxDimension: 1600)
+		let targetMaxBytes = 900_000
+		let qualitySteps: [CGFloat] = [0.8, 0.7, 0.6, 0.5, 0.45]
+
+		for quality in qualitySteps {
+			if let data = resized.jpegData(compressionQuality: quality), data.count <= targetMaxBytes {
+				return data
+			}
+		}
+
+		// Fallback for very large photos: downscale more aggressively.
+		let aggressiveResize = resizedImageIfNeeded(resized, maxDimension: 1200)
+		return aggressiveResize.jpegData(compressionQuality: 0.5)
+	}
+
+	private func resizedImageIfNeeded(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+		let originalSize = image.size
+		let longestSide = max(originalSize.width, originalSize.height)
+
+		guard longestSide > maxDimension else { return image }
+
+		let scale = maxDimension / longestSide
+		let newSize = CGSize(width: originalSize.width * scale, height: originalSize.height * scale)
+		let renderer = UIGraphicsImageRenderer(size: newSize)
+
+		return renderer.image { _ in
+			image.draw(in: CGRect(origin: .zero, size: newSize))
+		}
+	}
+
 	private func uploadSelectedImages(journalId: UUID) async throws -> [String] {
 		guard !selectedImages.isEmpty else { return [] }
 
 		var uploadedUrls: [String] = []
 		for (index, image) in selectedImages.enumerated() {
-			guard let data = image.jpegData(compressionQuality: 0.82) else { continue }
+			guard let data = optimizedImageData(from: image) else { continue }
 			let fileName = "photo_\(index)_\(Int(Date().timeIntervalSince1970)).jpg"
 			let publicUrl = try await viewModel.uploadMedia(
 				journalId: journalId,
