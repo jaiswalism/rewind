@@ -6,6 +6,7 @@ struct CommunityPostCard: View {
     let onComment: () -> Void
     let onShare: () -> Void
     let onReport: () -> Void
+    let onEdit: () -> Void
     let onDelete: () -> Void
     
     @Environment(\.colorScheme) private var colorScheme
@@ -63,6 +64,10 @@ struct CommunityPostCard: View {
                 
                 Menu {
                     if postWithUser.isMine {
+                        Button("Edit Post") {
+                            onEdit()
+                        }
+
                         Button("Delete Post", role: .destructive) {
                             onDelete()
                         }
@@ -73,10 +78,14 @@ struct CommunityPostCard: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 20))
+                        .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(.secondary)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 48, height: 48)
+                        .contentShape(Rectangle())
                 }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .zIndex(5)
             }
             
             // Post Content

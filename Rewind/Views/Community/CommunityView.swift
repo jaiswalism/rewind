@@ -8,6 +8,7 @@ struct CommunityView: View {
     @State private var showingCreatePost = false
     @State private var showingCommentSheet = false
     @State private var selectedPostIdForComments: String? = nil
+    @State private var editingPost: CommunityViewModel.CommunityPostWithUser?
     
     // Tags matching the Create Post screen
     let tags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
@@ -16,58 +17,61 @@ struct CommunityView: View {
     var body: some View {
         ZStack {
             EliteBackgroundView()
+                .ignoresSafeArea(.all, edges: .top)
             
-            // Scrollable content
-            ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 20) {
-                    if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
-                        VStack(spacing: 16) {
-                            Image(systemName: "person.2.square.stack")
-                                .font(.system(size: 48))
-                                .foregroundStyle(.secondary)
-                            Text("No posts found. Be the first to share!")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.top, 60)
-                    } else {
-                        ForEach(communityViewModel.posts) { post in
-                            CommunityPostCard(
-                                postWithUser: post,
-                                onLike: {
-                                    Task { try? await communityViewModel.toggleLike(postId: post.id) }
-                                },
-                                onComment: {
-                                    selectedPostIdForComments = post.id.uuidString
-                                    showingCommentSheet = true
-                                },
-                                onShare: { sharePost(post: post) },
-                                onReport: { print("Report tapped") },
-                                onDelete: {
-                                    Task { try? await communityViewModel.deletePost(id: post.id) }
-                                }
-                            )
-                            .padding(.horizontal, 20)
+            VStack(spacing: 0) {
+                headerView
+                    .padding(.top, 10)
+                    .padding(.bottom, 10)
+                    .background(colorScheme == .dark ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(red: 0.94, green: 0.96, blue: 1.0).opacity(0.95)))
+
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 20) {
+                        if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
+                            VStack(spacing: 16) {
+                                Image(systemName: "person.2.square.stack")
+                                    .font(.system(size: 48))
+                                    .foregroundStyle(.secondary)
+                                Text("No posts found. Be the first to share!")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.top, 60)
+                        } else {
+                            ForEach(communityViewModel.posts) { post in
+                                CommunityPostCard(
+                                    postWithUser: post,
+                                    onLike: {
+                                        Task { try? await communityViewModel.toggleLike(postId: post.id) }
+                                    },
+                                    onComment: {
+                                        selectedPostIdForComments = post.id.uuidString
+                                        showingCommentSheet = true
+                                    },
+                                    onShare: { sharePost(post: post) },
+                                    onReport: {
+                                        print("Report tapped")
+                                    },
+                                    onEdit: {
+                                        editingPost = post
+                                    },
+                                    onDelete: {
+                                        Task { try? await communityViewModel.deletePost(id: post.id) }
+                                    }
+                                )
+                                .padding(.horizontal, 20)
+                            }
                         }
                     }
+                    .padding(.bottom, 120)
+                    .padding(.top, 12)
                 }
-                .padding(.bottom, 120)
-                .padding(.top, 20)
-            }
-            .safeAreaInset(edge: .top) {
-                VStack(spacing: 0) {
-                    headerView
-                        .padding(.top, 60)
-                        .padding(.bottom, 10)
-                        .background(colorScheme == .dark ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(red: 0.94, green: 0.96, blue: 1.0).opacity(0.95)))
+                .refreshable {
+                    await communityViewModel.fetchPosts(refresh: true)
+                    await userViewModel.fetchProfile()
                 }
-            }
-            .refreshable {
-                await communityViewModel.fetchPosts(refresh: true)
-                await userViewModel.fetchProfile()
             }
         }
-        .ignoresSafeArea(.all, edges: .top)
         .preferredColorScheme(.dark)
         .onAppear {
             // Only fetch on first load, not every tab switch
@@ -86,6 +90,15 @@ struct CommunityView: View {
             }
         }) {
             CreatePostView()
+                .presentationCornerRadius(28)
+        }
+        .sheet(item: $editingPost, onDismiss: {
+            Task {
+                await communityViewModel.fetchPosts(refresh: true)
+                await userViewModel.fetchProfile()
+            }
+        }) { post in
+            CreatePostView(postToEdit: post)
                 .presentationCornerRadius(28)
         }
         .onChange(of: showingCommentSheet) { showing in

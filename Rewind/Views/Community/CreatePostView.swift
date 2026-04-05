@@ -28,10 +28,20 @@ struct CreatePostView: View {
     @State private var errorMessage: String = ""
     @FocusState private var isTextFocused: Bool
 
+    let postToEdit: CommunityViewModel.CommunityPostWithUser?
+
+    init(postToEdit: CommunityViewModel.CommunityPostWithUser? = nil) {
+        self.postToEdit = postToEdit
+    }
+
     private let availableTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
 
     private var canPost: Bool {
         !postText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isPosting
+    }
+
+    private var isEditMode: Bool {
+        postToEdit != nil
     }
 
     var body: some View {
@@ -73,6 +83,11 @@ struct CreatePostView: View {
             }
         }
         .onAppear {
+            if let post = postToEdit {
+                postText = post.post.content
+                isAnonymous = post.post.isAnonymous
+                selectedTags = Set(post.post.tags)
+            }
             if userViewModel.user == nil {
                 Task { await userViewModel.fetchProfile() }
             }
@@ -101,8 +116,12 @@ struct CreatePostView: View {
             Spacer()
 
             Text("Create Post")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(.primary)
+                .opacity(isEditMode ? 0 : 1)
+                .overlay {
+                    Text(isEditMode ? "Edit Post" : "Create Post")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.primary)
+                }
 
             Spacer()
 
@@ -114,7 +133,7 @@ struct CreatePostView: View {
                             .tint(.white)
                             .frame(width: 60)
                     } else {
-                        Text("Post")
+                        Text(isEditMode ? "Update" : "Post")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 20)
@@ -275,6 +294,13 @@ struct CreatePostView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
+                    if isEditMode {
+                        Text("Media editing is not supported yet")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
+                    }
+
                     // Existing images
                     ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
                         ZStack(alignment: .topTrailing) {
@@ -297,7 +323,7 @@ struct CreatePostView: View {
                     }
 
                     // Add button (if < 4 images)
-                    if selectedImages.count < 4 {
+                    if selectedImages.count < 4 && !isEditMode {
                         PhotosPicker(
                             selection: $selectedItems,
                             maxSelectionCount: 4 - selectedImages.count,
@@ -384,6 +410,28 @@ struct CreatePostView: View {
         guard !content.isEmpty else { return }
 
         isPosting = true
+
+        if let postToEdit {
+            Task {
+                do {
+                    try await communityViewModel.updatePost(
+                        id: postToEdit.id.uuidString,
+                        content: content,
+                        tags: Array(selectedTags)
+                    )
+                    await MainActor.run {
+                        dismiss()
+                    }
+                } catch {
+                    await MainActor.run {
+                        errorMessage = error.localizedDescription
+                        showError = true
+                        isPosting = false
+                    }
+                }
+            }
+            return
+        }
 
         Task {
             var mediaUrls: [String] = []
