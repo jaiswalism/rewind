@@ -80,20 +80,22 @@ class PetAvatarView: SCNView {
             modelURL = url
         } else if let url = Bundle.main.url(forResource: "wavingPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
+        } else if let url = Bundle.main.url(forResource: "sleepyPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "sadPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "cryingPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
+        } else if let url = Bundle.main.url(forResource: "fightingPanda", withExtension: "usdz", subdirectory: "Panda") {
+            modelURL = url
         } else if let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz") {
-            modelURL = url
-        } else if let url = Bundle.main.url(forResource: "penguin 2", withExtension: "usdz") {
-            modelURL = url
-        } else if let url = Bundle.main.url(forResource: "penguin", withExtension: "usdz") {
-            modelURL = url
-        } else if let url = Bundle.main.url(forResource: "Resources/penguin 2", withExtension: "usdz") {
             modelURL = url
         }
         
         if let validURL = modelURL {
             loadModel(from: validURL)
         } else {
-            print("PetAvatarView: Failed to find panda/penguin model file")
+            print("PetAvatarView: Failed to find Panda model file")
             // Could implement a fallback placeholder here if desired
         }
     }

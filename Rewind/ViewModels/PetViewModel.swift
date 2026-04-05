@@ -106,8 +106,8 @@ final class PetViewModel: ObservableObject {
             
             pet = PetData(
                 id: session.user.id,
-                name: state?.name ?? "Penguin Companion",
-                type: "penguin",
+                name: state?.name ?? "Panda Companion",
+                type: "panda",
                 level: state?.level ?? level,
                 experience: state?.experience ?? Int(totalState),
                 state: PetData.PenguinState(
