@@ -48,6 +48,13 @@ struct DBJournal: Codable, Identifiable {
     var tags: [String]
     var mediaUrls: [String]
     var isFavorite: Bool
+    
+    var entryType: String?
+    var voiceRecordingUrl: String?
+    var transcriptionText: String?
+    var feelings: [String]?
+    var activities: [String]?
+    
     let createdAt: String
     var updatedAt: String
 
@@ -57,6 +64,12 @@ struct DBJournal: Codable, Identifiable {
         case title, content, emotion, tags
         case mediaUrls = "media_urls"
         case isFavorite = "is_favorite"
+        
+        case entryType = "entry_type"
+        case voiceRecordingUrl = "voice_recording_url"
+        case transcriptionText = "transcription_text"
+        case feelings, activities
+        
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }

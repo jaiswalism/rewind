@@ -24,13 +24,20 @@ final class CommunityViewModel: ObservableObject {
         let hasPrev: Bool
     }
     
-    struct CommunityPostWithUser: Identifiable {
+    struct CommunityPostWithUser: Identifiable, Equatable {
         let post: DBCommunityPost
         let user: DBUser?
         
         var id: UUID { post.id }
         var isMine: Bool = false
         var isLiked: Bool = false
+        
+        static func == (lhs: CommunityPostWithUser, rhs: CommunityPostWithUser) -> Bool {
+            lhs.post.id == rhs.post.id &&
+            lhs.post.likeCount == rhs.post.likeCount &&
+            lhs.post.commentCount == rhs.post.commentCount &&
+            lhs.isLiked == rhs.isLiked
+        }
     }
     
     struct CommentWithUser: Identifiable {
@@ -41,10 +48,7 @@ final class CommunityViewModel: ObservableObject {
     }
     
     func fetchPosts(page: Int = 1, tag: String? = nil, refresh: Bool = false) async {
-        if refresh {
-            currentPage = 1
-            posts = []
-        }
+        if refresh { currentPage = 1 }
         
         isLoading = true
         
@@ -54,8 +58,8 @@ final class CommunityViewModel: ObservableObject {
                 .eq("is_deleted", value: false)
             
             if let tag = tag, !tag.isEmpty {
-                // Approximate array contains or substring match depending on PostgREST setup
-                query = query.like("tags", value: "%\(tag)%")
+                // `tags` is a TEXT[] column; use array contains for exact tag matching.
+                query = query.contains("tags", value: [tag])
             }
             
             let postData: [DBCommunityPost] = try await query
@@ -69,9 +73,7 @@ final class CommunityViewModel: ObservableObject {
             
             var likedPostIds: Set<String> = []
             if let currentUserId = currentUserId, !postData.isEmpty {
-                struct LikeResult: Decodable {
-                    let post_id: UUID
-                }
+                struct LikeResult: Decodable { let post_id: UUID }
                 let postIds = postData.map { $0.id.uuidString }
                 let likedPosts: [LikeResult]? = try? await supabase.from("post_likes")
                     .select("post_id")
@@ -84,27 +86,23 @@ final class CommunityViewModel: ObservableObject {
                 }
             }
             
-            // Get user info for each post
             var postsWithUsers: [CommunityPostWithUser] = []
             for post in postData {
                 var user: DBUser? = nil
                 if !post.isAnonymous, let userId = post.userId?.uuidString {
                     let userResponse: [DBUser]? = try? await supabase.from("users")
-                        .select("id, name, profile_image_url")
+                        .select()
                         .eq("id", value: userId)
                         .execute()
                         .value
-                    if let users = userResponse {
-                        user = users.first
-                    }
+                    user = userResponse?.first
                 }
-                
                 let isMine = post.userId?.uuidString == currentUserId
                 let isLiked = likedPostIds.contains(post.id.uuidString)
-                
                 postsWithUsers.append(CommunityPostWithUser(post: post, user: user, isMine: isMine, isLiked: isLiked))
             }
             
+            // Only now replace/append — prevents blank flash during refresh
             if page == 1 {
                 posts = postsWithUsers
             } else {
@@ -142,6 +140,14 @@ final class CommunityViewModel: ObservableObject {
         
         try await supabase.from("community_posts").insert(newPost).execute()
         
+        let currentUserId = session.user.id.uuidString
+        let userResp: [DBUser]? = try? await supabase.from("users").select().eq("id", value: currentUserId).execute().value
+        if let user = userResp?.first {
+            let newTotal = (user.totalPosts ?? 0) + 1
+            struct UpdateTotalPosts: Encodable { let total_posts: Int }
+            try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
+        }
+        
         return newPost
     }
     
@@ -178,6 +184,34 @@ final class CommunityViewModel: ObservableObject {
     }
     
     func deletePost(id: UUID) async throws {
+        // Delete associated media files from storage before soft-deleting the post
+        if let post = posts.first(where: { $0.id == id }) {
+            let mediaUrls = post.post.mediaUrls
+            if !mediaUrls.isEmpty {
+                let bucket = SupabaseConfig.shared.client.storage.from("community-media")
+                var pathsToDelete: [String] = []
+                
+                for urlStr in mediaUrls {
+                    if let url = URL(string: urlStr) {
+                        let pathComponents = url.pathComponents
+                        if let bucketIndex = pathComponents.lastIndex(of: "community-media"),
+                           bucketIndex + 1 < pathComponents.count {
+                            let relativePath = pathComponents[(bucketIndex + 1)...].joined(separator: "/")
+                            pathsToDelete.append(relativePath)
+                        }
+                    }
+                }
+                
+                if !pathsToDelete.isEmpty {
+                    do {
+                        _ = try await bucket.remove(paths: pathsToDelete)
+                    } catch {
+                        print("Error deleting community media files: \(error)")
+                    }
+                }
+            }
+        }
+
         struct DeletePostReq: Encodable {
             var is_deleted: Bool
             var updated_at: String
@@ -189,6 +223,16 @@ final class CommunityViewModel: ObservableObject {
             .execute()
         
         posts.removeAll { $0.id == id }
+        
+        if let session = try? await supabase.auth.session {
+            let currentUserId = session.user.id.uuidString
+            let userResp: [DBUser]? = try? await supabase.from("users").select().eq("id", value: currentUserId).execute().value
+            if let user = userResp?.first {
+                let newTotal = max(0, (user.totalPosts ?? 0) - 1)
+                struct UpdateTotalPosts: Encodable { let total_posts: Int }
+                try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
+            }
+        }
     }
     
     func toggleLike(postId: UUID) async throws -> (liked: Bool, count: Int) {
@@ -211,6 +255,14 @@ final class CommunityViewModel: ObservableObject {
             // Update count
             if let index = posts.firstIndex(where: { $0.id == postId }) {
                 let newCount = max(0, posts[index].post.likeCount - 1)
+                
+                // Sync count to remote DB
+                struct UpdateLikeCount: Encodable { let like_count: Int }
+                try? await supabase.from("community_posts")
+                    .update(UpdateLikeCount(like_count: newCount))
+                    .eq("id", value: postId.uuidString)
+                    .execute()
+                    
                 posts[index] = CommunityPostWithUser(
                     post: DBCommunityPost(
                         id: posts[index].post.id,
@@ -245,6 +297,14 @@ final class CommunityViewModel: ObservableObject {
             
             if let index = posts.firstIndex(where: { $0.id == postId }) {
                 let newCount = posts[index].post.likeCount + 1
+                
+                // Sync count to remote DB
+                struct UpdateLikeCount: Encodable { let like_count: Int }
+                try? await supabase.from("community_posts")
+                    .update(UpdateLikeCount(like_count: newCount))
+                    .eq("id", value: postId.uuidString)
+                    .execute()
+                    
                 posts[index] = CommunityPostWithUser(
                     post: DBCommunityPost(
                         id: posts[index].post.id,
@@ -273,6 +333,45 @@ final class CommunityViewModel: ObservableObject {
         isLoading = true
         
         do {
+            // Count check: Auto-correct out-of-sync comment_count from database
+            struct CommentIdOnly: Decodable { let id: UUID }
+            let allCommentsResponse: [CommentIdOnly]? = try? await supabase.from("comments")
+                .select("id")
+                .eq("post_id", value: postId.uuidString)
+                .execute()
+                .value
+            
+            if let actualCount = allCommentsResponse?.count, let index = posts.firstIndex(where: { $0.id == postId }) {
+                if posts[index].post.commentCount != actualCount {
+                    posts[index] = CommunityPostWithUser(
+                        post: DBCommunityPost(
+                            id: posts[index].post.id,
+                            userId: posts[index].post.userId,
+                            content: posts[index].post.content,
+                            isAnonymous: posts[index].post.isAnonymous,
+                            tags: posts[index].post.tags,
+                            mediaUrls: posts[index].post.mediaUrls,
+                            likeCount: posts[index].post.likeCount,
+                            commentCount: actualCount,
+                            isDeleted: posts[index].post.isDeleted,
+                            createdAt: posts[index].post.createdAt,
+                            updatedAt: posts[index].post.updatedAt
+                        ),
+                        user: posts[index].user,
+                        isMine: posts[index].isMine,
+                        isLiked: posts[index].isLiked
+                    )
+                    
+                    struct UpdateCommentCount: Encodable { let comment_count: Int }
+                    Task {
+                        try? await supabase.from("community_posts")
+                            .update(UpdateCommentCount(comment_count: actualCount))
+                            .eq("id", value: postId.uuidString)
+                            .execute()
+                    }
+                }
+            }
+
             let commentData: [DBComment] = try await supabase.from("comments")
                 .select("*")
                 .eq("post_id", value: postId.uuidString)
@@ -284,7 +383,7 @@ final class CommunityViewModel: ObservableObject {
             var commentsWithUsers: [CommentWithUser] = []
             for comment in commentData {
                 let userResponse: [DBUser]? = try? await supabase.from("users")
-                    .select("id, name, profile_image_url")
+                    .select()
                     .eq("id", value: comment.userId.uuidString)
                     .execute()
                     .value
@@ -324,7 +423,7 @@ final class CommunityViewModel: ObservableObject {
         
         // Wrap the DBComment in CommentWithUser, referencing the exact CurrentUser matching who posted it
         let currentUserResp: [DBUser]? = try? await supabase.from("users")
-            .select("id, name, profile_image_url")
+            .select()
             .eq("id", value: session.user.id.uuidString)
             .execute()
             .value
@@ -338,6 +437,16 @@ final class CommunityViewModel: ObservableObject {
         // Update comment count
         if let index = posts.firstIndex(where: { $0.id == postId }) {
             let newCount = posts[index].post.commentCount + 1
+            
+            // Sync count to remote DB
+            struct UpdateCommentCount: Encodable { let comment_count: Int }
+            Task {
+                try? await supabase.from("community_posts")
+                    .update(UpdateCommentCount(comment_count: newCount))
+                    .eq("id", value: postId.uuidString)
+                    .execute()
+            }
+            
             posts[index] = CommunityPostWithUser(
                 post: DBCommunityPost(
                     id: posts[index].post.id,

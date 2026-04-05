@@ -4,6 +4,8 @@ import Combine
 
 @MainActor
 final class UserViewModel: ObservableObject {
+    static let shared = UserViewModel()
+
     @Published var user: DBUser?
     @Published var isLoading = false
     @Published var error: String?
@@ -55,9 +57,12 @@ final class UserViewModel: ObservableObject {
             seeking_professional_help: seekingProfessionalHelp
         )
         
-        try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
-        
-        await fetchProfile()
+        do {
+            try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
+            await fetchProfile()
+        } catch {
+            throw NSError(domain: "UserVM", code: 1, userInfo: [NSLocalizedDescriptionKey: "Profile UPDATE User Error: \(error.localizedDescription)"])
+        }
     }
     
     func updateProfileImage(imageUrl: String) async throws {
@@ -73,9 +78,12 @@ final class UserViewModel: ObservableObject {
             updated_at: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
-        
-        await fetchProfile()
+        do {
+            try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
+            await fetchProfile()
+        } catch {
+            throw NSError(domain: "UserVM", code: 2, userInfo: [NSLocalizedDescriptionKey: "Image UPDATE User Error: \(error.localizedDescription)"])
+        }
     }
     
     func uploadAvatar(imageData: Data) async throws -> String {
@@ -83,18 +91,36 @@ final class UserViewModel: ObservableObject {
             throw NSError(domain: "UserVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
         
-        let fileName = "\(session.user.id.uuidString)/avatar.jpg"
+        // Postgres auth.uid()::text is lowercase, but Swift's UUID().uuidString is uppercase.
+        // For text-based RLS policies (storage paths), they MUST match case!
+        let userIdString = session.user.id.uuidString.lowercased()
         
-        try await supabase.storage.from("avatars").upload(
-            path: fileName,
-            file: imageData,
-            options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg", upsert: true)
-        )
+        let fileName = "\(userIdString)/avatar.jpg"
+        
+        // Attempt to actively remove the existing file to bypass UPDATE restrictions
+        do {
+            _ = try await supabase.storage.from("avatars").remove(paths: [fileName])
+        } catch {
+            // Ignore if file doesn't exist, or if we lack delete permissions
+        }
+        
+        do {
+            try await supabase.storage.from("avatars").upload(
+                path: fileName,
+                file: imageData,
+                options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg", upsert: true)
+            )
+        } catch {
+            throw NSError(domain: "UserVM", code: 3, userInfo: [NSLocalizedDescriptionKey: "Storage Upload Error: \(error.localizedDescription)"])
+        }
         
         let publicUrl = try supabase.storage.from("avatars").getPublicURL(path: fileName).absoluteString
         
-        try await updateProfileImage(imageUrl: publicUrl)
+        // Append a random cache-busting query parameter so AsyncImage refreshes
+        let cacheBustedUrl = publicUrl + "?t=\(Date().timeIntervalSince1970)"
         
-        return publicUrl
+        try await updateProfileImage(imageUrl: cacheBustedUrl)
+        
+        return cacheBustedUrl
     }
 }

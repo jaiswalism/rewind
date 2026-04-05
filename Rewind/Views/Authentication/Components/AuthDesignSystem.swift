@@ -43,25 +43,30 @@ extension Color {
 // MARK: - Sophisticated Mesh Background
 struct EliteBackgroundView: View {
     @State private var animate = false
+    @Environment(\.colorScheme) private var colorScheme
+    
+    private var orbOpacity: Double { colorScheme == .dark ? 0.12 : 0.18 }
     
     var body: some View {
         ZStack {
-            Color.eliteBackground.ignoresSafeArea()
+            // Adaptive base — off-white tint in light mode, system black in dark
+            (colorScheme == .dark ? Color(UIColor.systemBackground) : Color(red: 0.94, green: 0.96, blue: 1.0))
+                .ignoresSafeArea()
             
-            // Smoothly floating and blending ambient orbs (non-snapping mesh gradient alternative)
+            // Smoothly floating and blending ambient orbs
             GeometryReader { geometry in
                 ZStack {
                     Circle()
-                        .fill(Color.eliteAccentPrimary.opacity(0.12))
+                        .fill(Color.eliteAccentPrimary.opacity(orbOpacity))
                         .frame(width: geometry.size.width * 1.2, height: geometry.size.width * 1.2)
-                        .blur(radius: 80)
+                        .blur(radius: 70)
                         .offset(x: animate ? -geometry.size.width * 0.2 : geometry.size.width * 0.2,
                                 y: animate ? -geometry.size.height * 0.1 : geometry.size.height * 0.1)
                     
                     Circle()
-                        .fill(Color.eliteAccentSecondary.opacity(0.12))
+                        .fill(Color.eliteAccentSecondary.opacity(orbOpacity))
                         .frame(width: geometry.size.width, height: geometry.size.width)
-                        .blur(radius: 80)
+                        .blur(radius: 70)
                         .offset(x: animate ? geometry.size.width * 0.3 : -geometry.size.width * 0.1,
                                 y: animate ? geometry.size.height * 0.2 : -geometry.size.height * 0.1)
                 }

@@ -8,6 +8,7 @@
 import UIKit
 import PhotosUI
 import Combine
+import Supabase
 
 class AddTextJournalViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
     
@@ -350,26 +351,34 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                 }
             }
             
-            var mediaUrls: [String] = []
-            if !selectedImages.isEmpty {
-                if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-                    for image in selectedImages {
+            let imagesToUpload = selectedImages
+            view.isUserInteractionEnabled = false
+            
+            Task {
+                var mediaUrls: [String] = []
+                if !imagesToUpload.isEmpty {
+                    let bucket = SupabaseConfig.shared.client.storage.from("journal-media")
+                    let session = try? await SupabaseConfig.shared.client.auth.session
+                    let userIdStr = session?.user.id.uuidString.lowercased() ?? UUID().uuidString.lowercased()
+
+                    for image in imagesToUpload {
                         if let data = image.jpegData(compressionQuality: 0.8) {
-                            let filename = UUID().uuidString + ".jpg"
-                            let fileUrl = documentsDirectory.appendingPathComponent(filename)
-                            
+                            let filename = "\(userIdStr)/\(UUID().uuidString.lowercased()).jpg"
                             do {
-                                try data.write(to: fileUrl)
-                                mediaUrls.append("local-image://\(filename)")
+                                try await bucket.upload(
+                                    path: filename,
+                                    file: data,
+                                    options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg")
+                                )
+                                let publicUrl = try bucket.getPublicURL(path: filename).absoluteString
+                                mediaUrls.append(publicUrl)
                             } catch {
-                                print("Error saving image: \(error)")
+                                print("Error uploading image: \(error)")
                             }
                         }
                     }
                 }
-            }
-            
-            Task {
+                
                 do {
                     _ = try await journalViewModel.createJournal(
                         title: title,
@@ -380,11 +389,13 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                         isFavorite: false
                     )
                     await MainActor.run {
+                        self.view.isUserInteractionEnabled = true
                         print("Journal created successfully")
                         self.navigationController?.popViewController(animated: true)
                     }
                 } catch {
                     await MainActor.run {
+                        self.view.isUserInteractionEnabled = true
                         self.showAlert(title: "Error", message: error.localizedDescription)
                     }
                 }
