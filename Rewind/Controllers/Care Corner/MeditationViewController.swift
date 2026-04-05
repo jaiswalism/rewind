@@ -68,21 +68,20 @@ class MeditationViewController: UIViewController {
     private let soundButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("  SOUND: CHIRPING BIRDS", for: .normal)
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 13)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 0.8)
-        button.layer.cornerRadius = 20
-        button.contentHorizontalAlignment = .center
-        
-        // add a speaker icon
-
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        let speakerImage = UIImage(systemName: "speaker.wave.2.fill", withConfiguration: config)
-        button.setImage(speakerImage, for: .normal)
-        button.tintColor = .white
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 0)
-        
+        let sym = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let speakerImage = UIImage(systemName: "speaker.wave.2.fill", withConfiguration: sym)
+        var cfg = UIButton.Configuration.plain()
+        var soundTitle = AttributedString("SOUND: CHIRPING BIRDS")
+        soundTitle.font = UIFont.boldSystemFont(ofSize: 13)
+        cfg.attributedTitle = soundTitle
+        cfg.image = speakerImage
+        cfg.imagePlacement = .leading
+        cfg.imagePadding = 6
+        cfg.baseForegroundColor = .white
+        cfg.background.backgroundColor = UIColor(red: 0.35, green: 0.38, blue: 0.75, alpha: 0.8)
+        cfg.background.cornerRadius = 20
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+        button.configuration = cfg
         return button
     }()
     

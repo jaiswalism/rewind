@@ -140,7 +140,7 @@ class MyJournalsListViewController: UIViewController {
     }
 
     private func updateHeaderTitle() {
-        subtitleLabel.text = "\(journalEntries.count) entries - Latest first"
+        subtitleLabel.text = "\(journalEntries.count) entries"
     }
 
     private func updateEmptyState() {

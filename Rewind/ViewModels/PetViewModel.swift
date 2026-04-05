@@ -11,8 +11,11 @@ final class PetViewModel: ObservableObject {
     private var hasLoadedPet = false
     
     private let supabase = SupabaseConfig.shared.client
-    
-    private let penguinServiceURL = "https://your-penguin-service.com/api"
+
+    /// Must match `Rewind/penguin-intelligence-service` (`POST /infer` on port 3001). For a physical device, set `Constants.PenguinService.baseURL` to your Mac’s LAN IP (e.g. `http://192.168.1.10:3001`).
+    private var penguinInferURL: URL {
+        URL(string: "\(Constants.PenguinService.baseURL)/infer")!
+    }
     
     struct PetData: Identifiable {
         let id: UUID
@@ -50,9 +53,9 @@ final class PetViewModel: ObservableObject {
             let state: State
             
             struct State: Codable {
-                let energy: Double
-                let mood: Double
-                let trust: Double
+                let energy: Int
+                let mood: Int
+                let trust: Int
             }
         }
     }
@@ -158,8 +161,7 @@ final class PetViewModel: ObservableObject {
         default: timeOfDay = "night"
         }
         
-        let url = URL(string: "\(penguinServiceURL)/infer")!
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: penguinInferURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
@@ -172,9 +174,9 @@ final class PetViewModel: ObservableObject {
                 days_inactive: daysInactive,
                 last_policy: nil,
                 state: PenguinChatRequest.PenguinContext.State(
-                    energy: Double(state?.energy ?? 100),
-                    mood: Double(state?.happiness ?? 100),
-                    trust: Double(state?.health ?? 50)
+                    energy: state?.energy ?? 100,
+                    mood: state?.happiness ?? 100,
+                    trust: state?.health ?? 50
                 )
             ),
             user_id: session.user.id.uuidString
@@ -225,8 +227,7 @@ final class PetViewModel: ObservableObject {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
         
-        let url = URL(string: "\(penguinServiceURL)/infer")!
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: penguinInferURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         

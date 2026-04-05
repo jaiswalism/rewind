@@ -175,7 +175,7 @@ class JournalDetailViewViewController: UIViewController {
         mainStackView.addArrangedSubview(bodyContainer)
         
         // 5. Images Section
-        let mediaUrls = journal.mediaUrls ?? []
+        let mediaUrls = journal.mediaUrls
         if !mediaUrls.isEmpty {
             let imageLabel = UILabel()
             imageLabel.text = "Attached Photos"

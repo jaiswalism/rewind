@@ -46,30 +46,17 @@ struct JournalsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .padding(24)
                 
-                // Navigation
-                NavigationLink(
-                    destination: JournalDetailView(
-                        journal: selectedJournal ?? journalViewModel.journals.first ?? DBJournal(
-                            id: UUID(),
-                            userId: UUID(),
-                            title: "",
-                            content: "",
-                            emotion: "",
-                            tags: [],
-                            mediaUrls: [],
-                            isFavorite: false,
-                            createdAt: "",
-                            updatedAt: ""
-                        ),
+            }
+            .navigationDestination(isPresented: $showSelectedJournal) {
+                if let journal = selectedJournal {
+                    JournalDetailView(
+                        journal: journal,
                         onDeleteCompleted: {
                             Task {
                                 await journalViewModel.fetchAllJournals(refresh: true)
                             }
                         }
-                    ),
-                    isActive: $showSelectedJournal
-                ) {
-                    EmptyView()
+                    )
                 }
             }
             .navigationBarHidden(true)
@@ -96,7 +83,7 @@ struct JournalsView: View {
                 .font(.system(size: 34, weight: .bold, design: .default))
                 .foregroundStyle(.primary)
             
-            Text("\(journalViewModel.journals.count) entries • Latest first")
+            Text("\(journalViewModel.journals.count) entries")
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -181,13 +168,13 @@ struct JournalsView: View {
             }
             
             // Title
-            Text((journal.title ?? "").isEmpty ? "Untitled Entry" : journal.title ?? "Untitled Entry")
+            Text(journal.title.isEmpty ? "Untitled Entry" : journal.title)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(2)
             
             // Preview
-            Text((journal.content ?? "").isEmpty ? "No content" : journal.content ?? "No content")
+            Text(journal.content.isEmpty ? "No content" : journal.content)
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(3)

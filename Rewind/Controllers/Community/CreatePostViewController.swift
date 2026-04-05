@@ -57,12 +57,15 @@ class CreatePostViewController: UIViewController {
     
     private let postButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Post", for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
-        button.tintColor = UIColor(named: "colors/Blue&Shades/blue-500")
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 18
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20)
+        var cfg = UIButton.Configuration.plain()
+        var postTitle = AttributedString("Post")
+        postTitle.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        cfg.attributedTitle = postTitle
+        cfg.baseForegroundColor = UIColor(named: "colors/Blue&Shades/blue-500")
+        cfg.background.backgroundColor = .white
+        cfg.background.cornerRadius = 18
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
+        button.configuration = cfg
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -299,7 +302,7 @@ class CreatePostViewController: UIViewController {
             await MainActor.run {
                 if let user = userViewModel.user {
                     self.currentUser = user
-                    if !(self.anonymousSwitch.isOn ?? false) {
+                    if !self.anonymousSwitch.isOn {
                         self.nameLabel.text = user.name
                     }
                 }
@@ -461,14 +464,17 @@ class CreatePostViewController: UIViewController {
     private func populateTags() {
         for tag in availableTags {
             let button = UIButton(type: .system)
-            button.setTitle(tag, for: .normal)
-            button.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
-            button.setTitleColor(.white, for: .normal)
-            button.backgroundColor = UIColor.white.withAlphaComponent(0.12)
-            button.layer.cornerRadius = 16
-            button.layer.borderWidth = 1
-            button.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
-            button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+            var tagCfg = UIButton.Configuration.plain()
+            var title = AttributedString(tag)
+            title.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            tagCfg.attributedTitle = title
+            tagCfg.baseForegroundColor = .white
+            tagCfg.background.backgroundColor = UIColor.white.withAlphaComponent(0.12)
+            tagCfg.background.cornerRadius = 16
+            tagCfg.background.strokeWidth = 1
+            tagCfg.background.strokeColor = UIColor.white.withAlphaComponent(0.25)
+            tagCfg.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+            button.configuration = tagCfg
             button.addTarget(self, action: #selector(tagTapped(_:)), for: .touchUpInside)
             tagsStack.addArrangedSubview(button)
         }
@@ -540,8 +546,8 @@ class CreatePostViewController: UIViewController {
                         let filename = "\(userIdStr)/\(UUID().uuidString.lowercased()).jpg"
                         do {
                             try await bucket.upload(
-                                path: filename,
-                                file: data,
+                                filename,
+                                data: data,
                                 options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg")
                             )
                             let publicUrl = try bucket.getPublicURL(path: filename).absoluteString

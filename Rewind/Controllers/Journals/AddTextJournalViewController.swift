@@ -366,8 +366,8 @@ class AddTextJournalViewController: UIViewController, UITextViewDelegate, UIText
                             let filename = "\(userIdStr)/\(UUID().uuidString.lowercased()).jpg"
                             do {
                                 try await bucket.upload(
-                                    path: filename,
-                                    file: data,
+                                    filename,
+                                    data: data,
                                     options: SupabaseConfig.Client.UploadOptions(contentType: "image/jpeg")
                                 )
                                 let publicUrl = try bucket.getPublicURL(path: filename).absoluteString

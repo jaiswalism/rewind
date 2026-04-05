@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import AVFoundation
 
 struct AddJournalView: View {
 	let journalToEdit: DBJournal?
@@ -32,6 +33,7 @@ struct AddJournalView: View {
 	@State private var showActivities = false
 	@State private var showVoiceRecording = false
 	@State private var voiceRecordingURL: URL?
+	@State private var voiceRecordingDurationText: String?
 	@State private var showDatePickerSheet = false
 	@State private var showStatusAlert = false
 	@State private var statusMessage = ""
@@ -102,13 +104,15 @@ struct AddJournalView: View {
 					topBar
 					titleSection
 					noteSection
-					moodSection
-					feelingsSection
-					activitiesSection
 					if !isEditMode {
 						audioSection
+					}
+					moodSection
+					if !isEditMode {
 						photoSection
 					}
+					feelingsSection
+					activitiesSection
 					saveButton
 				}
 				.padding(.horizontal, 24)
@@ -119,8 +123,8 @@ struct AddJournalView: View {
 		.photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItems, matching: .images)
 		.sheet(isPresented: $showVoiceRecording) {
 			VoiceRecordingView { transcription, audioURL in
-				note = transcription
 				voiceRecordingURL = audioURL
+				note = transcription
 			}
 		}
 		.sheet(isPresented: $showDatePickerSheet) {
@@ -141,6 +145,9 @@ struct AddJournalView: View {
 					}
 				}
 			}
+		}
+		.onChange(of: voiceRecordingURL) { _, newURL in
+			refreshVoiceRecordingDuration(for: newURL)
 		}
 		.onAppear {
 			guard let journal = journalToEdit else { return }
@@ -305,39 +312,148 @@ struct AddJournalView: View {
 	}
 
 	private var audioSection: some View {
-		VStack(alignment: .leading, spacing: 10) {
-			Text("Audio")
-				.font(.system(size: 16, weight: .bold, design: .rounded))
-				.foregroundColor(titleText)
-
-			Button(action: { showVoiceRecording = true }) {
-				HStack {
-					Text("Record an audio journal")
-						.font(.system(size: 16, weight: .semibold, design: .rounded))
-						.foregroundColor(primaryText)
-					Spacer()
-					Image(systemName: "mic.fill")
-						.font(.system(size: 16, weight: .bold))
+		VStack(alignment: .leading, spacing: 12) {
+			HStack(alignment: .top, spacing: 12) {
+				VStack(alignment: .leading, spacing: 4) {
+					Text("Voice note")
+						.font(.system(size: 16, weight: .bold, design: .rounded))
 						.foregroundColor(titleText)
-						.frame(width: 44, height: 44)
-						.background(iconBg)
-						.clipShape(Circle())
+					Text("Optional — we transcribe speech into your note above.")
+						.font(.system(size: 13, weight: .medium, design: .rounded))
+						.foregroundColor(titleText.opacity(0.92))
 				}
-				.padding(.horizontal, 20)
-				.padding(.vertical, 16)
-				.background(cardBg)
-				.clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-				.shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 4)
+				Spacer(minLength: 8)
+				if voiceRecordingURL == nil {
+					Button(action: { showVoiceRecording = true }) {
+						HStack(spacing: 6) {
+							Image(systemName: "plus.circle.fill")
+								.font(.system(size: 16, weight: .semibold))
+							Text("Add")
+								.font(.system(size: 15, weight: .bold, design: .rounded))
+						}
+						.foregroundColor(.white)
+						.padding(.horizontal, 16)
+						.padding(.vertical, 10)
+						.background(buttonBlue)
+						.clipShape(Capsule())
+					}
+					.buttonStyle(.plain)
+					.accessibilityLabel("Add voice note")
+				}
 			}
-			.buttonStyle(.plain)
+
+			if voiceRecordingURL == nil {
+				HStack(spacing: 12) {
+					ZStack {
+						Circle()
+							.fill(buttonBlue.opacity(0.18))
+							.frame(width: 44, height: 44)
+						Image(systemName: "waveform")
+							.font(.system(size: 18, weight: .semibold))
+							.foregroundStyle(buttonBlue)
+					}
+					VStack(alignment: .leading, spacing: 4) {
+						Text("No voice note yet")
+							.font(.system(size: 15, weight: .semibold, design: .rounded))
+							.foregroundColor(primaryText)
+						Text("Tap Add to record. Your words will appear in “Your note”.")
+							.font(.system(size: 13, weight: .medium, design: .rounded))
+							.foregroundColor(titleText.opacity(0.9))
+					}
+					Spacer(minLength: 0)
+				}
+				.padding(16)
+				.frame(maxWidth: .infinity, alignment: .leading)
+				.background(cardBg)
+				.clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+				.overlay(
+					RoundedRectangle(cornerRadius: 20, style: .continuous)
+						.stroke(buttonBlue.opacity(0.3), lineWidth: 1.5)
+				)
+			} else {
+				VStack(alignment: .leading, spacing: 12) {
+					HStack(alignment: .center, spacing: 12) {
+						ZStack {
+							Circle()
+								.fill(Color.green.opacity(0.2))
+								.frame(width: 44, height: 44)
+							Image(systemName: "checkmark.circle.fill")
+								.font(.system(size: 20, weight: .semibold))
+								.foregroundStyle(Color.green)
+						}
+						VStack(alignment: .leading, spacing: 2) {
+							Text("Voice note added")
+								.font(.system(size: 16, weight: .bold, design: .rounded))
+								.foregroundColor(primaryText)
+							if let duration = voiceRecordingDurationText {
+								Text(duration)
+									.font(.system(size: 13, weight: .semibold, design: .rounded))
+									.foregroundColor(titleText)
+							}
+						}
+						Spacer(minLength: 0)
+					}
+
+					VStack(alignment: .leading, spacing: 6) {
+						Text("Transcription")
+							.font(.system(size: 12, weight: .bold, design: .rounded))
+							.foregroundColor(titleText)
+							.textCase(.uppercase)
+							.tracking(0.6)
+						Text(note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No speech detected — try again or type in your note." : note)
+							.font(.system(size: 15, weight: .medium, design: .rounded))
+							.foregroundColor(primaryText)
+							.frame(maxWidth: .infinity, alignment: .leading)
+							.fixedSize(horizontal: false, vertical: true)
+					}
+					.padding(12)
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.background(colorScheme == .dark ? Color.white.opacity(0.06) : Color(red: 0.95, green: 0.96, blue: 0.99))
+					.clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+					HStack(spacing: 20) {
+						Button(action: { showVoiceRecording = true }) {
+							Text("Replace")
+								.font(.system(size: 14, weight: .bold, design: .rounded))
+								.foregroundColor(buttonBlue)
+						}
+						.buttonStyle(.plain)
+
+						Button(role: .destructive, action: removeVoiceNote) {
+							Text("Remove")
+								.font(.system(size: 14, weight: .bold, design: .rounded))
+						}
+						.buttonStyle(.plain)
+						Spacer()
+					}
+				}
+				.padding(16)
+				.background(cardBg)
+				.clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+				.overlay(
+					RoundedRectangle(cornerRadius: 20, style: .continuous)
+						.stroke(buttonBlue.opacity(0.2), lineWidth: 1.5)
+				)
+			}
 		}
+	}
+
+	private func removeVoiceNote() {
+		voiceRecordingURL = nil
+		voiceRecordingDurationText = nil
+		note = ""
 	}
 
 	private var photoSection: some View {
 		VStack(alignment: .leading, spacing: 10) {
-			Text("Photo")
-				.font(.system(size: 16, weight: .bold, design: .rounded))
-				.foregroundColor(titleText)
+			VStack(alignment: .leading, spacing: 4) {
+				Text("Photo")
+					.font(.system(size: 16, weight: .bold, design: .rounded))
+					.foregroundColor(titleText)
+				Text("Optional — add a moment from your day.")
+					.font(.system(size: 13, weight: .medium, design: .rounded))
+					.foregroundColor(titleText.opacity(0.92))
+			}
 
 			Button(action: { showPhotoPicker = true }) {
 				HStack {
@@ -675,6 +791,28 @@ struct AddJournalView: View {
 			formatter.dateFormat = "MMM d, HH:mm"
 		}
 		return formatter.string(from: date)
+	}
+
+	private func refreshVoiceRecordingDuration(for url: URL?) {
+		voiceRecordingDurationText = nil
+		guard let url else { return }
+		let asset = AVURLAsset(url: url)
+		Task {
+			do {
+				let duration = try await asset.load(.duration)
+				let seconds = CMTimeGetSeconds(duration)
+				guard seconds.isFinite, seconds > 0 else { return }
+				let total = Int(seconds.rounded())
+				let m = total / 60
+				let s = total % 60
+				let text = m > 0 ? "\(m):\(String(format: "%02d", s))" : "0:\(String(format: "%02d", s))"
+				await MainActor.run {
+					voiceRecordingDurationText = text
+				}
+			} catch {
+				// Duration unavailable; leave label hidden
+			}
+		}
 	}
 
 	private func saveEntry() {

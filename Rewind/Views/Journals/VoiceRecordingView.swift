@@ -3,76 +3,155 @@ import AVFoundation
 import Speech
 import Combine
 
-class VoiceRecordingViewModel: NSObject, ObservableObject {
+@MainActor
+final class VoiceRecordingViewModel: ObservableObject {
     @Published var isRecording = false
     @Published var transcriptionText = ""
     @Published var statusLabel = "Ready"
-    
-        @Published var waveformHeights: [CGFloat] = Array(repeating: 8, count: 18)
+
+    @Published var waveformHeights: [CGFloat] = Array(repeating: 8, count: 18)
     private var recordingURL: URL?
+    private var audioFile: AVAudioFile?
     private var animationTimer: Timer?
-    
+
     private let audioEngine = AVAudioEngine()
     private let speechRecognizer = SFSpeechRecognizer()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
-    
-    override init() {
-        super.init()
+
+    /// Matches Pet Talk: keep the session warm while this sheet is open so repeat record/stop is fast. Deactivate only in `tearDownAudioSession()` (sheet dismiss).
+    private var audioSessionActivated = false
+
+    /// Call from `onAppear` so the first tap only starts the engine + file (same idea as Pet Talk pre-opening the session).
+    func warmUpAudioSession() {
+        guard !audioSessionActivated else { return }
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            audioSessionActivated = true
+            if let availableInputs = session.availableInputs, !availableInputs.isEmpty {
+                let preferredInput = availableInputs.first { $0.portType == .builtInMic } ?? availableInputs.first
+                if let input = preferredInput {
+                    try session.setPreferredInput(input)
+                }
+            }
+        } catch {
+            audioSessionActivated = false
+        }
     }
-    
+
+    func tearDownAudioSession() {
+        stopRecording()
+        recordingURL = nil
+        transcriptionText = ""
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        audioSessionActivated = false
+        statusLabel = "Ready"
+    }
+
     func startRecording() {
+        statusLabel = "Starting…"
+
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        if isRecording {
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        recognitionRequest = nil
+        audioFile = nil
+
         let fileName = "voice_journal_\(Int(Date().timeIntervalSince1970)).m4a"
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        recordingURL = paths[0].appendingPathComponent(fileName)
-        
+        let fileURL = paths[0].appendingPathComponent(fileName)
+
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            
+            audioSessionActivated = true
+
+            if let availableInputs = audioSession.availableInputs, !availableInputs.isEmpty {
+                let preferredInput = availableInputs.first { $0.portType == .builtInMic } ?? availableInputs.first
+                if let input = preferredInput {
+                    try audioSession.setPreferredInput(input)
+                }
+            }
+
+            let inputNode = audioEngine.inputNode
+            let recordingFormat = inputNode.outputFormat(forBus: 0)
+
+            guard recordingFormat.sampleRate > 0, recordingFormat.channelCount > 0 else {
+                statusLabel = "No microphone available"
+                return
+            }
+
+            do {
+                audioFile = try AVAudioFile(forWriting: fileURL, settings: recordingFormat.settings)
+            } catch {
+                statusLabel = "Could not create audio file"
+                return
+            }
+
+            recordingURL = fileURL
+
             recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
             guard let recognitionRequest = recognitionRequest else { return }
             recognitionRequest.shouldReportPartialResults = true
-            
+
+            inputNode.removeTap(onBus: 0)
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+                guard let recorder = self else { return }
+                recorder.recognitionRequest?.append(buffer)
+                do {
+                    try recorder.audioFile?.write(from: buffer)
+                } catch {
+                    // Best-effort
+                }
+                recorder.updateWaveform(buffer: buffer)
+            }
+
+            audioEngine.prepare()
+            try audioEngine.start()
+
+            transcriptionText = ""
             recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, _ in
-                guard let self = self else { return }
+                guard let recorder = self else { return }
                 if let result = result {
-                    DispatchQueue.main.async {
-                        self.transcriptionText = result.bestTranscription.formattedString
+                    Task { @MainActor in
+                        recorder.transcriptionText = result.bestTranscription.formattedString
                     }
                 }
             }
-            
-            let inputNode = audioEngine.inputNode
-            let recordingFormat = inputNode.outputFormat(forBus: 0)
-            
-            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-                self?.recognitionRequest?.append(buffer)
-                self?.updateWaveform(buffer: buffer)
-            }
-            
-            audioEngine.prepare()
-            try audioEngine.start()
-            
-            DispatchQueue.main.async {
-                self.isRecording = true
-                self.statusLabel = "Listening..."
-                self.startWaveformAnimation()
-            }
+
+            isRecording = true
+            statusLabel = "Listening..."
+            startWaveformAnimation()
         } catch {
-            DispatchQueue.main.async {
-                self.statusLabel = "Error: \(error.localizedDescription)"
-            }
+            audioFile = nil
+            recordingURL = nil
+            statusLabel = "Error: \(error.localizedDescription)"
         }
     }
-    
+
     func stopRecording() {
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        if isRecording {
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
-        
+        recognitionRequest = nil
+        recognitionTask = nil
+        audioFile = nil
+
+        // Do not deactivate the session here — Pet Talk keeps it live between takes; full reactivation was causing 2–3s delay on the next start.
+
         isRecording = false
         statusLabel = "Ready"
         stopWaveformAnimation()
@@ -91,28 +170,25 @@ class VoiceRecordingViewModel: NSObject, ObservableObject {
             avgPower = -160
         }
         
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.animateWaveform(power: avgPower)
         }
     }
-    
+
     private func animateWaveform(power: Float) {
         let minDb: Float = -60
         let clampedPower = max(minDb, min(0, power))
         let normalized = CGFloat(clampedPower - minDb) / CGFloat(abs(minDb))
         let heightMultiplier = normalized * 85 + 8
-        
-        DispatchQueue.main.async {
-            self.waveformHeights.removeFirst()
-            let randomVariation = CGFloat.random(in: 0.7...1.3)
-            let newHeight = max(8, min(100, heightMultiplier * randomVariation))
-            self.waveformHeights.append(newHeight)
-        }
+        waveformHeights.removeFirst()
+        let randomVariation = CGFloat.random(in: 0.7...1.3)
+        let newHeight = max(8, min(100, heightMultiplier * randomVariation))
+        waveformHeights.append(newHeight)
     }
     
     private func startWaveformAnimation() {
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            // Timer keeps waveform updating via audio buffer tap
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            // Audio tap drives bars; timer kept for optional future use.
         }
     }
     
@@ -287,9 +363,10 @@ struct VoiceRecordingView: View {
         .background(bgColor)
         .onAppear {
             viewModel.requestPermissions()
+            viewModel.warmUpAudioSession()
         }
         .onDisappear {
-            viewModel.stopRecording()
+            viewModel.tearDownAudioSession()
         }
     }
     
@@ -306,8 +383,15 @@ struct VoiceRecordingView: View {
         isSaving = true
         
         Task {
-            onSave(viewModel.transcriptionText, viewModel.getRecordingURL())
+            if viewModel.isRecording {
+                viewModel.stopRecording()
+            }
+            // Allow Speech framework to deliver the final transcription after endAudio.
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            let transcript = viewModel.transcriptionText
+            let url = viewModel.getRecordingURL()
             await MainActor.run {
+                onSave(transcript, url)
                 isSaving = false
                 dismiss()
             }

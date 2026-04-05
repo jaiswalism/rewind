@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Combine
 
 struct JournalDetailView: View {
     @StateObject private var viewModel = JournalViewModel()
@@ -219,7 +220,7 @@ struct JournalDetailView: View {
                         HStack(spacing: 10) {
                             Image(systemName: isAudioPlaying ? "pause.circle.fill" : "play.circle.fill")
                                 .font(.system(size: 18, weight: .semibold))
-                            Text(isAudioPlaying ? "Pause Recording" : "Play Recording")
+                            Text(isAudioPlaying ? "Pause" : "Play")
                                 .font(.system(size: 14, weight: .semibold))
                             Spacer()
                         }
@@ -230,6 +231,7 @@ struct JournalDetailView: View {
                         .cornerRadius(10)
                     }
                 }
+                .background(playbackDidEndObserver)
             }
 
             if !displayImageURLs.isEmpty {
@@ -311,6 +313,19 @@ struct JournalDetailView: View {
     private func isLikelyAudioURL(_ url: URL) -> Bool {
         let pathExt = url.pathExtension.lowercased()
         return ["m4a", "mp3", "wav", "aac", "caf"].contains(pathExt)
+    }
+
+    /// Observes natural end of playback so the button returns to Play (AVPlayer does not update SwiftUI state by itself).
+    @ViewBuilder
+    private var playbackDidEndObserver: some View {
+        if let item = audioPlayer?.currentItem {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.didPlayToEndTimeNotification, object: item)) { _ in
+                    isAudioPlaying = false
+                    audioPlayer?.seek(to: .zero)
+                }
+        }
     }
 
     private func toggleAudioPlayback(with url: URL) {

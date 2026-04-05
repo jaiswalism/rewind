@@ -100,7 +100,7 @@ class CommentSheetViewController: UIViewController {
         sendButton.isEnabled = false
         Task {
             do {
-                let newComment = try await communityViewModel.addComment(postId: uuid, text: text)
+                _ = try await communityViewModel.addComment(postId: uuid, text: text)
                 await MainActor.run {
                     self.sendButton.isEnabled = true
                     self.inputTextField.text = ""

@@ -101,8 +101,7 @@ struct CommunityView: View {
             CreatePostView(postToEdit: post)
                 .presentationCornerRadius(28)
         }
-        .onChange(of: showingCommentSheet) { showing in
-            // Fallback clear logic string
+        .onChange(of: showingCommentSheet) { _, showing in
             if !showing {
                 selectedPostIdForComments = nil
             }

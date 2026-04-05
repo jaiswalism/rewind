@@ -35,20 +35,12 @@ class PetTalkingViewController: UIViewController {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-            config.image = UIImage(systemName: "chevron.left", withConfiguration: imageConfig)
-            config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
-            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
-            button.configuration = config
-        } else {
-            let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-            let image = UIImage(systemName: "chevron.left", withConfiguration: config)
-            button.setImage(image, for: .normal)
-            button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
-            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-        }
+        var config = UIButton.Configuration.plain()
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        config.image = UIImage(systemName: "chevron.left", withConfiguration: imageConfig)
+        config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        button.configuration = config
         
         button.backgroundColor = UIColor.clear
         button.isUserInteractionEnabled = true
@@ -794,7 +786,7 @@ class PetTalkingViewController: UIViewController {
         
         Task {
             do {
-                let (response, emotion, policy) = try await petViewModel.sendMessage(text)
+                let (response, _, _) = try await petViewModel.sendMessage(text)
                 await MainActor.run {
                     self.transcriptionLabel.text = response
                     self.speak(text: response)

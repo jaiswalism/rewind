@@ -95,11 +95,11 @@ class AddGoalViewController: UIViewController {
                     category: Optional<String>.none,
                     targetDate: Optional<String>.none
                 )
-                await MainActor.run {
+                _ = await MainActor.run {
                     navigationController?.popViewController(animated: true)
                 }
             } catch {
-                await MainActor.run {
+                _ = await MainActor.run {
                     showAlert(message: error.localizedDescription)
                 }
             }

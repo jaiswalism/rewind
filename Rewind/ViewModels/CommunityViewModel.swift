@@ -78,7 +78,7 @@ final class CommunityViewModel: ObservableObject {
                 let likedPosts: [LikeResult]? = try? await supabase.from("post_likes")
                     .select("post_id")
                     .eq("user_id", value: currentUserId)
-                    .in("post_id", value: postIds)
+                    .in("post_id", values: postIds)
                     .execute()
                     .value
                 if let likes = likedPosts {
@@ -145,7 +145,7 @@ final class CommunityViewModel: ObservableObject {
         if let user = userResp?.first {
             let newTotal = (user.totalPosts ?? 0) + 1
             struct UpdateTotalPosts: Encodable { let total_posts: Int }
-            try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
+            _ = try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
         }
         
         return newPost
@@ -230,7 +230,7 @@ final class CommunityViewModel: ObservableObject {
             if let user = userResp?.first {
                 let newTotal = max(0, (user.totalPosts ?? 0) - 1)
                 struct UpdateTotalPosts: Encodable { let total_posts: Int }
-                try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
+                _ = try? await supabase.from("users").update(UpdateTotalPosts(total_posts: newTotal)).eq("id", value: currentUserId).execute()
             }
         }
     }
@@ -258,11 +258,11 @@ final class CommunityViewModel: ObservableObject {
                 
                 // Sync count to remote DB
                 struct UpdateLikeCount: Encodable { let like_count: Int }
-                try? await supabase.from("community_posts")
+                _ = try? await supabase.from("community_posts")
                     .update(UpdateLikeCount(like_count: newCount))
                     .eq("id", value: postId.uuidString)
                     .execute()
-                    
+
                 posts[index] = CommunityPostWithUser(
                     post: DBCommunityPost(
                         id: posts[index].post.id,
@@ -300,11 +300,11 @@ final class CommunityViewModel: ObservableObject {
                 
                 // Sync count to remote DB
                 struct UpdateLikeCount: Encodable { let like_count: Int }
-                try? await supabase.from("community_posts")
+                _ = try? await supabase.from("community_posts")
                     .update(UpdateLikeCount(like_count: newCount))
                     .eq("id", value: postId.uuidString)
                     .execute()
-                    
+
                 posts[index] = CommunityPostWithUser(
                     post: DBCommunityPost(
                         id: posts[index].post.id,
@@ -364,7 +364,7 @@ final class CommunityViewModel: ObservableObject {
                     
                     struct UpdateCommentCount: Encodable { let comment_count: Int }
                     Task {
-                        try? await supabase.from("community_posts")
+                        _ = try? await supabase.from("community_posts")
                             .update(UpdateCommentCount(comment_count: actualCount))
                             .eq("id", value: postId.uuidString)
                             .execute()
@@ -441,7 +441,7 @@ final class CommunityViewModel: ObservableObject {
             // Sync count to remote DB
             struct UpdateCommentCount: Encodable { let comment_count: Int }
             Task {
-                try? await supabase.from("community_posts")
+                _ = try? await supabase.from("community_posts")
                     .update(UpdateCommentCount(comment_count: newCount))
                     .eq("id", value: postId.uuidString)
                     .execute()
