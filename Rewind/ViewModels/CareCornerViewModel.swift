@@ -281,7 +281,7 @@ final class CareCornerViewModel: ObservableObject {
             completedAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await executeWithRetry {
+        _ = try await executeWithRetry {
             try await self.supabase.from("breathing_exercises").insert(exercise).execute()
         }
         
@@ -292,7 +292,7 @@ final class CareCornerViewModel: ObservableObject {
 
         struct PawsUpdate: Encodable { var paws_balance: Int }
         let updatedPaws = currentPaws + pawsEarned
-        try await executeWithRetry {
+        _ = try await executeWithRetry {
             try await self.supabase.from("users")
                 .update(PawsUpdate(paws_balance: updatedPaws))
                 .eq("id", value: session.user.id.uuidString)
@@ -322,7 +322,7 @@ final class CareCornerViewModel: ObservableObject {
             completedAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await executeWithRetry {
+        _ = try await executeWithRetry {
             try await self.supabase.from("meditation_sessions").insert(sessionData).execute()
         }
         
@@ -333,7 +333,7 @@ final class CareCornerViewModel: ObservableObject {
 
         struct PawsUpdate: Encodable { var paws_balance: Int }
         let updatedPaws = currentPaws + pawsEarned
-        try await executeWithRetry {
+        _ = try await executeWithRetry {
             try await self.supabase.from("users")
                 .update(PawsUpdate(paws_balance: updatedPaws))
                 .eq("id", value: session.user.id.uuidString)
