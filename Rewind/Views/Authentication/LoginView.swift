@@ -1,4 +1,5 @@
 import SwiftUI
+import Supabase
 
 struct LoginView: View {
     @StateObject private var authViewModel = AuthViewModel()
@@ -14,6 +15,7 @@ struct LoginView: View {
     
     // Callbacks for routing
     var onLoginSuccess: ((_ isNewUser: Bool) -> Void)?
+    var onOAuthSuccess: ((_ isNewUser: Bool) -> Void)?
     var onSignUpTapped: (() -> Void)?
     var onForgotPasswordTapped: (() -> Void)?
     
@@ -121,7 +123,7 @@ struct LoginView: View {
                         
                         // Social Login Buttons
                         VStack(spacing: 16) {
-                            Button(action: { /* Google Auth */ }) {
+                            Button(action: { performOAuthLogin(provider: .google) }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/googleLogo")
                                         .renderingMode(.original)
@@ -132,8 +134,9 @@ struct LoginView: View {
                                 }
                             }
                             .buttonStyle(EliteSocialButtonStyle())
+                            .disabled(authViewModel.isLoading)
                             
-                            Button(action: { /* Apple Auth */ }) {
+                            Button(action: { performOAuthLogin(provider: .apple) }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/appleLogo")
                                         .renderingMode(.template)
@@ -145,6 +148,7 @@ struct LoginView: View {
                                 }
                             }
                             .buttonStyle(EliteSocialButtonStyle())
+                            .disabled(authViewModel.isLoading)
                         }
                     }
                     
@@ -226,6 +230,27 @@ struct LoginView: View {
                 
                 onLoginSuccess?(isCompleted)
                 
+            } catch {
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.error)
+            }
+        }
+    }
+
+    private func performOAuthLogin(provider: Provider) {
+        guard !authViewModel.isLoading else { return }
+
+        focusedField = nil
+
+        Task {
+            do {
+                try await authViewModel.signInWithOAuth(provider: provider)
+                let isCompleted = authViewModel.currentUser?.onboardingCompleted ?? false
+                if let onOAuthSuccess = onOAuthSuccess {
+                    onOAuthSuccess(isCompleted)
+                } else {
+                    onLoginSuccess?(isCompleted)
+                }
             } catch {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)

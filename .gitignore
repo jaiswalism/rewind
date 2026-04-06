@@ -19,6 +19,7 @@ DerivedData
 *.ipa
 *.xcuserstate
 *.log
+scripts
 
 # Secrets
 SupabaseSecrets.swift

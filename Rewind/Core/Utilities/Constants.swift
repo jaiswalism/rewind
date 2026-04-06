@@ -1,6 +1,10 @@
 import Foundation
 
 enum Constants {
+    enum Auth {
+        static let oauthRedirectURL = URL(string: "rewind://auth-callback")!
+    }
+
     enum Supabase {
         static let url = "https://YOUR_PROJECT.supabase.co"
         static let anonKey = "YOUR_ANON_KEY"

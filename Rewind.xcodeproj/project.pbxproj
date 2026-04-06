@@ -417,9 +417,11 @@
 				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = B6J4R9QTM2;
+				DEVELOPMENT_TEAM = TW33TRP3X9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Rewind/Resources/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -454,9 +456,11 @@
 				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = B6J4R9QTM2;
+				DEVELOPMENT_TEAM = TW33TRP3X9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Rewind/Resources/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

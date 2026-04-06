@@ -36,6 +36,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.makeKeyAndVisible()
 
         Task {
+            if let callbackURL = connectionOptions.urlContexts.first?.url {
+                await handleOAuthCallback(url: callbackURL)
+                return
+            }
             await resolveInitialScreen()
         }
     }
@@ -90,5 +94,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {}
     func sceneDidEnterBackground(_ scene: UIScene) {
         (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        Task {
+            await handleOAuthCallback(url: url)
+        }
+    }
+
+    @MainActor
+    private func handleOAuthCallback(url: URL) async {
+        do {
+            _ = try await SupabaseConfig.shared.client.auth.session(from: url)
+        } catch {
+            SupabaseConfig.shared.client.handle(url)
+        }
+
+        await resolveInitialScreen()
     }
 }
