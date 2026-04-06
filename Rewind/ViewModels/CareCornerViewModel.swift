@@ -92,12 +92,20 @@ final class CareCornerViewModel: ObservableObject {
                 
                 challengeCompleted = !completions.isEmpty
             } else {
-                // Create today's challenge
+                let templates = [
+                    (title: "Mindful Pause", description: "Spend one minute noticing five things around you.", category: "mindfulness"),
+                    (title: "Gratitude Reset", description: "Write down one thing that made you smile today.", category: "gratitude"),
+                    (title: "Slow Breath Check-In", description: "Take six slow breaths and notice how your body feels.", category: "breathing"),
+                    (title: "Quiet Moment", description: "Put your phone face down and sit with the silence for two minutes.", category: "calm")
+                ]
+                let dayIndex = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
+                let template = templates[dayIndex % templates.count]
+
                 let newChallenge = DBDailyChallenge(
                     id: UUID(),
-                    title: "Daily Mindfulness",
-                    description: "Take a moment to practice gratitude today",
-                    category: "mindfulness",
+                    title: template.title,
+                    description: template.description,
+                    category: template.category,
                     points: 10,
                     createdForDate: String(today)
                 )
