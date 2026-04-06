@@ -30,11 +30,22 @@ struct CreatePostView: View {
 
     let postToEdit: CommunityViewModel.CommunityPostWithUser?
 
-    init(postToEdit: CommunityViewModel.CommunityPostWithUser? = nil) {
+    private static let supportedTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY", "MINDFULNESS"]
+
+    init(
+        postToEdit: CommunityViewModel.CommunityPostWithUser? = nil,
+        initialText: String = "",
+        initialTags: [String] = []
+    ) {
         self.postToEdit = postToEdit
+        _postText = State(initialValue: initialText)
+
+        let normalizedTags = Set(initialTags.map { $0.uppercased() })
+        let allowedTags = Set(Self.supportedTags)
+        _selectedTags = State(initialValue: normalizedTags.intersection(allowedTags))
     }
 
-    private let availableTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
+    private let availableTags = Self.supportedTags
 
     private var canPost: Bool {
         !postText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isPosting

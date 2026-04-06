@@ -9,6 +9,10 @@ import UIKit
 import SceneKit
 
 class PetAvatarView: SCNView {
+
+    override var canBecomeFocused: Bool {
+        false
+    }
     
     // MARK: - Properties
     var penguinNode: SCNNode?
@@ -76,19 +80,24 @@ class PetAvatarView: SCNView {
         // Try different paths - prioritized list
         var modelURL: URL?
 
-        if let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz", subdirectory: "Panda") {
+        let preferredStyle = UserDefaults.standard.string(forKey: Constants.UserDefaults.selectedPetMartStyle)
+
+        if let preferredStyle,
+           let url = Bundle.main.url(forResource: preferredStyle, withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "wavingPanda", withExtension: "usdz", subdirectory: "Panda") {
+        }
+
+        if modelURL == nil, let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "sleepyPanda", withExtension: "usdz", subdirectory: "Panda") {
+        } else if modelURL == nil, let url = Bundle.main.url(forResource: "wavingPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "sadPanda", withExtension: "usdz", subdirectory: "Panda") {
+        } else if modelURL == nil, let url = Bundle.main.url(forResource: "sleepyPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "cryingPanda", withExtension: "usdz", subdirectory: "Panda") {
+        } else if modelURL == nil, let url = Bundle.main.url(forResource: "sadPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "fightingPanda", withExtension: "usdz", subdirectory: "Panda") {
+        } else if modelURL == nil, let url = Bundle.main.url(forResource: "fightingPanda", withExtension: "usdz", subdirectory: "Panda") {
             modelURL = url
-        } else if let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz") {
+        } else if modelURL == nil, let url = Bundle.main.url(forResource: "basicPanda", withExtension: "usdz") {
             modelURL = url
         }
         

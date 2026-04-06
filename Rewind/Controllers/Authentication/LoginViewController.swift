@@ -8,7 +8,7 @@ class LoginViewController: UIHostingController<LoginView> {
         super.init(rootView: loginView)
         
         // Setup bridging callbacks
-        loginView.onLoginSuccess = { [weak self] isCompleted in
+        let routeAfterAuthentication: (Bool) -> Void = { [weak self] isCompleted in
             DispatchQueue.main.async {
                 if isCompleted {
                     let mainTabVC = MainTabBarController()
@@ -25,6 +25,9 @@ class LoginViewController: UIHostingController<LoginView> {
                 }
             }
         }
+
+        loginView.onLoginSuccess = routeAfterAuthentication
+        loginView.onOAuthSuccess = routeAfterAuthentication
         
         loginView.onSignUpTapped = { [weak self] in
             let signupVC = SignupViewController()

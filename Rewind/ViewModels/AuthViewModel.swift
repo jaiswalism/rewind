@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Supabase
 import Combine
 
@@ -10,15 +11,20 @@ final class AuthViewModel: ObservableObject {
     @Published var error: String?
     
     private let supabase = SupabaseConfig.shared.client
+    private let initialPawsBalance = 100
     
     init() {
         Task {
             await checkCurrentSession()
         }
     }
+
+    func getSession() async -> Session? {
+        try? await supabase.auth.session
+    }
     
     func checkCurrentSession() async {
-        if (try? await supabase.auth.session) != nil {
+        if await getSession() != nil {
             isLoggedIn = true
             await fetchCurrentUser()
         } else {
@@ -29,6 +35,7 @@ final class AuthViewModel: ObservableObject {
     func register(name: String, email: String, password: String) async throws {
         isLoading = true
         error = nil
+        defer { isLoading = false }
         
         do {
             let session = try await supabase.auth.signUp(
@@ -38,6 +45,8 @@ final class AuthViewModel: ObservableObject {
             )
             
             let now = ISO8601DateFormatter().string(from: Date())
+
+            try await seedInitialPawsBalance(userId: session.user.id, updatedAt: now)
             
             let newUser = DBUser(
                 id: session.user.id,
@@ -52,7 +61,7 @@ final class AuthViewModel: ObservableObject {
                 age: nil,
                 healthGoal: nil,
                 seekingProfessionalHelp: false,
-                pawsBalance: 0,
+                pawsBalance: 100,
                 totalPosts: 0,
                 onboardingCompleted: false,
                 createdAt: now,
@@ -69,13 +78,12 @@ final class AuthViewModel: ObservableObject {
             self.error = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     func login(email: String, password: String) async throws {
         isLoading = true
         error = nil
+        defer { isLoading = false }
         
         do {
             _ = try await supabase.auth.signIn(
@@ -89,12 +97,104 @@ final class AuthViewModel: ObservableObject {
             self.error = error.localizedDescription
             throw error
         }
+    }
+
+    func signInWithOAuth(provider: Provider) async throws {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        do {
+            let session = try await supabase.auth.signInWithOAuth(
+                provider: provider,
+                redirectTo: Constants.Auth.oauthRedirectURL
+            )
+
+            // Newer Supabase SDKs complete OAuth and return a session directly.
+            isLoggedIn = true
+            await ensureInitialPawsBalanceForNewUser(userId: session.user.id)
+            await fetchCurrentUser()
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
+    }
+
+    private func seedInitialPawsBalance(userId: UUID, updatedAt: String) async throws {
+        struct InitialPawsUpdate: Encodable {
+            var paws_balance: Int
+            var updated_at: String
+        }
+
+        let payload = InitialPawsUpdate(paws_balance: initialPawsBalance, updated_at: updatedAt)
+        var lastError: Error?
+        for attempt in 0..<3 {
+            do {
+                try await supabase.from("users")
+                    .update(payload)
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+                return
+            } catch {
+                lastError = error
+                if attempt < 2 {
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                }
+            }
+        }
         
-        isLoading = false
+        if let lastError = lastError {
+            throw lastError
+        }
+    }
+
+    private func ensureInitialPawsBalanceForNewUser(userId: UUID) async {
+        struct UserBootstrapSnapshot: Decodable {
+            let paws_balance: Int?
+            let onboarding_completed: Bool?
+            let total_posts: Int?
+            let created_at: String?
+        }
+
+        guard
+            let snapshot: UserBootstrapSnapshot = try? await supabase.from("users")
+                .select("paws_balance,onboarding_completed,total_posts,created_at")
+                .eq("id", value: userId.uuidString)
+                .single()
+                .execute()
+                .value
+        else {
+            return
+        }
+
+        let hasNoPawsYet = (snapshot.paws_balance ?? 0) <= 0
+        let hasNoPosts = (snapshot.total_posts ?? 0) == 0
+        let hasNotOnboarded = snapshot.onboarding_completed != true
+
+        var createdRecently = false
+        if let createdAt = snapshot.created_at,
+           let createdDate = ISO8601DateFormatter().date(from: createdAt) {
+            createdRecently = Date().timeIntervalSince(createdDate) <= 900
+        }
+
+        guard hasNoPawsYet && hasNoPosts && hasNotOnboarded && createdRecently else {
+            return
+        }
+
+        do {
+            try await seedInitialPawsBalance(
+                userId: userId,
+                updatedAt: ISO8601DateFormatter().string(from: Date())
+            )
+        } catch {
+            print("Failed to seed initial paws balance: \(error)")
+            self.error = "Error setting initial balance: \(error.localizedDescription)"
+        }
     }
     
     func logout() async {
         isLoading = true
+        defer { isLoading = false }
         
         do {
             try await supabase.auth.signOut()
@@ -103,12 +203,11 @@ final class AuthViewModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
-        
-        isLoading = false
     }
     
     func forgotPassword(email: String) async throws {
         isLoading = true
+        defer { isLoading = false }
         
         do {
             try await supabase.auth.resetPasswordForEmail(email)
@@ -116,8 +215,6 @@ final class AuthViewModel: ObservableObject {
             self.error = error.localizedDescription
             throw error
         }
-        
-        isLoading = false
     }
     
     private func fetchCurrentUser() async {

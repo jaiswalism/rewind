@@ -118,16 +118,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		52A84E472EB9531200D47157 /* RewindTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = RewindTests;
-			sourceTree = "<group>";
-		};
-		52A84E512EB9531200D47157 /* RewindUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = RewindUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -193,8 +183,6 @@
 			isa = PBXGroup;
 			children = (
 				5214F6672EBD0CD5005020AA /* Rewind */,
-				52A84E472EB9531200D47157 /* RewindTests */,
-				52A84E512EB9531200D47157 /* RewindUITests */,
 				5275E9542F69CBBD0093C480 /* Frameworks */,
 				52A84E2B2EB9531100D47157 /* Products */,
 			);
@@ -262,9 +250,6 @@
 			dependencies = (
 				52A84E462EB9531200D47157 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				52A84E472EB9531200D47157 /* RewindTests */,
-			);
 			name = RewindTests;
 			packageProductDependencies = (
 			);
@@ -284,9 +269,6 @@
 			);
 			dependencies = (
 				52A84E502EB9531200D47157 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				52A84E512EB9531200D47157 /* RewindUITests */,
 			);
 			name = RewindUITests;
 			packageProductDependencies = (
@@ -417,9 +399,11 @@
 				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = B6J4R9QTM2;
+				DEVELOPMENT_TEAM = TW33TRP3X9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Rewind/Resources/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -454,9 +438,11 @@
 				CODE_SIGN_ENTITLEMENTS = Rewind/Resources/Rewind.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = B6J4R9QTM2;
+				DEVELOPMENT_TEAM = TW33TRP3X9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Rewind/Resources/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

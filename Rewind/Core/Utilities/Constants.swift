@@ -1,6 +1,10 @@
 import Foundation
 
 enum Constants {
+    enum Auth {
+        static let oauthRedirectURL = URL(string: "rewind://auth-callback")!
+    }
+
     enum Supabase {
         static let url = "https://YOUR_PROJECT.supabase.co"
         static let anonKey = "YOUR_ANON_KEY"
@@ -17,13 +21,17 @@ enum Constants {
     }
 
     enum Paws {
-        static let breathingPawsPerMinute = 20
-        static let meditationPawsPerMinute = 20
-        static let challengeCompletionPaws = 50
+        static let breathingPawsPerMinute = 2
+        static let meditationPawsPerMinute = 3
+        static let challengeCompletionPaws = 10
+        static let minimumBreathingSeconds = 60
+        static let minimumMeditationSeconds = 120
     }
 
     enum UserDefaults {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let currentUserID = "currentUserID"
+        static let selectedPetMartStyle = "selectedPetMartStyle"
+        static let ownedPetMartStyles = "ownedPetMartStyles"
     }
 }

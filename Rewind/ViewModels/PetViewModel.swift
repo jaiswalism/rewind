@@ -16,6 +16,19 @@ final class PetViewModel: ObservableObject {
     private var penguinInferURL: URL {
         URL(string: "\(Constants.PenguinService.baseURL)/infer")!
     }
+
+    private var shouldSkipLocalhostInferenceOnDevice: Bool {
+        guard let host = URL(string: Constants.PenguinService.baseURL)?.host?.lowercased() else {
+            return false
+        }
+        let isLoopback = host == "127.0.0.1" || host == "localhost"
+
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return isLoopback
+        #endif
+    }
     
     struct PetData: Identifiable {
         let id: UUID
@@ -89,13 +102,13 @@ final class PetViewModel: ObservableObject {
         do {
             guard let session = try? await supabase.auth.session else { return }
             
-            let stateResponse: [DBPenguinState] = try await supabase.from("penguin_states")
+            let stateResponse: [DBPenguinState] = try await supabase.from("pet_states")
                 .select("*")
                 .eq("user_id", value: session.user.id.uuidString)
                 .execute()
                 .value
             
-            let memoryResponse: [DBPenguinMemory] = try await supabase.from("penguin_memories")
+            let memoryResponse: [DBPenguinMemory] = try await supabase.from("pet_memories")
                 .select("*")
                 .eq("user_id", value: session.user.id.uuidString)
                 .execute()
@@ -134,6 +147,14 @@ final class PetViewModel: ObservableObject {
     }
     
     func sendMessage(_ message: String) async throws -> (response: String, emotion: String?, policy: String?) {
+        if shouldSkipLocalhostInferenceOnDevice {
+            throw NSError(
+                domain: "PetVM",
+                code: 503,
+                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
+            )
+        }
+
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
@@ -142,7 +163,7 @@ final class PetViewModel: ObservableObject {
         
         defer { isTyping = false }
         
-        let stateResponse: [DBPenguinState] = try await supabase.from("penguin_states")
+        let stateResponse: [DBPenguinState] = try await supabase.from("pet_states")
             .select("*")
             .eq("user_id", value: session.user.id.uuidString)
             .execute()
@@ -208,7 +229,7 @@ final class PetViewModel: ObservableObject {
                     health: delta.trust != nil ? min(100, max(0, Int(Double(state?.health ?? 50) + delta.trust!))) : nil
                 )
                 
-                try await supabase.from("penguin_states")
+                try await supabase.from("pet_states")
                     .update(req)
                     .eq("user_id", value: session.user.id.uuidString)
                     .execute()
@@ -223,6 +244,14 @@ final class PetViewModel: ObservableObject {
     }
     
     func analyzeJournalMood(content: String) async throws -> (emotion: String, policy: String?) {
+        if shouldSkipLocalhostInferenceOnDevice {
+            throw NSError(
+                domain: "PetVM",
+                code: 503,
+                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
+            )
+        }
+
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }

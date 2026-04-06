@@ -31,6 +31,7 @@ final class SupabaseConfig {
             supabaseKey: SupabaseSecrets.supabaseKey,
             options: SupabaseClientOptions(
                 auth: SupabaseClientOptions.AuthOptions(
+                    redirectToURL: Constants.Auth.oauthRedirectURL,
                     emitLocalSessionAsInitialSession: true
                 )
             )

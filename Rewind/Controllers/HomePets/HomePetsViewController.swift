@@ -45,6 +45,19 @@ class HomePetsViewController: UIHostingController<HomePetsView> {
             }
         }
 
+        connectedView.onPetMartTapped = { [weak self] in
+            guard let self = self else { return }
+            let petMartVC = PetMartViewController()
+            petMartVC.hidesBottomBarWhenPushed = true
+            if let navController = self.navigationController {
+                navController.pushViewController(petMartVC, animated: true)
+            } else {
+                let navController = UINavigationController(rootViewController: petMartVC)
+                navController.modalPresentationStyle = .fullScreen
+                self.present(navController, animated: true)
+            }
+        }
+
         // NOTE: Talk is now handled inline inside HomePetsView – no navigation needed.
 
         // Apply the updated view back to hosting controller

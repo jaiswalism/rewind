@@ -2,11 +2,13 @@ import Foundation
 
 struct PawsCalculator {
     static func calculateBreathingPaws(durationSeconds: Int) -> Int {
+        guard durationSeconds >= Constants.Paws.minimumBreathingSeconds else { return 0 }
         let minutes = durationSeconds / 60
         return minutes * Constants.Paws.breathingPawsPerMinute
     }
 
     static func calculateMeditationPaws(durationSeconds: Int) -> Int {
+        guard durationSeconds >= Constants.Paws.minimumMeditationSeconds else { return 0 }
         let minutes = durationSeconds / 60
         return minutes * Constants.Paws.meditationPawsPerMinute
     }

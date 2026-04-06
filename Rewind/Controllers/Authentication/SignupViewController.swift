@@ -22,6 +22,26 @@ class SignupViewController: UIHostingController<SignupView> {
                 self?.present(goalVC, animated: true, completion: nil)
             }
         }
+
+        let routeAfterAuthentication: (Bool) -> Void = { [weak self] isCompleted in
+            DispatchQueue.main.async {
+                if isCompleted {
+                    let mainTabVC = MainTabBarController()
+                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                        sceneDelegate.setRoot(mainTabVC)
+                    } else {
+                        mainTabVC.modalPresentationStyle = .fullScreen
+                        self?.present(mainTabVC, animated: true)
+                    }
+                } else {
+                    let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                    goalVC.modalPresentationStyle = .fullScreen
+                    self?.present(goalVC, animated: true)
+                }
+            }
+        }
+
+        view.onOAuthSuccess = routeAfterAuthentication
         
         view.onSignInTapped = { [weak self] in
             DispatchQueue.main.async {
