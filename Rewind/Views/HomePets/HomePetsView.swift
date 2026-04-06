@@ -48,6 +48,13 @@ private struct MoodState {
     }
 }
 
+private enum HomeStatInfoTopic: String, Identifiable {
+    case paws
+    case mood
+
+    var id: String { rawValue }
+}
+
 // MARK: - Home View
 
 struct HomePetsView: View {
@@ -55,14 +62,17 @@ struct HomePetsView: View {
     @StateObject private var talkSession: PetTalkSessionViewModel
     @StateObject private var userViewModel: UserViewModel
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(Constants.UserDefaults.selectedPetMartStyle) private var selectedPetMartStyle = "basicPanda"
 
     var onSettingsTapped:      () -> Void = {}
+    var onPetMartTapped:       () -> Void = {}
     // onMicTapped removed – talk is now inline
 
     @State private var showBubble = false
     @State private var isTalking  = false   // drives the inline panel
     @State private var bubbleQuote = ""
     @State private var hasInitializedData = false
+    @State private var selectedStatTopic: HomeStatInfoTopic?
 
     init() {
         let pet = PetViewModel()
@@ -119,6 +129,10 @@ struct HomePetsView: View {
                 showBubble = true
             }
         }
+        .sheet(item: $selectedStatTopic) { topic in
+            HomeStatsInfoSheet(topic: topic)
+                .presentationDetents([.medium, .large])
+        }
         .animation(.spring(response: 0.45, dampingFraction: 0.75), value: isTalking)
     }
 
@@ -162,30 +176,35 @@ struct HomePetsView: View {
             Spacer()
 
             HStack(spacing: 20) {
-                statChip("flame.fill",
-                         "5 days",
-                         color: Color(red: 1.0, green: 0.55, blue: 0.2))
                 statChip("pawprint.fill",
                          "\(userViewModel.user?.pawsBalance ?? 0) pts",
-                         color: Color(red: 0.55, green: 0.75, blue: 1.0))
+                         color: Color(red: 0.55, green: 0.75, blue: 1.0),
+                         topic: .paws)
                 statChip("face.smiling.fill",
                          "\(Int(viewModel.pet?.state.mood ?? 80))%",
-                         color: Color(red: 0.35, green: 0.78, blue: 0.45))
+                         color: Color(red: 0.35, green: 0.78, blue: 0.45),
+                         topic: .mood)
             }
 
             Spacer()
         }
     }
 
-    private func statChip(_ icon: String, _ value: String, color: Color) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(color)
-            Text(value)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
+    private func statChip(_ icon: String, _ value: String, color: Color, topic: HomeStatInfoTopic) -> some View {
+        Button {
+            selectedStatTopic = topic
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(color)
+                Text(value)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+            }
         }
+        .buttonStyle(.plain)
+        .accessibilityHint("Shows details about this stat")
     }
 
     // MARK: - Pet Section
@@ -220,6 +239,7 @@ struct HomePetsView: View {
                 .tint(.primary)
         } else {
             PetAvatarViewRepresentable(scale: 0.14, position: SCNVector3(0, -2.0, 0))
+                .id(selectedPetMartStyle)
         }
     }
 
@@ -267,7 +287,7 @@ struct HomePetsView: View {
             }
             .buttonStyle(ElitePrimaryButtonStyle())
 
-            Button(action: {}) {
+            Button(action: onPetMartTapped) {
                 HStack(spacing: 8) {
                     Image(systemName: "bag")
                         .font(.system(size: 14, weight: .medium))
@@ -417,6 +437,105 @@ struct HomePetsView: View {
         case .error(let m):  return m
         default:             return ""
         }
+    }
+}
+
+private struct HomeStatsInfoSheet: View {
+    let topic: HomeStatInfoTopic
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    if topic == .paws {
+                        card(
+                            title: "Paws points",
+                            icon: "pawprint.fill",
+                            iconColor: Color(red: 0.55, green: 0.75, blue: 1.0),
+                            lines: [
+                                "This is your current points balance.",
+                                "You can earn paws by completing care challenges and mindful sessions.",
+                                "Pet Mart redemption is coming soon."
+                            ]
+                        )
+
+                        card(
+                            title: "How to earn paws",
+                            icon: "sparkles",
+                            iconColor: Color(red: 1.0, green: 0.62, blue: 0.25),
+                            lines: [
+                                "Complete the daily challenge in Care Corner.",
+                                "Finish qualifying breathing sessions.",
+                                "Finish qualifying meditation sessions."
+                            ]
+                        )
+
+                        card(
+                            title: "How paws will be used",
+                            icon: "bag.fill",
+                            iconColor: Color(red: 0.64, green: 0.54, blue: 0.92),
+                            lines: [
+                                "Pet Mart purchases will use paws points.",
+                                "You will be able to unlock pet items and goodies.",
+                                "Pet Mart setup is in progress."
+                            ]
+                        )
+                    } else {
+                        card(
+                            title: "Mood score",
+                            icon: "face.smiling.fill",
+                            iconColor: Color(red: 0.35, green: 0.78, blue: 0.45),
+                            lines: [
+                                "This is your pet's current mood estimate.",
+                                "Talking with your pet and consistent care activities can help improve it.",
+                                "Higher mood reflects better recent emotional wellbeing."
+                            ]
+                        )
+
+                        card(
+                            title: "How mood improves",
+                            icon: "heart.fill",
+                            iconColor: Color(red: 0.95, green: 0.38, blue: 0.45),
+                            lines: [
+                                "Talk with your pet regularly.",
+                                "Complete care activities consistently.",
+                                "Check in daily to keep your bond strong."
+                            ]
+                        )
+                    }
+                }
+                .padding(20)
+            }
+            .navigationTitle("Stats info")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private func card(title: String, icon: String, iconColor: Color, lines: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(iconColor)
+                Text(title)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.primary)
+            }
+
+            ForEach(lines, id: \.self) { line in
+                Text("• \(line)")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
+        )
     }
 }
 

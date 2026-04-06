@@ -25,5 +25,7 @@ enum Constants {
     enum UserDefaults {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let currentUserID = "currentUserID"
+        static let selectedPetMartStyle = "selectedPetMartStyle"
+        static let ownedPetMartStyles = "ownedPetMartStyles"
     }
 }

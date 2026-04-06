@@ -1,19 +1,29 @@
 import SwiftUI
 
 struct CareCornerView: View {
+    private enum ActiveSheet: Identifiable, Equatable {
+        case challengeComposer
+
+        var id: String {
+            switch self {
+            case .challengeComposer:
+                return "challengeComposer"
+            }
+        }
+    }
+
     @StateObject private var viewModel = CareCornerViewModel()
     @StateObject private var userViewModel = UserViewModel.shared
     @State private var hasLoaded = false
     @State private var showingCompletionAlert = false
     @State private var showingChallengeErrorAlert = false
-    @State private var showingChallengePostComposer = false
+    @State private var activeSheet: ActiveSheet?
     @State private var challengePostPrefill: CareCornerViewModel.ChallengeCommunityPrefill?
     @State private var isCompletingChallenge = false
     @State private var shouldShowCompletionAfterComposer = false
 
     let onBreathingTapped: () -> Void
     let onMeditationTapped: () -> Void
-
     var body: some View {
         ZStack {
             EliteBackgroundView()
@@ -48,15 +58,18 @@ struct CareCornerView: View {
         } message: {
             Text(viewModel.error ?? "Please try again.")
         }
-        .sheet(isPresented: $showingChallengePostComposer, onDismiss: {
+        .sheet(item: $activeSheet, onDismiss: {
             if shouldShowCompletionAfterComposer {
                 shouldShowCompletionAfterComposer = false
                 showingCompletionAlert = true
             }
         }) {
-            if let challengePostPrefill {
-                CreatePostView(initialText: challengePostPrefill.text, initialTags: challengePostPrefill.tags)
-                    .presentationCornerRadius(28)
+            switch $0 {
+            case .challengeComposer:
+                if let challengePostPrefill {
+                    CreatePostView(initialText: challengePostPrefill.text, initialTags: challengePostPrefill.tags)
+                        .presentationCornerRadius(28)
+                }
             }
         }
     }
@@ -127,7 +140,7 @@ struct CareCornerView: View {
 
                                 let prefill = viewModel.communityPrefillForCurrentChallenge() ?? viewModel.communityPrefillFallbackForToday()
                                 challengePostPrefill = prefill
-                                showingChallengePostComposer = true
+                                activeSheet = .challengeComposer
 
                                 let shouldCompleteChallenge = !viewModel.challengeCompleted && viewModel.dailyChallenge != nil
 
@@ -137,7 +150,7 @@ struct CareCornerView: View {
                                         try await viewModel.completeChallenge()
                                     }
                                     if shouldCompleteChallenge && !wasCompleted {
-                                        if showingChallengePostComposer {
+                                        if activeSheet == .challengeComposer {
                                             shouldShowCompletionAfterComposer = true
                                         } else {
                                             showingCompletionAlert = true
@@ -145,7 +158,7 @@ struct CareCornerView: View {
                                     }
                                 } catch {
                                     // If posting composer is already open, completion failure should not block sharing.
-                                    if !showingChallengePostComposer {
+                                    if activeSheet != .challengeComposer {
                                         viewModel.error = error.localizedDescription
                                         showingChallengeErrorAlert = true
                                     }

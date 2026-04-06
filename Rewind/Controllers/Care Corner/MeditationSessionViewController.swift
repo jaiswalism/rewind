@@ -7,8 +7,31 @@
 
 import UIKit
 import Combine
+import AVFoundation
 
 class MeditationSessionViewController: UIViewController {
+    private struct SoundResource {
+        let fileName: String
+        let fileExtension: String
+    }
+
+    private static let soundResources: [String: SoundResource] = [
+        "Calm Flow": SoundResource(fileName: "ocean-waves", fileExtension: "mp3"),
+        "Ambient Hush": SoundResource(fileName: "white-noise", fileExtension: "mp3"),
+        "Birdsong": SoundResource(fileName: "chirping-birds", fileExtension: "mp3"),
+        "Rain": SoundResource(fileName: "rain", fileExtension: "mp3"),
+        "Forest Night": SoundResource(fileName: "forest-night", fileExtension: "wav"),
+        "Flute Rain": SoundResource(fileName: "flute-rain", fileExtension: "mp3")
+    ]
+
+    private static func urlForSoundResource(_ resource: SoundResource) -> URL? {
+        // Some build setups flatten resources, while others preserve the Sounds subdirectory.
+        if let url = Bundle.main.url(forResource: resource.fileName, withExtension: resource.fileExtension, subdirectory: "Sounds") {
+            return url
+        }
+        return Bundle.main.url(forResource: resource.fileName, withExtension: resource.fileExtension)
+    }
+
     private let accentColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
     private let minimumRewardSeconds = CareCornerViewModel.minimumRewardMeditationSeconds
 
@@ -76,7 +99,7 @@ class MeditationSessionViewController: UIViewController {
     private let soundLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "  SOUND: CHIRPING BIRDS"
+        label.text = "  SOUND: CALM FLOW"
         label.font = UIFont.boldSystemFont(ofSize: 13)
         label.textColor = .white
         label.textAlignment = .center
@@ -139,8 +162,10 @@ class MeditationSessionViewController: UIViewController {
     private var remainingSeconds: Int
     private var totalSeconds: Int
     private var selectedSound: String
+    private var audioPlayer: AVAudioPlayer?
+    private var audioSessionConfigured = false
 
-    private let soundOptions = ["Chirping Birds", "Ocean Waves", "Rain", "Forest", "White Noise", "Silence"]
+    private let soundOptions = ["Calm Flow", "Ambient Hush", "Birdsong", "Rain", "Forest Night", "Flute Rain", "Silence"]
 
     init(durationInSeconds: Int, soundName: String) {
         self.remainingSeconds = durationInSeconds
@@ -152,7 +177,7 @@ class MeditationSessionViewController: UIViewController {
     required init?(coder: NSCoder) {
         self.remainingSeconds = 300
         self.totalSeconds = 300
-        self.selectedSound = "Chirping Birds"
+        self.selectedSound = "Calm Flow"
         super.init(coder: coder)
     }
     
@@ -190,6 +215,7 @@ class MeditationSessionViewController: UIViewController {
             completeEarlyButton.isHidden = true
 
             startTimer()
+            startAudioPlaybackIfNeeded()
             updateProgress()
             updatePlaybackVisualState()
         }
@@ -198,10 +224,12 @@ class MeditationSessionViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopTimer()
+        stopAudioPlayback(resetPosition: true)
     }
 
     deinit {
         stopTimer()
+        stopAudioPlayback(resetPosition: true)
     }
 
     private func setupUI() {
@@ -354,6 +382,69 @@ class MeditationSessionViewController: UIViewController {
     private func updateSoundLabel() {
         soundLabel.text = "  SOUND: \(selectedSound.uppercased())"
     }
+
+    private func configureAudioSessionIfNeeded() {
+        guard !audioSessionConfigured else { return }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true)
+            audioSessionConfigured = true
+        } catch {
+            print("Failed to configure meditation audio session: \(error)")
+        }
+    }
+
+    private func prepareAudioPlayerIfNeeded() {
+        guard selectedSound != "Silence" else {
+            stopAudioPlayback(resetPosition: true)
+            return
+        }
+
+        guard let resource = Self.soundResources[selectedSound] else {
+            stopAudioPlayback(resetPosition: true)
+            return
+        }
+
+        guard let url = Self.urlForSoundResource(resource) else {
+            print("Missing meditation audio resource: \(resource.fileName).\(resource.fileExtension)")
+            stopAudioPlayback(resetPosition: true)
+            return
+        }
+
+        if audioPlayer?.url == url { return }
+
+        do {
+            audioPlayer?.stop()
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.numberOfLoops = -1
+            player.prepareToPlay()
+            audioPlayer = player
+        } catch {
+            print("Failed to load meditation audio player: \(error)")
+            audioPlayer = nil
+        }
+    }
+
+    private func startAudioPlaybackIfNeeded() {
+        guard isPlaying else { return }
+        configureAudioSessionIfNeeded()
+        prepareAudioPlayerIfNeeded()
+        audioPlayer?.play()
+    }
+
+    private func stopAudioPlayback(resetPosition: Bool) {
+        audioPlayer?.pause()
+        if resetPosition {
+            audioPlayer?.currentTime = 0
+            do {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                audioSessionConfigured = false
+            } catch {
+                print("Failed to deactivate meditation audio session: \(error)")
+            }
+        }
+    }
     
     private func updateProgress() {
         let progress = 1.0 - (CGFloat(remainingSeconds) / CGFloat(totalSeconds))
@@ -439,10 +530,12 @@ class MeditationSessionViewController: UIViewController {
         
         if isPlaying {
             startTimer()
+            startAudioPlaybackIfNeeded()
             completeEarlyButton.isHidden = true
             updateProgress()
         } else {
             stopTimer()
+            stopAudioPlayback(resetPosition: false)
             completeEarlyButton.isHidden = false
         }
         updatePlaybackVisualState()
@@ -476,6 +569,8 @@ class MeditationSessionViewController: UIViewController {
             let action = UIAlertAction(title: sound, style: .default) { [weak self] _ in
                 self?.selectedSound = sound
                 self?.updateSoundLabel()
+                self?.prepareAudioPlayerIfNeeded()
+                self?.startAudioPlaybackIfNeeded()
             }
             if sound == selectedSound {
                 action.setValue(true, forKey: "checked")

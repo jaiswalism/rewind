@@ -16,6 +16,19 @@ final class PetViewModel: ObservableObject {
     private var penguinInferURL: URL {
         URL(string: "\(Constants.PenguinService.baseURL)/infer")!
     }
+
+    private var shouldSkipLocalhostInferenceOnDevice: Bool {
+        guard let host = URL(string: Constants.PenguinService.baseURL)?.host?.lowercased() else {
+            return false
+        }
+        let isLoopback = host == "127.0.0.1" || host == "localhost"
+
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return isLoopback
+        #endif
+    }
     
     struct PetData: Identifiable {
         let id: UUID
@@ -134,6 +147,14 @@ final class PetViewModel: ObservableObject {
     }
     
     func sendMessage(_ message: String) async throws -> (response: String, emotion: String?, policy: String?) {
+        if shouldSkipLocalhostInferenceOnDevice {
+            throw NSError(
+                domain: "PetVM",
+                code: 503,
+                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
+            )
+        }
+
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
@@ -223,6 +244,14 @@ final class PetViewModel: ObservableObject {
     }
     
     func analyzeJournalMood(content: String) async throws -> (emotion: String, policy: String?) {
+        if shouldSkipLocalhostInferenceOnDevice {
+            throw NSError(
+                domain: "PetVM",
+                code: 503,
+                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
+            )
+        }
+
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }

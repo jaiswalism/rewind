@@ -82,7 +82,7 @@ class MeditationViewController: UIViewController {
         let sym = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         let speakerImage = UIImage(systemName: "speaker.wave.2.fill", withConfiguration: sym)
         var cfg = UIButton.Configuration.plain()
-        var soundTitle = AttributedString("SOUND: CHIRPING BIRDS")
+        var soundTitle = AttributedString("SOUND: CALM FLOW")
         soundTitle.font = UIFont.boldSystemFont(ofSize: 13)
         cfg.attributedTitle = soundTitle
         cfg.image = speakerImage
@@ -114,9 +114,9 @@ class MeditationViewController: UIViewController {
     private var gradientLayer: CAGradientLayer?
     private var selectedMinutes: Int = 25
     private var selectedSeconds: Int = 0
-    private var selectedSound: String = "Chirping Birds"
+    private var selectedSound: String = "Calm Flow"
 
-    private let soundOptions = ["Chirping Birds", "Ocean Waves", "Rain", "Forest", "White Noise", "Silence"]
+    private let soundOptions = ["Calm Flow", "Ambient Hush", "Birdsong", "Rain", "Forest Night", "Flute Rain", "Silence"]
 
     override func viewDidLoad() {
         super.viewDidLoad()

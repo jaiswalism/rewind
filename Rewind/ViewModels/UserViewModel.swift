@@ -84,6 +84,39 @@ final class UserViewModel: ObservableObject {
             throw NSError(domain: "UserVM", code: 2, userInfo: [NSLocalizedDescriptionKey: "Image UPDATE User Error: \(error.localizedDescription)"])
         }
     }
+
+    func spendPawsBalance(amount: Int) async throws {
+        guard amount > 0 else { return }
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "UserVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        if user == nil {
+            await fetchProfile()
+        }
+
+        let currentBalance = user?.pawsBalance ?? 0
+        guard currentBalance >= amount else {
+            throw NSError(domain: "UserVM", code: 402, userInfo: [NSLocalizedDescriptionKey: "Not enough paws"])
+        }
+
+        struct BalanceUpdate: Encodable {
+            var paws_balance: Int
+            var updated_at: String
+        }
+
+        let req = BalanceUpdate(
+            paws_balance: currentBalance - amount,
+            updated_at: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
+            await fetchProfile()
+        } catch {
+            throw NSError(domain: "UserVM", code: 4, userInfo: [NSLocalizedDescriptionKey: "Paws update error: \(error.localizedDescription)"])
+        }
+    }
     
     func uploadAvatar(imageData: Data) async throws -> String {
         guard let session = try? await supabase.auth.session else {
