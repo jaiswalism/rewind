@@ -166,7 +166,7 @@ struct HomePetsView: View {
                          "5 days",
                          color: Color(red: 1.0, green: 0.55, blue: 0.2))
                 statChip("pawprint.fill",
-                         "\(viewModel.pet?.experience ?? 0) pts",
+                         "\(userViewModel.user?.pawsBalance ?? 0) pts",
                          color: Color(red: 0.55, green: 0.75, blue: 1.0))
                 statChip("face.smiling.fill",
                          "\(Int(viewModel.pet?.state.mood ?? 80))%",

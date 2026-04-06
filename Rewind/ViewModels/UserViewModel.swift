@@ -23,7 +23,6 @@ final class UserViewModel: ObservableObject {
                 .eq("id", value: session.user.id.uuidString)
                 .execute()
                 .value
-            
             user = response.first
         } catch {
             self.error = error.localizedDescription

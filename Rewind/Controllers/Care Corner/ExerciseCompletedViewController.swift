@@ -8,8 +8,10 @@
 import UIKit
 
 class ExerciseCompletedViewController: UIViewController {
-    
-    // MARK: - UI Components
+    private let accentColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
+    private var gradientLayer: CAGradientLayer?
+    private var didRunEntryAnimation = false
+
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +31,7 @@ class ExerciseCompletedViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Exercise\nCompleted"
-        label.font = UIFont.boldSystemFont(ofSize: 42)
+        label.font = UIFont.boldSystemFont(ofSize: 40)
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 2
@@ -47,14 +49,13 @@ class ExerciseCompletedViewController: UIViewController {
         label.alpha = 0.9
         return label
     }()
-    
-    // Custom Badge for Duration
+
     private let durationBadge: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .clear
-        view.layer.borderColor = UIColor.white.cgColor
-        view.layer.borderWidth = 2
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.14)
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        view.layer.borderWidth = 0.8
         view.layer.cornerRadius = 22
         return view
     }()
@@ -78,8 +79,6 @@ class ExerciseCompletedViewController: UIViewController {
         label.textAlignment = .center
         return label
     }()
-    
-    // centering the icon and label
 
     private let durationStackView: UIStackView = {
         let stackView = UIStackView()
@@ -89,14 +88,13 @@ class ExerciseCompletedViewController: UIViewController {
         stackView.alignment = .center
         return stackView
     }()
-    
-    // Custom Badge for Paws
+
     private let pawsBadge: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .clear
-        view.layer.borderColor = UIColor.white.cgColor
-        view.layer.borderWidth = 2
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.14)
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        view.layer.borderWidth = 0.8
         view.layer.cornerRadius = 22
         return view
     }()
@@ -110,48 +108,59 @@ class ExerciseCompletedViewController: UIViewController {
         label.textAlignment = .center
         return label
     }()
-    
-    // Background Illustration
+
     private let illustrationImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.contentMode = .scaleAspectFill
-        // Use the asset name confirmed by the user
         imageView.image = UIImage(named: "illustrations/careCorner/ExCompleteBottomBG")
         imageView.clipsToBounds = true
         return imageView
     }()
-    
-    // Main action button (at the bottom)
+
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Back to Care Corner", for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        button.setTitleColor(UIColor(named: "colors/Primary/Dark"), for: .normal)
-        button.backgroundColor = .white
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.16).cgColor
         button.layer.cornerRadius = 28
         return button
     }()
-    
-    // MARK: - Properties
+
     private let duration: String
     private let pawsEarned: Int
-    
-    // MARK: - Init
-    init(duration: String, pawsEarned: Int = 100) {
+    private let activityName: String
+    private let rewarded: Bool
+    private let minimumRewardSeconds: Int
+
+    init(
+        duration: String,
+        pawsEarned: Int = 100,
+        activityName: String = "Exercise",
+        rewarded: Bool = true,
+        minimumRewardSeconds: Int = 60
+    ) {
         self.duration = duration
         self.pawsEarned = pawsEarned
+        self.activityName = activityName
+        self.rewarded = rewarded
+        self.minimumRewardSeconds = minimumRewardSeconds
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         self.duration = "5M"
         self.pawsEarned = 100
+        self.activityName = "Exercise"
+        self.rewarded = true
+        self.minimumRewardSeconds = 60
         super.init(coder: coder)
     }
-    
-    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -162,17 +171,36 @@ class ExerciseCompletedViewController: UIViewController {
         setupUI()
         setupActions()
         updateLabels()
+        applyTheme()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.setNavigationBarHidden(true, animated: animated)
     }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animateEntryIfNeeded()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
+            applyTheme()
+        }
+    }
     
     private func setupUI() {
-        view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400")
+        view.backgroundColor = .systemBackground
+
+        let gradient = CAGradientLayer()
+        gradient.frame = view.bounds
+        gradient.colors = []
+        gradient.locations = [0.0, 0.55, 1.0]
+        view.layer.insertSublayer(gradient, at: 0)
+        gradientLayer = gradient
         
-        // ADD ILLUSTRATION FIRST to the main view (static background)
         view.insertSubview(illustrationImageView, at: 0)
         
         view.addSubview(scrollView)
@@ -180,21 +208,24 @@ class ExerciseCompletedViewController: UIViewController {
         
         view.addSubview(backButton)
         
-        // ADD CONTENT ELEMENTS to the contentView (layered on top)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
-        
-        // Assemble duration badge using the Stack View
+
         durationStackView.addArrangedSubview(durationIcon)
         durationStackView.addArrangedSubview(durationLabel)
         durationBadge.addSubview(durationStackView)
         contentView.addSubview(durationBadge)
-        
-        // Assemble paws badge
+
         pawsBadge.addSubview(pawsLabel)
         contentView.addSubview(pawsBadge)
         
         setupConstraints()
+        prepareForEntryAnimation()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        gradientLayer?.frame = view.bounds
     }
 
     private func setupConstraints() {
@@ -207,7 +238,6 @@ class ExerciseCompletedViewController: UIViewController {
             illustrationImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             illustrationImageView.heightAnchor.constraint(equalToConstant: 480),
 
-            // --- Scroll View ---
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -219,41 +249,32 @@ class ExerciseCompletedViewController: UIViewController {
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -20),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            // --- Content Elements (Relative to safeArea/contentView top) ---
-
-            // Title
             titleLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 40),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 30),
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -30),
             
-            // Subtitle
             subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
             subtitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
             
-            // Duration Badge
             durationBadge.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
             durationBadge.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             durationBadge.heightAnchor.constraint(equalToConstant: 44),
             durationBadge.widthAnchor.constraint(equalToConstant: 200),
             
-            // FIXED ALIGNMENT: Center the stack view inside the badge
             durationStackView.centerXAnchor.constraint(equalTo: durationBadge.centerXAnchor),
             durationStackView.centerYAnchor.constraint(equalTo: durationBadge.centerYAnchor),
-            
-            // Paws Badge
+
             pawsBadge.topAnchor.constraint(equalTo: durationBadge.bottomAnchor, constant: 12),
             pawsBadge.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             pawsBadge.heightAnchor.constraint(equalToConstant: 44),
             pawsBadge.widthAnchor.constraint(equalToConstant: 220),
             
-            // Paws Label
             pawsLabel.centerXAnchor.constraint(equalTo: pawsBadge.centerXAnchor),
             pawsLabel.centerYAnchor.constraint(equalTo: pawsBadge.centerYAnchor),
-            
-            // --- Main Action Button (Pinned to main view's safe area) ---
+
             backButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -30),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
             backButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
@@ -266,13 +287,104 @@ class ExerciseCompletedViewController: UIViewController {
     }
     
     private func updateLabels() {
+        titleLabel.text = "\(activityName)\nCompleted"
         durationLabel.text = "DURATION: \(duration)"
-        pawsLabel.text = "\(pawsEarned) PAWS CREDITED"
+
+        if rewarded {
+            subtitleLabel.text = "Strong finish. Your \(activityName.lowercased()) session is saved and rewards are now in your balance."
+            pawsLabel.text = "+\(pawsEarned) PAWS CREDITED"
+        } else {
+            let minMinutes = max(1, minimumRewardSeconds / 60)
+            subtitleLabel.text = "Session saved. Keep going for at least \(minMinutes) minute\(minMinutes == 1 ? "" : "s") to unlock paws next time."
+            pawsLabel.text = "0 PAWS THIS ROUND"
+        }
     }
-    
-    // MARK: - Actions
+
+    private func prepareForEntryAnimation() {
+        let animatedViews: [UIView] = [
+            titleLabel,
+            subtitleLabel,
+            durationBadge,
+            pawsBadge,
+            backButton
+        ]
+
+        animatedViews.forEach {
+            $0.alpha = 0
+            $0.transform = CGAffineTransform(translationX: 0, y: 18)
+        }
+    }
+
+    private func animateEntryIfNeeded() {
+        guard !didRunEntryAnimation else { return }
+        didRunEntryAnimation = true
+
+        let animatedViews: [UIView] = [
+            titleLabel,
+            subtitleLabel,
+            durationBadge,
+            pawsBadge,
+            backButton
+        ]
+
+        if UIAccessibility.isReduceMotionEnabled {
+            animatedViews.forEach {
+                $0.alpha = 1
+                $0.transform = .identity
+            }
+            return
+        }
+
+        for (index, item) in animatedViews.enumerated() {
+            UIView.animate(
+                withDuration: 0.46,
+                delay: 0.05 + (Double(index) * 0.06),
+                usingSpringWithDamping: 0.86,
+                initialSpringVelocity: 0.2,
+                options: [.curveEaseOut],
+                animations: {
+                    item.alpha = 1
+                    item.transform = .identity
+                }
+            )
+        }
+    }
+
+    private func applyTheme() {
+        let isDark = traitCollection.userInterfaceStyle != .light
+        let textPrimary = isDark ? UIColor.white : UIColor.label
+        let textSecondary = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor.secondaryLabel
+        let cardBackground = isDark ? UIColor.white.withAlphaComponent(0.14) : UIColor.systemBackground.withAlphaComponent(0.94)
+        let cardBorder = isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor.black.withAlphaComponent(0.10)
+
+        gradientLayer?.colors = isDark
+            ? [
+                UIColor(red: 0.03, green: 0.05, blue: 0.16, alpha: 1.0).cgColor,
+                UIColor(red: 0.09, green: 0.10, blue: 0.30, alpha: 1.0).cgColor,
+                UIColor(red: 0.14, green: 0.12, blue: 0.36, alpha: 1.0).cgColor
+            ]
+            : [
+                UIColor(red: 0.93, green: 0.95, blue: 1.00, alpha: 1.0).cgColor,
+                UIColor(red: 0.88, green: 0.92, blue: 1.00, alpha: 1.0).cgColor,
+                UIColor(red: 0.83, green: 0.89, blue: 1.00, alpha: 1.0).cgColor
+            ]
+
+        titleLabel.textColor = textPrimary
+        subtitleLabel.textColor = textSecondary
+        durationLabel.textColor = textPrimary
+        pawsLabel.textColor = textPrimary
+        durationIcon.tintColor = textPrimary
+
+        durationBadge.backgroundColor = cardBackground
+        durationBadge.layer.borderColor = cardBorder.cgColor
+        pawsBadge.backgroundColor = cardBackground
+        pawsBadge.layer.borderColor = cardBorder.cgColor
+
+        backButton.backgroundColor = accentColor
+        backButton.setTitleColor(.white, for: .normal)
+    }
+
     @objc private func backButtonTapped() {
-        // Navigate back to Care Corner
         if let navigationController = navigationController {
             for viewController in navigationController.viewControllers.reversed() {
                 if viewController is CareCornerViewController {

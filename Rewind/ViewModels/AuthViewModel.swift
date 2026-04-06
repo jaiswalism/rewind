@@ -38,6 +38,8 @@ final class AuthViewModel: ObservableObject {
             )
             
             let now = ISO8601DateFormatter().string(from: Date())
+
+            await seedInitialPawsBalance(userId: session.user.id, updatedAt: now)
             
             let newUser = DBUser(
                 id: session.user.id,
@@ -52,7 +54,7 @@ final class AuthViewModel: ObservableObject {
                 age: nil,
                 healthGoal: nil,
                 seekingProfessionalHelp: false,
-                pawsBalance: 0,
+                pawsBalance: 100,
                 totalPosts: 0,
                 onboardingCompleted: false,
                 createdAt: now,
@@ -91,6 +93,28 @@ final class AuthViewModel: ObservableObject {
         }
         
         isLoading = false
+    }
+
+    private func seedInitialPawsBalance(userId: UUID, updatedAt: String) async {
+        struct InitialPawsUpdate: Encodable {
+            var paws_balance: Int
+            var updated_at: String
+        }
+
+        let payload = InitialPawsUpdate(paws_balance: 100, updated_at: updatedAt)
+        for attempt in 0..<3 {
+            do {
+                try await supabase.from("users")
+                    .update(payload)
+                    .eq("id", value: userId.uuidString)
+                    .execute()
+                return
+            } catch {
+                if attempt < 2 {
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                }
+            }
+        }
     }
     
     func logout() async {

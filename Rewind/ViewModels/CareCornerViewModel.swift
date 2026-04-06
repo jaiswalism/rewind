@@ -4,6 +4,9 @@ import Combine
 
 @MainActor
 final class CareCornerViewModel: ObservableObject {
+    static let minimumRewardBreathingSeconds = 60
+    static let minimumRewardMeditationSeconds = 120
+
     @Published var stats: CareCornerStatsData?
     @Published var dailyChallenge: DBDailyChallenge?
     @Published var challengeCompleted = false
@@ -13,12 +16,42 @@ final class CareCornerViewModel: ObservableObject {
     @Published var error: String?
     
     private let supabase = SupabaseConfig.shared.client
+
+    private func calculateBreathingPaws(durationSeconds: Int) -> Int {
+        guard durationSeconds >= Self.minimumRewardBreathingSeconds else { return 0 }
+        return (durationSeconds / 60) * 2
+    }
+
+    private func calculateMeditationPaws(durationSeconds: Int) -> Int {
+        guard durationSeconds >= Self.minimumRewardMeditationSeconds else { return 0 }
+        return (durationSeconds / 60) * 3
+    }
     
     struct CareCornerStatsData {
         var totalBreathingExercises: Int
         var totalMeditationSessions: Int
         var totalChallengesCompleted: Int
         var pawsBalance: Int
+    }
+
+    private struct UserPawsRow: Decodable {
+        let paws_balance: Int?
+    }
+
+    private func fetchCurrentPawsBalance(userId: UUID) async throws -> Int {
+        let rows: [UserPawsRow] = try await supabase.from("users")
+            .select("paws_balance")
+            .eq("id", value: userId.uuidString)
+            .execute()
+            .value
+
+        return rows.first?.paws_balance ?? 0
+    }
+
+    private func syncSharedPawsBalance(_ newBalance: Int) {
+        var currentUser = UserViewModel.shared.user
+        currentUser?.pawsBalance = newBalance
+        UserViewModel.shared.user = currentUser
     }
     
     func fetchStats() async {
@@ -42,7 +75,7 @@ final class CareCornerViewModel: ObservableObject {
                 .eq("user_id", value: session.user.id.uuidString)
                 .execute()
             
-            async let userResponse: [DBUser] = supabase.from("users")
+            async let userResponse: [UserPawsRow] = supabase.from("users")
                 .select("paws_balance")
                 .eq("id", value: session.user.id.uuidString)
                 .execute()
@@ -54,7 +87,7 @@ final class CareCornerViewModel: ObservableObject {
                 totalBreathingExercises: breathing.count ?? 0,
                 totalMeditationSessions: meditation.count ?? 0,
                 totalChallengesCompleted: challenge.count ?? 0,
-                pawsBalance: users.first?.pawsBalance ?? 0
+                pawsBalance: users.first?.paws_balance ?? 0
             )
         } catch {
             self.error = error.localizedDescription
@@ -147,11 +180,15 @@ final class CareCornerViewModel: ObservableObject {
         try await supabase.from("user_challenge_completions").insert(completion).execute()
         
         // Award paws (10 for completing challenge)
+        let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
+
         struct PawsUpdate: Encodable { var paws_balance: Int }
+        let updatedPaws = currentPaws + 10
         try await supabase.from("users")
-            .update(PawsUpdate(paws_balance: (stats?.pawsBalance ?? 0) + 10))
+            .update(PawsUpdate(paws_balance: updatedPaws))
             .eq("id", value: session.user.id.uuidString)
             .execute()
+        syncSharedPawsBalance(updatedPaws)
         
         challengeCompleted = true
         await fetchStats()
@@ -161,9 +198,8 @@ final class CareCornerViewModel: ObservableObject {
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "CareCornerVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
-        
-        let minutes = durationSeconds / 60
-        let pawsEarned = minutes * 2 // 2 paws per minute
+
+        let pawsEarned = calculateBreathingPaws(durationSeconds: durationSeconds)
         
         let exercise = DBBreathingExercise(
             id: UUID(),
@@ -176,11 +212,15 @@ final class CareCornerViewModel: ObservableObject {
         try await supabase.from("breathing_exercises").insert(exercise).execute()
         
         // Update paws
+        let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
+
         struct PawsUpdate: Encodable { var paws_balance: Int }
+        let updatedPaws = currentPaws + pawsEarned
         try await supabase.from("users")
-            .update(PawsUpdate(paws_balance: (stats?.pawsBalance ?? 0) + pawsEarned))
+            .update(PawsUpdate(paws_balance: updatedPaws))
             .eq("id", value: session.user.id.uuidString)
             .execute()
+        syncSharedPawsBalance(updatedPaws)
         
         await fetchStats()
         
@@ -191,9 +231,8 @@ final class CareCornerViewModel: ObservableObject {
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "CareCornerVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
-        
-        let minutes = durationSeconds / 60
-        let pawsEarned = minutes * 3 // 3 paws per minute
+
+        let pawsEarned = calculateMeditationPaws(durationSeconds: durationSeconds)
         
         let sessionData = DBMeditationSession(
             id: UUID(),
@@ -208,11 +247,15 @@ final class CareCornerViewModel: ObservableObject {
         try await supabase.from("meditation_sessions").insert(sessionData).execute()
         
         // Update paws
+        let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
+
         struct PawsUpdate: Encodable { var paws_balance: Int }
+        let updatedPaws = currentPaws + pawsEarned
         try await supabase.from("users")
-            .update(PawsUpdate(paws_balance: (stats?.pawsBalance ?? 0) + pawsEarned))
+            .update(PawsUpdate(paws_balance: updatedPaws))
             .eq("id", value: session.user.id.uuidString)
             .execute()
+        syncSharedPawsBalance(updatedPaws)
         
         await fetchStats()
         

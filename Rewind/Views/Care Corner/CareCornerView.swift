@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CareCornerView: View {
     @StateObject private var viewModel = CareCornerViewModel()
+    @StateObject private var userViewModel = UserViewModel.shared
     @State private var hasLoaded = false
     @State private var showingCompletionAlert = false
 
@@ -15,7 +16,10 @@ struct CareCornerView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 16) {
                     heroSection
-                    statsSection
+                    CareCornerProgressSection(
+                        viewModel: viewModel,
+                        pawsBalance: userViewModel.user?.pawsBalance ?? 0
+                    )
                     dailyChallengeSection
                     quickResetSection
                 }
@@ -56,25 +60,14 @@ struct CareCornerView: View {
         }
     }
 
-    private var statsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Your rhythm")
-
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                metricCard(title: "Paws", value: viewModel.stats?.pawsBalance ?? 0, icon: "pawprint.fill", tint: .eliteAccentPrimary)
-                metricCard(title: "Breathing", value: viewModel.stats?.totalBreathingExercises ?? 0, icon: "wind", tint: Color(red: 0.25, green: 0.72, blue: 0.55))
-                metricCard(title: "Meditation", value: viewModel.stats?.totalMeditationSessions ?? 0, icon: "moon.stars.fill", tint: Color(red: 0.5, green: 0.55, blue: 0.95))
-                metricCard(title: "Challenges", value: viewModel.stats?.totalChallengesCompleted ?? 0, icon: "checkmark.seal.fill", tint: Color(red: 1.0, green: 0.62, blue: 0.25))
-            }
-        }
-    }
-
     private var dailyChallengeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Today's challenge")
+            Text("Today's challenge")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.primary)
 
             VStack(alignment: .leading, spacing: 14) {
-                ZStack(alignment: .bottomLeading) {
+                ZStack(alignment: .center) {
                     Image("illustrations/careCorner/topSectionBG")
                         .resizable()
                         .scaledToFill()
@@ -143,6 +136,7 @@ struct CareCornerView: View {
                         )
                         .disabled(viewModel.challengeCompleted || viewModel.dailyChallenge == nil)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     .padding(18)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
@@ -157,7 +151,9 @@ struct CareCornerView: View {
 
     private var quickResetSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("Quick resets")
+            Text("Quick resets")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.primary)
 
             VStack(spacing: 12) {
                 actionCard(
@@ -179,38 +175,6 @@ struct CareCornerView: View {
                 )
             }
         }
-    }
-
-    private func sectionTitle(_ title: String) -> some View {
-        Text(title)
-            .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(.primary)
-    }
-
-    private func metricCard(title: String, value: Int, icon: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(tint)
-                Spacer()
-            }
-
-            Text("\(value)")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
-
-            Text(title)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 108, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
-        )
     }
 
     private func actionCard(
@@ -268,5 +232,6 @@ struct CareCornerView: View {
     private func loadContent() async {
         await viewModel.fetchDailyChallenge()
         await viewModel.fetchStats()
+        await userViewModel.fetchProfile()
     }
 }
