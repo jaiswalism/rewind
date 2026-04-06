@@ -89,13 +89,13 @@ final class PetViewModel: ObservableObject {
         do {
             guard let session = try? await supabase.auth.session else { return }
             
-            let stateResponse: [DBPenguinState] = try await supabase.from("penguin_states")
+            let stateResponse: [DBPenguinState] = try await supabase.from("pet_states")
                 .select("*")
                 .eq("user_id", value: session.user.id.uuidString)
                 .execute()
                 .value
             
-            let memoryResponse: [DBPenguinMemory] = try await supabase.from("penguin_memories")
+            let memoryResponse: [DBPenguinMemory] = try await supabase.from("pet_memories")
                 .select("*")
                 .eq("user_id", value: session.user.id.uuidString)
                 .execute()
@@ -142,7 +142,7 @@ final class PetViewModel: ObservableObject {
         
         defer { isTyping = false }
         
-        let stateResponse: [DBPenguinState] = try await supabase.from("penguin_states")
+        let stateResponse: [DBPenguinState] = try await supabase.from("pet_states")
             .select("*")
             .eq("user_id", value: session.user.id.uuidString)
             .execute()
@@ -208,7 +208,7 @@ final class PetViewModel: ObservableObject {
                     health: delta.trust != nil ? min(100, max(0, Int(Double(state?.health ?? 50) + delta.trust!))) : nil
                 )
                 
-                try await supabase.from("penguin_states")
+                try await supabase.from("pet_states")
                     .update(req)
                     .eq("user_id", value: session.user.id.uuidString)
                     .execute()
