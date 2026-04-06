@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import Supabase
 
 struct LoginView: View {
@@ -14,8 +15,8 @@ struct LoginView: View {
     }
     
     // Callbacks for routing
-    var onLoginSuccess: ((_ isNewUser: Bool) -> Void)?
-    var onOAuthSuccess: ((_ isNewUser: Bool) -> Void)?
+    var onLoginSuccess: ((_ onboardingCompleted: Bool) -> Void)?
+    var onOAuthSuccess: ((_ onboardingCompleted: Bool) -> Void)?
     var onSignUpTapped: (() -> Void)?
     var onForgotPasswordTapped: (() -> Void)?
     

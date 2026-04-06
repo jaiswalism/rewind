@@ -231,12 +231,10 @@ class MeditationViewController: UIViewController {
     @objc private func soundButtonTapped() {
         let alert = UIAlertController(title: "Select Sound", message: nil, preferredStyle: .actionSheet)
         for sound in soundOptions {
-            let action = UIAlertAction(title: sound, style: .default) { [weak self] _ in
+            let actionTitle = sound == selectedSound ? "✓ \(sound)" : sound
+            let action = UIAlertAction(title: actionTitle, style: .default) { [weak self] _ in
                 self?.selectedSound = sound
                 self?.updateSoundButton()
-            }
-            if sound == selectedSound {
-                action.setValue(true, forKey: "checked")
             }
             alert.addAction(action)
         }

@@ -293,12 +293,10 @@ class BreathingExerciseViewController: UIViewController {
             preferredStyle: .actionSheet
         )
         for pattern in BreathingPattern.allCases {
-            let action = UIAlertAction(title: pattern.selectionTitle, style: .default) { [weak self] _ in
+            let actionTitle = pattern == selectedPattern ? "✓ \(pattern.selectionTitle)" : pattern.selectionTitle
+            let action = UIAlertAction(title: actionTitle, style: .default) { [weak self] _ in
                 self?.selectedPattern = pattern
                 self?.updatePatternButton()
-            }
-            if pattern == selectedPattern {
-                action.setValue(true, forKey: "checked")
             }
             alert.addAction(action)
         }

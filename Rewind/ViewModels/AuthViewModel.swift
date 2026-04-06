@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Supabase
 import Combine
 
@@ -45,7 +46,7 @@ final class AuthViewModel: ObservableObject {
             
             let now = ISO8601DateFormatter().string(from: Date())
 
-            await seedInitialPawsBalance(userId: session.user.id, updatedAt: now)
+            try await seedInitialPawsBalance(userId: session.user.id, updatedAt: now)
             
             let newUser = DBUser(
                 id: session.user.id,
@@ -109,6 +110,7 @@ final class AuthViewModel: ObservableObject {
                 redirectTo: Constants.Auth.oauthRedirectURL
             )
 
+            // Newer Supabase SDKs complete OAuth and return a session directly.
             isLoggedIn = true
             await ensureInitialPawsBalanceForNewUser(userId: session.user.id)
             await fetchCurrentUser()
@@ -118,13 +120,14 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
-    private func seedInitialPawsBalance(userId: UUID, updatedAt: String) async {
+    private func seedInitialPawsBalance(userId: UUID, updatedAt: String) async throws {
         struct InitialPawsUpdate: Encodable {
             var paws_balance: Int
             var updated_at: String
         }
 
         let payload = InitialPawsUpdate(paws_balance: initialPawsBalance, updated_at: updatedAt)
+        var lastError: Error?
         for attempt in 0..<3 {
             do {
                 try await supabase.from("users")
@@ -133,10 +136,15 @@ final class AuthViewModel: ObservableObject {
                     .execute()
                 return
             } catch {
+                lastError = error
                 if attempt < 2 {
                     try? await Task.sleep(nanoseconds: 300_000_000)
                 }
             }
+        }
+        
+        if let lastError = lastError {
+            throw lastError
         }
     }
 
@@ -173,10 +181,15 @@ final class AuthViewModel: ObservableObject {
             return
         }
 
-        await seedInitialPawsBalance(
-            userId: userId,
-            updatedAt: ISO8601DateFormatter().string(from: Date())
-        )
+        do {
+            try await seedInitialPawsBalance(
+                userId: userId,
+                updatedAt: ISO8601DateFormatter().string(from: Date())
+            )
+        } catch {
+            print("Failed to seed initial paws balance: \(error)")
+            self.error = "Error setting initial balance: \(error.localizedDescription)"
+        }
     }
     
     func logout() async {

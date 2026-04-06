@@ -2,6 +2,63 @@ import Foundation
 import Supabase
 import Combine
 
+private struct PurchaseParams: Encodable, Sendable {
+    let p_user_id: UUID
+    let p_amount: Int
+    let p_style: String
+
+    enum CodingKeys: String, CodingKey {
+        case p_user_id
+        case p_amount
+        case p_style
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(p_user_id, forKey: .p_user_id)
+        try container.encode(p_amount, forKey: .p_amount)
+        try container.encode(p_style, forKey: .p_style)
+    }
+}
+
+private struct FallbackUpdate: Encodable, Sendable {
+    var paws_balance: Int
+    var owned_styles: [String]
+    var updated_at: String
+}
+
+private struct SpendParams: Encodable, Sendable {
+    let user_id: UUID
+    let amount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case user_id
+        case amount
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(user_id, forKey: .user_id)
+        try container.encode(amount, forKey: .amount)
+    }
+}
+
+private struct ProfileUpdate: Encodable, Sendable {
+    var updated_at: String
+    var name: String?
+    var location: String?
+    var date_of_birth: String?
+    var gender: String?
+    var age: Int?
+    var health_goal: String?
+    var seeking_professional_help: Bool?
+}
+
+private struct ImageUpdate: Encodable, Sendable {
+    var profile_image_url: String
+    var updated_at: String
+}
+
 @MainActor
 final class UserViewModel: ObservableObject {
     static let shared = UserViewModel()
@@ -34,17 +91,6 @@ final class UserViewModel: ObservableObject {
     func updateProfile(name: String? = nil, location: String? = nil, dateOfBirth: String? = nil, gender: String? = nil, age: Int? = nil, healthGoal: String? = nil, seekingProfessionalHelp: Bool? = nil) async throws {
         guard let session = try? await supabase.auth.session else { return }
         
-        struct ProfileUpdate: Encodable {
-            var updated_at: String
-            var name: String?
-            var location: String?
-            var date_of_birth: String?
-            var gender: String?
-            var age: Int?
-            var health_goal: String?
-            var seeking_professional_help: Bool?
-        }
-        
         let req = ProfileUpdate(
             updated_at: ISO8601DateFormatter().string(from: Date()),
             name: name,
@@ -67,11 +113,6 @@ final class UserViewModel: ObservableObject {
     func updateProfileImage(imageUrl: String) async throws {
         guard let session = try? await supabase.auth.session else { return }
         
-        struct ImageUpdate: Encodable {
-            var profile_image_url: String
-            var updated_at: String
-        }
-        
         let req = ImageUpdate(
             profile_image_url: imageUrl,
             updated_at: ISO8601DateFormatter().string(from: Date())
@@ -85,33 +126,54 @@ final class UserViewModel: ObservableObject {
         }
     }
 
+    func purchasePetStyle(styleFileName: String, amount: Int) async throws {
+        guard amount >= 0 else { return }
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "UserVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        
+        let params = PurchaseParams(p_user_id: session.user.id, p_amount: amount, p_style: styleFileName)
+        
+        do {
+            // Assumes an RPC `purchase_pet_style` exists that atomically checks paws and appends to `owned_styles`
+            try await supabase.rpc("purchase_pet_style", params: params).execute()
+            await fetchProfile()
+        } catch {
+            // Fallback strategy if RPC isn't available yet: manually read/modify/write (can have race condition but works if no RPC)
+            if user == nil { await fetchProfile() }
+            let currentBalance = user?.pawsBalance ?? 0
+            guard currentBalance >= amount else {
+                throw NSError(domain: "UserVM", code: 402, userInfo: [NSLocalizedDescriptionKey: "Not enough paws"])
+            }
+            
+            var currentStyles = user?.ownedStyles ?? []
+            if !currentStyles.contains(styleFileName) {
+                currentStyles.append(styleFileName)
+            }
+            
+            let req = FallbackUpdate(
+                paws_balance: currentBalance - amount,
+                owned_styles: currentStyles,
+                updated_at: ISO8601DateFormatter().string(from: Date())
+            )
+            
+            try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
+            await fetchProfile()
+        }
+    }
+
     func spendPawsBalance(amount: Int) async throws {
         guard amount > 0 else { return }
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "UserVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
 
-        if user == nil {
-            await fetchProfile()
-        }
-
-        let currentBalance = user?.pawsBalance ?? 0
-        guard currentBalance >= amount else {
-            throw NSError(domain: "UserVM", code: 402, userInfo: [NSLocalizedDescriptionKey: "Not enough paws"])
-        }
-
-        struct BalanceUpdate: Encodable {
-            var paws_balance: Int
-            var updated_at: String
-        }
-
-        let req = BalanceUpdate(
-            paws_balance: currentBalance - amount,
-            updated_at: ISO8601DateFormatter().string(from: Date())
-        )
+        let params = SpendParams(user_id: session.user.id, amount: amount)
 
         do {
-            try await supabase.from("users").update(req).eq("id", value: session.user.id.uuidString).execute()
+            // Assume we have an RPC function `spend_paws` on the backend that atomically checks and decrements
+            // If the RPC fails, it throws, ensuring balance doesn't go negative or overwrite concurrent rewards.
+            try await supabase.rpc("spend_paws", params: params).execute()
             await fetchProfile()
         } catch {
             throw NSError(domain: "UserVM", code: 4, userInfo: [NSLocalizedDescriptionKey: "Paws update error: \(error.localizedDescription)"])

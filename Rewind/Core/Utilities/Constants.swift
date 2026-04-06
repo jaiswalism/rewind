@@ -21,9 +21,11 @@ enum Constants {
     }
 
     enum Paws {
-        static let breathingPawsPerMinute = 20
-        static let meditationPawsPerMinute = 20
-        static let challengeCompletionPaws = 50
+        static let breathingPawsPerMinute = 2
+        static let meditationPawsPerMinute = 3
+        static let challengeCompletionPaws = 10
+        static let minimumBreathingSeconds = 60
+        static let minimumMeditationSeconds = 120
     }
 
     enum UserDefaults {

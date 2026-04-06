@@ -4,8 +4,6 @@ import Combine
 
 @MainActor
 final class CareCornerViewModel: ObservableObject {
-    static let minimumRewardBreathingSeconds = 60
-    static let minimumRewardMeditationSeconds = 120
 
     @Published var stats: CareCornerStatsData?
     @Published var dailyChallenge: DBDailyChallenge?
@@ -30,16 +28,6 @@ final class CareCornerViewModel: ObservableObject {
             }
         }
         throw lastError ?? NSError(domain: "CareCornerVM", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown retry failure"])
-    }
-
-    private func calculateBreathingPaws(durationSeconds: Int) -> Int {
-        guard durationSeconds >= Self.minimumRewardBreathingSeconds else { return 0 }
-        return (durationSeconds / 60) * 2
-    }
-
-    private func calculateMeditationPaws(durationSeconds: Int) -> Int {
-        guard durationSeconds >= Self.minimumRewardMeditationSeconds else { return 0 }
-        return (durationSeconds / 60) * 3
     }
     
     struct CareCornerStatsData {
@@ -251,11 +239,12 @@ final class CareCornerViewModel: ObservableObject {
         
         try await supabase.from("user_challenge_completions").insert(completion).execute()
         
-        // Award paws (10 for completing challenge)
+        // Award paws (use points from the challenge)
+        let rewardPoints = challenge.points
         let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
 
         struct PawsUpdate: Encodable { var paws_balance: Int }
-        let updatedPaws = currentPaws + 10
+        let updatedPaws = currentPaws + rewardPoints
         try await supabase.from("users")
             .update(PawsUpdate(paws_balance: updatedPaws))
             .eq("id", value: session.user.id.uuidString)
@@ -271,7 +260,7 @@ final class CareCornerViewModel: ObservableObject {
             throw NSError(domain: "CareCornerVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
 
-        let pawsEarned = calculateBreathingPaws(durationSeconds: durationSeconds)
+    let pawsEarned = PawsCalculator.calculateBreathingPaws(durationSeconds: durationSeconds)
         
         let exercise = DBBreathingExercise(
             id: UUID(),
@@ -310,7 +299,7 @@ final class CareCornerViewModel: ObservableObject {
             throw NSError(domain: "CareCornerVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
 
-        let pawsEarned = calculateMeditationPaws(durationSeconds: durationSeconds)
+    let pawsEarned = PawsCalculator.calculateMeditationPaws(durationSeconds: durationSeconds)
         
         let sessionData = DBMeditationSession(
             id: UUID(),

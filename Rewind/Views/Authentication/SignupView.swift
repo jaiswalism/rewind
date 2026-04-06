@@ -16,7 +16,7 @@ struct SignupView: View {
     
     // Callbacks for routing
     var onSignUpSuccess: (() -> Void)?
-    var onOAuthSuccess: ((_ isNewUser: Bool) -> Void)?
+    var onOAuthSuccess: ((_ onboardingCompleted: Bool) -> Void)?
     var onSignInTapped: (() -> Void)?
     
     var body: some View {

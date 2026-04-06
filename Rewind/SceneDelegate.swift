@@ -65,12 +65,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
             if let onboardingVC = onboardingStoryboard.instantiateInitialViewController() {
                 nextViewController = onboardingVC
+            } else {
+                nextViewController = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
             }
         }
 
         await waitForMinimumSplashDuration()
         if let nextViewController {
             setRoot(nextViewController)
+        } else {
+            // Absolute fallback so we're never stuck on the splash screen
+            let fallbackVC = UIViewController()
+            fallbackVC.view.backgroundColor = .systemBackground
+            setRoot(fallbackVC)
         }
     }
 

@@ -49,8 +49,14 @@ struct PetMartView: View {
             }
         }
         .task {
+            // Either fetch or make sure our latest backend styles overwrite local cache if needed
             if userViewModel.user == nil {
                 await userViewModel.fetchProfile()
+            }
+            if let serverStyles = userViewModel.user?.ownedStyles, !serverStyles.isEmpty {
+                // Merge backend owned styles into our local cache
+                let merged = ownedStyleSet.union(serverStyles).sorted()
+                ownedStylesCSV = merged.joined(separator: ",")
             }
         }
         .alert("Pet Mart", isPresented: $showingAlert) {
@@ -219,26 +225,30 @@ struct PetMartView: View {
         pendingStyleFileName = style.fileName
         defer { pendingStyleFileName = nil }
 
+        // Persist ownership to backend and spend paws
         do {
-            try await userViewModel.spendPawsBalance(amount: style.price)
-            selectedStyleFileName = style.fileName
-            ownedStylesCSV = ownedStylesCSV
-                .split(separator: ",")
-                .map(String.init)
-                .filter { !$0.isEmpty }
-                .union([style.fileName])
-                .sorted()
-                .joined(separator: ",")
-            alertMessage = "Purchased \(style.name) and equipped it on Home."
-            showingAlert = true
+            try await userViewModel.purchasePetStyle(styleFileName: style.fileName, amount: style.price)
         } catch {
             alertMessage = error.localizedDescription
             showingAlert = true
+            return
         }
+
+        selectedStyleFileName = style.fileName
+        ownedStylesCSV = ownedStylesCSV
+            .split(separator: ",")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+            .union([style.fileName])
+            .sorted()
+            .joined(separator: ",")
+        
+        alertMessage = "Purchased \(style.name) and equipped it on Home."
+        showingAlert = true
     }
 
     private struct PandaStyle: Identifiable {
-        let id = UUID()
+        var id: String { fileName }
         let name: String
         let fileName: String
         let price: Int

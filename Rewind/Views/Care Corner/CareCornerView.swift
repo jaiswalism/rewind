@@ -51,7 +51,7 @@ struct CareCornerView: View {
         .alert("Challenge Completed!", isPresented: $showingCompletionAlert) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text("Great job. You earned 10 paws.")
+            Text("Great job. You earned \(viewModel.dailyChallenge?.points ?? 10) paws.")
         }
         .alert("Couldn't Complete Challenge", isPresented: $showingChallengeErrorAlert) {
             Button("OK", role: .cancel) { }
@@ -116,7 +116,7 @@ struct CareCornerView: View {
 
                             Spacer(minLength: 8)
 
-                            Text("10 paws")
+                            Text("\(viewModel.dailyChallenge?.points ?? 10) paws")
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundStyle(Color.white)
                                 .padding(.horizontal, 10)

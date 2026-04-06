@@ -33,7 +33,7 @@ class MeditationSessionViewController: UIViewController {
     }
 
     private let accentColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
-    private let minimumRewardSeconds = CareCornerViewModel.minimumRewardMeditationSeconds
+    private let minimumRewardSeconds = Constants.Paws.minimumMeditationSeconds
 
     private let careCornerViewModel = CareCornerViewModel()
 
@@ -566,14 +566,12 @@ class MeditationSessionViewController: UIViewController {
     @objc private func soundLabelTapped() {
         let alert = UIAlertController(title: "Select Sound", message: nil, preferredStyle: .actionSheet)
         for sound in soundOptions {
-            let action = UIAlertAction(title: sound, style: .default) { [weak self] _ in
+            let actionTitle = sound == selectedSound ? "✓ \(sound)" : sound
+            let action = UIAlertAction(title: actionTitle, style: .default) { [weak self] _ in
                 self?.selectedSound = sound
                 self?.updateSoundLabel()
                 self?.prepareAudioPlayerIfNeeded()
                 self?.startAudioPlaybackIfNeeded()
-            }
-            if sound == selectedSound {
-                action.setValue(true, forKey: "checked")
             }
             alert.addAction(action)
         }

@@ -30,7 +30,7 @@ struct CreatePostView: View {
 
     let postToEdit: CommunityViewModel.CommunityPostWithUser?
 
-    private static let supportedTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
+    private static let supportedTags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY", "MINDFULNESS"]
 
     init(
         postToEdit: CommunityViewModel.CommunityPostWithUser? = nil,

@@ -24,6 +24,7 @@ struct User: Codable {
     let pawsBalance: Int
     let totalPosts: Int
     let onboardingCompleted: Bool
+    let ownedStyles: [String]
     let createdAt: String
     let updatedAt: String
 }

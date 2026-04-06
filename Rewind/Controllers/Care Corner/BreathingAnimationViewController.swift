@@ -78,7 +78,7 @@ enum BreathingPattern: CaseIterable {
 
 class BreathingAnimationViewController: UIViewController {
     private let accentColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
-    private let minimumRewardSeconds = CareCornerViewModel.minimumRewardBreathingSeconds
+    private let minimumRewardSeconds = Constants.Paws.minimumBreathingSeconds
     
     // MARK: - ViewModels
     private let careCornerViewModel = CareCornerViewModel()

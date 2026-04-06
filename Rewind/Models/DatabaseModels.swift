@@ -20,6 +20,7 @@ struct DBUser: Codable, Identifiable {
     var pawsBalance: Int?
     var totalPosts: Int?
     var onboardingCompleted: Bool?
+    var ownedStyles: [String]?
     let createdAt: String
     var updatedAt: String
 
@@ -32,6 +33,7 @@ struct DBUser: Codable, Identifiable {
         case pawsBalance = "paws_balance"
         case totalPosts = "total_posts"
         case onboardingCompleted = "onboarding_completed"
+        case ownedStyles = "owned_styles"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
