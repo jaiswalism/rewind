@@ -5,6 +5,11 @@ struct CareCornerView: View {
     @StateObject private var userViewModel = UserViewModel.shared
     @State private var hasLoaded = false
     @State private var showingCompletionAlert = false
+    @State private var showingChallengeErrorAlert = false
+    @State private var showingChallengePostComposer = false
+    @State private var challengePostPrefill: CareCornerViewModel.ChallengeCommunityPrefill?
+    @State private var isCompletingChallenge = false
+    @State private var shouldShowCompletionAfterComposer = false
 
     let onBreathingTapped: () -> Void
     let onMeditationTapped: () -> Void
@@ -38,6 +43,22 @@ struct CareCornerView: View {
         } message: {
             Text("Great job. You earned 10 paws.")
         }
+        .alert("Couldn't Complete Challenge", isPresented: $showingChallengeErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.error ?? "Please try again.")
+        }
+        .sheet(isPresented: $showingChallengePostComposer, onDismiss: {
+            if shouldShowCompletionAfterComposer {
+                shouldShowCompletionAfterComposer = false
+                showingCompletionAlert = true
+            }
+        }) {
+            if let challengePostPrefill {
+                CreatePostView(initialText: challengePostPrefill.text, initialTags: challengePostPrefill.tags)
+                    .presentationCornerRadius(28)
+            }
+        }
     }
 
     private var heroSection: some View {
@@ -67,21 +88,7 @@ struct CareCornerView: View {
                 .foregroundStyle(.primary)
 
             VStack(alignment: .leading, spacing: 14) {
-                ZStack(alignment: .center) {
-                    Image("illustrations/careCorner/topSectionBG")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 190)
-                        .clipped()
-
-                    LinearGradient(
-                        colors: [Color.black.opacity(0.08), Color.black.opacity(0.48)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-
-                    VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(viewModel.dailyChallenge?.title ?? "Daily Mindfulness")
@@ -111,18 +118,52 @@ struct CareCornerView: View {
                         }
 
                         Button {
-                            Task {
-                                do {
-                                    try await viewModel.completeChallenge()
-                                    showingCompletionAlert = true
-                                } catch {
-                                    viewModel.error = error.localizedDescription
+                            Task { @MainActor in
+                                isCompletingChallenge = true
+
+                                if viewModel.dailyChallenge == nil {
+                                    await viewModel.fetchDailyChallenge()
                                 }
+
+                                let prefill = viewModel.communityPrefillForCurrentChallenge() ?? viewModel.communityPrefillFallbackForToday()
+                                challengePostPrefill = prefill
+                                showingChallengePostComposer = true
+
+                                let shouldCompleteChallenge = !viewModel.challengeCompleted && viewModel.dailyChallenge != nil
+
+                                do {
+                                    let wasCompleted = viewModel.challengeCompleted
+                                    if shouldCompleteChallenge {
+                                        try await viewModel.completeChallenge()
+                                    }
+                                    if shouldCompleteChallenge && !wasCompleted {
+                                        if showingChallengePostComposer {
+                                            shouldShowCompletionAfterComposer = true
+                                        } else {
+                                            showingCompletionAlert = true
+                                        }
+                                    }
+                                } catch {
+                                    // If posting composer is already open, completion failure should not block sharing.
+                                    if !showingChallengePostComposer {
+                                        viewModel.error = error.localizedDescription
+                                        showingChallengeErrorAlert = true
+                                    }
+                                }
+
+                                isCompletingChallenge = false
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                Image(systemName: viewModel.challengeCompleted ? "checkmark.circle.fill" : "sparkles")
-                                Text(viewModel.challengeCompleted ? "Challenge completed" : "Complete challenge")
+                                if isCompletingChallenge {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .tint(Color(red: 0.25, green: 0.28, blue: 0.86))
+                                    Text("Completing...")
+                                } else {
+                                    Image(systemName: viewModel.challengeCompleted ? "square.and.arrow.up" : "sparkles")
+                                    Text(viewModel.challengeCompleted ? "Post today's challenge" : "Complete challenge")
+                                }
                             }
                             .frame(maxWidth: .infinity)
                             .foregroundStyle(viewModel.challengeCompleted ? Color.white.opacity(0.75) : Color(red: 0.25, green: 0.28, blue: 0.86))
@@ -134,10 +175,24 @@ struct CareCornerView: View {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke(Color.white.opacity(viewModel.challengeCompleted ? 0.14 : 0.0), lineWidth: 1)
                         )
-                        .disabled(viewModel.challengeCompleted || viewModel.dailyChallenge == nil)
+                        .disabled(isCompletingChallenge)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
+                .background {
+                    ZStack {
+                        Image("illustrations/careCorner/topSectionBG")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .clipped()
+
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.08), Color.black.opacity(0.48)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .padding(18)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
                 .overlay(

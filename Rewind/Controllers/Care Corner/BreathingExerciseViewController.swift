@@ -98,11 +98,44 @@ class BreathingExerciseViewController: UIViewController {
         
         return button
     }()
+
+    private let patternDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        label.textColor = UIColor.white.withAlphaComponent(0.82)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+
+    private let patternButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        let sym = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let windImage = UIImage(systemName: "wind", withConfiguration: sym)
+        var cfg = UIButton.Configuration.plain()
+        var title = AttributedString("PATTERN: BOX 4-4-4-4")
+        title.font = UIFont.boldSystemFont(ofSize: 13)
+        cfg.attributedTitle = title
+        cfg.image = windImage
+        cfg.imagePlacement = .leading
+        cfg.imagePadding = 6
+        cfg.baseForegroundColor = .white
+        cfg.background.backgroundColor = UIColor.white.withAlphaComponent(0.12)
+        cfg.background.cornerRadius = 20
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+        button.configuration = cfg
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.22).cgColor
+        return button
+    }()
     
     // MARK: - Properties
     private var gradientLayer: CAGradientLayer?
     private var selectedMinutes: Int = 5
     private var selectedSeconds: Int = 0
+    private var selectedPattern: BreathingPattern = .box4444
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -112,6 +145,7 @@ class BreathingExerciseViewController: UIViewController {
         setupActions()
         setupGestures()
         applyTheme()
+        setupTraitObservation()
     }
     
     override func viewDidLayoutSubviews() {
@@ -119,13 +153,6 @@ class BreathingExerciseViewController: UIViewController {
         gradientLayer?.frame = view.bounds
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            applyTheme()
-        }
-    }
-    
     // MARK: - Setup
     private func setupUI() {
         view.backgroundColor = .systemBackground
@@ -145,6 +172,8 @@ class BreathingExerciseViewController: UIViewController {
         view.addSubview(secondsContainer)
         minutesContainer.addSubview(minutesLabel)
         secondsContainer.addSubview(secondsLabel)
+        view.addSubview(patternButton)
+        view.addSubview(patternDescriptionLabel)
         view.addSubview(startButton)
         
         setupConstraints()
@@ -189,6 +218,18 @@ class BreathingExerciseViewController: UIViewController {
             // Seconds Label
             secondsLabel.centerXAnchor.constraint(equalTo: secondsContainer.centerXAnchor),
             secondsLabel.centerYAnchor.constraint(equalTo: secondsContainer.centerYAnchor),
+
+            // Pattern Button
+            patternButton.topAnchor.constraint(equalTo: minutesContainer.bottomAnchor, constant: 26),
+            patternButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            patternButton.heightAnchor.constraint(equalToConstant: 44),
+            patternButton.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            patternButton.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24),
+
+            // Pattern Description
+            patternDescriptionLabel.topAnchor.constraint(equalTo: patternButton.bottomAnchor, constant: 10),
+            patternDescriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 34),
+            patternDescriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -34),
             
             // Start Button
             startButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -28),
@@ -201,6 +242,7 @@ class BreathingExerciseViewController: UIViewController {
     private func setupActions() {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         startButton.addTarget(self, action: #selector(startExerciseTapped), for: .touchUpInside)
+        patternButton.addTarget(self, action: #selector(patternButtonTapped), for: .touchUpInside)
     }
     
     private func setupGestures() {
@@ -239,8 +281,29 @@ class BreathingExerciseViewController: UIViewController {
     
     @objc private func startExerciseTapped() {
         let totalSeconds = (selectedMinutes * 60) + selectedSeconds
-        let animationVC = BreathingAnimationViewController(durationInSeconds: totalSeconds)
+        let animationVC = BreathingAnimationViewController(durationInSeconds: totalSeconds, pattern: selectedPattern)
+        animationVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(animationVC, animated: true)
+    }
+
+    @objc private func patternButtonTapped() {
+        let alert = UIAlertController(
+            title: "Select Breathing Pattern",
+            message: "Choose based on your goal. Focus for daytime calm, Relax for evening wind-down.",
+            preferredStyle: .actionSheet
+        )
+        for pattern in BreathingPattern.allCases {
+            let action = UIAlertAction(title: pattern.selectionTitle, style: .default) { [weak self] _ in
+                self?.selectedPattern = pattern
+                self?.updatePatternButton()
+            }
+            if pattern == selectedPattern {
+                action.setValue(true, forKey: "checked")
+            }
+            alert.addAction(action)
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
     }
     
     @objc private func minutesSwipedUp() {
@@ -296,6 +359,26 @@ class BreathingExerciseViewController: UIViewController {
         }
     }
 
+    private func updatePatternButton() {
+        var config = patternButton.configuration ?? UIButton.Configuration.plain()
+        var title = AttributedString("PATTERN: \(selectedPattern.displayName.uppercased())")
+        title.font = UIFont.boldSystemFont(ofSize: 13)
+        config.attributedTitle = title
+        config.image = UIImage(systemName: "wind", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold))
+        config.imagePlacement = .leading
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+
+        let isDark = traitCollection.userInterfaceStyle != .light
+        let textPrimary = isDark ? UIColor.white : UIColor.label
+        config.baseForegroundColor = textPrimary
+        config.background.backgroundColor = isDark ? UIColor.white.withAlphaComponent(0.12) : UIColor.systemBackground.withAlphaComponent(0.92)
+        config.background.cornerRadius = 20
+        patternButton.configuration = config
+        patternButton.layer.borderColor = (isDark ? UIColor.white.withAlphaComponent(0.22) : UIColor.black.withAlphaComponent(0.12)).cgColor
+        patternDescriptionLabel.text = selectedPattern.shortPurpose
+    }
+
     private func applyTheme() {
         let isDark = traitCollection.userInterfaceStyle != .light
         let textPrimary = isDark ? UIColor.white : UIColor.label
@@ -321,6 +404,7 @@ class BreathingExerciseViewController: UIViewController {
 
         titleLabel.textColor = textPrimary
         subtitleLabel.textColor = textSecondary
+        patternDescriptionLabel.textColor = isDark ? UIColor.white.withAlphaComponent(0.82) : UIColor.secondaryLabel
 
         minutesContainer.backgroundColor = accentColor.withAlphaComponent(isDark ? 0.92 : 0.88)
         minutesContainer.layer.borderColor = (isDark ? UIColor.white.withAlphaComponent(0.18) : UIColor.white.withAlphaComponent(0.5)).cgColor
@@ -333,5 +417,15 @@ class BreathingExerciseViewController: UIViewController {
         startButton.backgroundColor = accentColor
         startButton.layer.borderColor = (isDark ? UIColor.white.withAlphaComponent(0.14) : UIColor.black.withAlphaComponent(0.08)).cgColor
         startButton.setTitleColor(.white, for: .normal)
+
+        updatePatternButton()
+    }
+
+    private func setupTraitObservation() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+            }
+        }
     }
 }

@@ -50,6 +50,22 @@ class ExerciseCompletedViewController: UIViewController {
         return label
     }()
 
+    private let resultBadge: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.layer.cornerRadius = 34
+        view.layer.borderWidth = 1
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let resultIconView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
     private let durationBadge: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -136,6 +152,7 @@ class ExerciseCompletedViewController: UIViewController {
     private let activityName: String
     private let rewarded: Bool
     private let minimumRewardSeconds: Int
+    private var isNavigatingBack = false
 
     init(
         duration: String,
@@ -172,6 +189,7 @@ class ExerciseCompletedViewController: UIViewController {
         setupActions()
         updateLabels()
         applyTheme()
+        setupTraitObservation()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -184,13 +202,6 @@ class ExerciseCompletedViewController: UIViewController {
         animateEntryIfNeeded()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            applyTheme()
-        }
-    }
-    
     private func setupUI() {
         view.backgroundColor = .systemBackground
 
@@ -210,6 +221,8 @@ class ExerciseCompletedViewController: UIViewController {
         
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
+        contentView.addSubview(resultBadge)
+        resultBadge.addSubview(resultIconView)
 
         durationStackView.addArrangedSubview(durationIcon)
         durationStackView.addArrangedSubview(durationLabel)
@@ -258,8 +271,18 @@ class ExerciseCompletedViewController: UIViewController {
             subtitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
+
+            resultBadge.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 26),
+            resultBadge.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            resultBadge.widthAnchor.constraint(equalToConstant: 68),
+            resultBadge.heightAnchor.constraint(equalToConstant: 68),
+
+            resultIconView.centerXAnchor.constraint(equalTo: resultBadge.centerXAnchor),
+            resultIconView.centerYAnchor.constraint(equalTo: resultBadge.centerYAnchor),
+            resultIconView.widthAnchor.constraint(equalToConstant: 30),
+            resultIconView.heightAnchor.constraint(equalToConstant: 30),
             
-            durationBadge.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
+            durationBadge.topAnchor.constraint(equalTo: resultBadge.bottomAnchor, constant: 24),
             durationBadge.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             durationBadge.heightAnchor.constraint(equalToConstant: 44),
             durationBadge.widthAnchor.constraint(equalToConstant: 200),
@@ -304,6 +327,7 @@ class ExerciseCompletedViewController: UIViewController {
         let animatedViews: [UIView] = [
             titleLabel,
             subtitleLabel,
+            resultBadge,
             durationBadge,
             pawsBadge,
             backButton
@@ -322,6 +346,7 @@ class ExerciseCompletedViewController: UIViewController {
         let animatedViews: [UIView] = [
             titleLabel,
             subtitleLabel,
+            resultBadge,
             durationBadge,
             pawsBadge,
             backButton
@@ -356,6 +381,8 @@ class ExerciseCompletedViewController: UIViewController {
         let textSecondary = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor.secondaryLabel
         let cardBackground = isDark ? UIColor.white.withAlphaComponent(0.14) : UIColor.systemBackground.withAlphaComponent(0.94)
         let cardBorder = isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor.black.withAlphaComponent(0.10)
+        let badgeBackground = isDark ? UIColor.white.withAlphaComponent(0.14) : UIColor.white.withAlphaComponent(0.96)
+        let badgeBorder = isDark ? UIColor.white.withAlphaComponent(0.24) : UIColor.black.withAlphaComponent(0.10)
 
         gradientLayer?.colors = isDark
             ? [
@@ -364,10 +391,12 @@ class ExerciseCompletedViewController: UIViewController {
                 UIColor(red: 0.14, green: 0.12, blue: 0.36, alpha: 1.0).cgColor
             ]
             : [
-                UIColor(red: 0.93, green: 0.95, blue: 1.00, alpha: 1.0).cgColor,
-                UIColor(red: 0.88, green: 0.92, blue: 1.00, alpha: 1.0).cgColor,
-                UIColor(red: 0.83, green: 0.89, blue: 1.00, alpha: 1.0).cgColor
+                UIColor(red: 0.96, green: 0.97, blue: 1.00, alpha: 1.0).cgColor,
+                UIColor(red: 0.91, green: 0.94, blue: 1.00, alpha: 1.0).cgColor,
+                UIColor(red: 0.85, green: 0.90, blue: 1.00, alpha: 1.0).cgColor
             ]
+
+        illustrationImageView.alpha = isDark ? 1.0 : 0.20
 
         titleLabel.textColor = textPrimary
         subtitleLabel.textColor = textSecondary
@@ -380,11 +409,34 @@ class ExerciseCompletedViewController: UIViewController {
         pawsBadge.backgroundColor = cardBackground
         pawsBadge.layer.borderColor = cardBorder.cgColor
 
+        resultBadge.backgroundColor = badgeBackground
+        resultBadge.layer.borderColor = badgeBorder.cgColor
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 28, weight: .bold)
+        if rewarded {
+            resultIconView.image = UIImage(systemName: "checkmark.circle.fill", withConfiguration: symbolConfig)
+            resultIconView.tintColor = accentColor
+        } else {
+            resultIconView.image = UIImage(systemName: "clock.badge.exclamationmark.fill", withConfiguration: symbolConfig)
+            resultIconView.tintColor = isDark ? UIColor.white.withAlphaComponent(0.92) : UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
+        }
+
         backButton.backgroundColor = accentColor
         backButton.setTitleColor(.white, for: .normal)
     }
 
+    private func setupTraitObservation() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+            }
+        }
+    }
+
     @objc private func backButtonTapped() {
+        guard !isNavigatingBack else { return }
+        isNavigatingBack = true
+        backButton.isEnabled = false
+
         if let navigationController = navigationController {
             for viewController in navigationController.viewControllers.reversed() {
                 if viewController is CareCornerViewController {

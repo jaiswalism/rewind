@@ -126,36 +126,45 @@ class MeditationSessionViewController: UIViewController {
         view.isUserInteractionEnabled = false
         return view
     }()
-    
-        private var isPlaying = false
+
+    private var currentPrimaryTextColor: UIColor = .white
+    private var currentSecondaryTextColor: UIColor = .white
+    private var currentControlBackground: UIColor = .clear
+    private var currentControlBorder: UIColor = .clear
+    private var isPlaying = false
+    private var isCompletingSession = false
 
     private var hasStartedAutomatically = false
-     private var timer: Timer?
-     private var remainingSeconds: Int
-     private var totalSeconds: Int
-     private let soundName: String
+    private var timer: Timer?
+    private var remainingSeconds: Int
+    private var totalSeconds: Int
+    private var selectedSound: String
+
+    private let soundOptions = ["Chirping Birds", "Ocean Waves", "Rain", "Forest", "White Noise", "Silence"]
 
     init(durationInSeconds: Int, soundName: String) {
         self.remainingSeconds = durationInSeconds
         self.totalSeconds = durationInSeconds
-        self.soundName = soundName
+        self.selectedSound = soundName
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         self.remainingSeconds = 300
         self.totalSeconds = 300
-        self.soundName = "Chirping Birds"
+        self.selectedSound = "Chirping Birds"
         super.init(coder: coder)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        hidesBottomBarWhenPushed = true
         setupUI()
         setupActions()
         updateTimerLabel()
         updateSoundLabel()
         applyTheme()
+        setupTraitObservation()
     }
     
     override func viewDidLayoutSubviews() {
@@ -166,13 +175,6 @@ class MeditationSessionViewController: UIViewController {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            applyTheme()
-        }
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateProgress()
@@ -189,6 +191,7 @@ class MeditationSessionViewController: UIViewController {
 
             startTimer()
             updateProgress()
+            updatePlaybackVisualState()
         }
     }
     
@@ -202,7 +205,7 @@ class MeditationSessionViewController: UIViewController {
     }
 
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.03, green: 0.05, blue: 0.16, alpha: 1.0)
+        view.backgroundColor = .systemBackground
         view.addSubview(backgroundImageView)
         view.addSubview(gradientOverlay)
         NSLayoutConstraint.activate([
@@ -315,10 +318,14 @@ class MeditationSessionViewController: UIViewController {
      }
      
      private func setupActions() {
-         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-         playPauseButton.addTarget(self, action: #selector(playPauseTapped), for: .touchUpInside)
-         completeEarlyButton.addTarget(self, action: #selector(completeEarlyTapped), for: .touchUpInside)
-     }
+        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+        playPauseButton.addTarget(self, action: #selector(playPauseTapped), for: .touchUpInside)
+        completeEarlyButton.addTarget(self, action: #selector(completeEarlyTapped), for: .touchUpInside)
+
+        let soundTap = UITapGestureRecognizer(target: self, action: #selector(soundLabelTapped))
+        soundLabel.addGestureRecognizer(soundTap)
+        soundLabel.isUserInteractionEnabled = true
+    }
     
     private func startTimer() {
         guard timer == nil else { return }
@@ -345,7 +352,7 @@ class MeditationSessionViewController: UIViewController {
     }
     
     private func updateSoundLabel() {
-        soundLabel.text = "  SOUND: \(soundName.uppercased())"
+        soundLabel.text = "  SOUND: \(selectedSound.uppercased())"
     }
     
     private func updateProgress() {
@@ -364,12 +371,17 @@ class MeditationSessionViewController: UIViewController {
     }
 
     private func completeSession(durationSeconds: Int) {
+        guard !isCompletingSession else { return }
+        isCompletingSession = true
+        playPauseButton.isEnabled = false
+        completeEarlyButton.isEnabled = false
+
         let rewarded = durationSeconds >= minimumRewardSeconds
         let durationString = "\(max(1, durationSeconds / 60))M"
 
         Task {
             do {
-                let pawsEarned = try await careCornerViewModel.recordMeditation(durationSeconds: durationSeconds, soundName: soundName)
+                let pawsEarned = try await careCornerViewModel.recordMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
                 await MainActor.run {
                     let completedVC = ExerciseCompletedViewController(
                         duration: durationString,
@@ -384,6 +396,12 @@ class MeditationSessionViewController: UIViewController {
                 await MainActor.run {
                     print("Error recording meditation: \(error)")
                     let fallbackPaws = rewarded ? max(0, (durationSeconds / 60) * 3) : 0
+                    if fallbackPaws > 0 {
+                        var updatedUser = UserViewModel.shared.user
+                        let currentBalance = updatedUser?.pawsBalance ?? 0
+                        updatedUser?.pawsBalance = currentBalance + fallbackPaws
+                        UserViewModel.shared.user = updatedUser
+                    }
                     let completedVC = ExerciseCompletedViewController(
                         duration: durationString,
                         pawsEarned: fallbackPaws,
@@ -422,13 +440,12 @@ class MeditationSessionViewController: UIViewController {
         if isPlaying {
             startTimer()
             completeEarlyButton.isHidden = true
-            playPauseButton.backgroundColor = accentColor
             updateProgress()
         } else {
             stopTimer()
             completeEarlyButton.isHidden = false
-            playPauseButton.backgroundColor = UIColor.white.withAlphaComponent(0.18)
         }
+        updatePlaybackVisualState()
         
         UIView.animate(withDuration: 0.1, animations: {
             self.playPauseButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
@@ -452,6 +469,22 @@ class MeditationSessionViewController: UIViewController {
         })
         present(alert, animated: true)
     }
+
+    @objc private func soundLabelTapped() {
+        let alert = UIAlertController(title: "Select Sound", message: nil, preferredStyle: .actionSheet)
+        for sound in soundOptions {
+            let action = UIAlertAction(title: sound, style: .default) { [weak self] _ in
+                self?.selectedSound = sound
+                self?.updateSoundLabel()
+            }
+            if sound == selectedSound {
+                action.setValue(true, forKey: "checked")
+            }
+            alert.addAction(action)
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
     
     private func formatElapsedTime() -> String {
         let elapsed = totalSeconds - remainingSeconds
@@ -462,10 +495,17 @@ class MeditationSessionViewController: UIViewController {
 
     private func applyTheme() {
         let isDark = traitCollection.userInterfaceStyle != .light
-        let textPrimary = isDark ? UIColor.white : UIColor.label
-        let textSecondary = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor.secondaryLabel
-        let controlBackground = isDark ? UIColor.white.withAlphaComponent(0.16) : UIColor.systemBackground.withAlphaComponent(0.9)
-        let controlBorder = isDark ? UIColor.white.withAlphaComponent(0.22) : UIColor.black.withAlphaComponent(0.12)
+        let textPrimary = isDark ? UIColor.white : UIColor(red: 0.07, green: 0.10, blue: 0.20, alpha: 1.0)
+        let textSecondary = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor(red: 0.23, green: 0.28, blue: 0.44, alpha: 1.0)
+        let controlBackground = isDark ? UIColor.white.withAlphaComponent(0.16) : UIColor.white.withAlphaComponent(0.88)
+        let controlBorder = isDark ? UIColor.white.withAlphaComponent(0.22) : UIColor(red: 0.15, green: 0.20, blue: 0.36, alpha: 0.12)
+
+        currentPrimaryTextColor = textPrimary
+        currentSecondaryTextColor = textSecondary
+        currentControlBackground = controlBackground
+        currentControlBorder = controlBorder
+
+        backgroundImageView.alpha = isDark ? 1.0 : 0.14
 
         if let gradient = gradientOverlay.layer.sublayers?.first as? CAGradientLayer {
             gradient.colors = isDark
@@ -475,9 +515,9 @@ class MeditationSessionViewController: UIViewController {
                     UIColor(red: 0.04, green: 0.05, blue: 0.17, alpha: 0.82).cgColor
                 ]
                 : [
-                    UIColor(red: 0.92, green: 0.95, blue: 1.00, alpha: 0.55).cgColor,
-                    UIColor(red: 0.86, green: 0.91, blue: 1.00, alpha: 0.45).cgColor,
-                    UIColor(red: 0.84, green: 0.89, blue: 1.00, alpha: 0.62).cgColor
+                    UIColor(red: 0.95, green: 0.97, blue: 1.00, alpha: 0.96).cgColor,
+                    UIColor(red: 0.89, green: 0.93, blue: 1.00, alpha: 0.94).cgColor,
+                    UIColor(red: 0.83, green: 0.89, blue: 1.00, alpha: 0.96).cgColor
                 ]
         }
 
@@ -496,13 +536,30 @@ class MeditationSessionViewController: UIViewController {
         completeEarlyButton.layer.borderColor = controlBorder.cgColor
         completeEarlyButton.setTitleColor(textPrimary, for: .normal)
 
-        if !isPlaying {
-            playPauseButton.backgroundColor = controlBackground
-            playPauseButton.tintColor = textSecondary
-        } else {
-            playPauseButton.backgroundColor = accentColor
-            playPauseButton.tintColor = .white
+        updatePlaybackVisualState()
+        progressBackgroundLayer.strokeColor = isDark
+            ? UIColor.white.withAlphaComponent(0.22).cgColor
+            : UIColor(red: 0.28, green: 0.33, blue: 0.65, alpha: 0.34).cgColor
+        progressLayer.strokeColor = accentColor.cgColor
+    }
+
+    private func setupTraitObservation() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+            }
         }
-        progressBackgroundLayer.strokeColor = isDark ? UIColor.white.withAlphaComponent(0.2).cgColor : UIColor.black.withAlphaComponent(0.14).cgColor
+    }
+
+    private func updatePlaybackVisualState() {
+        if isPlaying {
+            playPauseButton.backgroundColor = accentColor
+            playPauseButton.layer.borderColor = UIColor.white.withAlphaComponent(0.16).cgColor
+            playPauseButton.tintColor = .white
+        } else {
+            playPauseButton.backgroundColor = currentControlBackground
+            playPauseButton.layer.borderColor = currentControlBorder.cgColor
+            playPauseButton.tintColor = currentSecondaryTextColor
+        }
     }
 }

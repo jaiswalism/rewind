@@ -29,11 +29,13 @@ final class CareCornerViewController: UIHostingController<CareCornerView> {
 
     private func showBreathingExercise() {
         let breathingVC = BreathingExerciseViewController()
+        breathingVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(breathingVC, animated: true)
     }
 
     private func showMeditationSession() {
         let meditationVC = MeditationViewController()
+        meditationVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(meditationVC, animated: true)
     }
 }

@@ -17,6 +17,21 @@ final class CareCornerViewModel: ObservableObject {
     
     private let supabase = SupabaseConfig.shared.client
 
+    private func executeWithRetry<T>(attempts: Int = 3, operation: @escaping () async throws -> T) async throws -> T {
+        var lastError: Error?
+        for attempt in 1...attempts {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+                if attempt < attempts {
+                    try? await Task.sleep(nanoseconds: UInt64(attempt) * 350_000_000)
+                }
+            }
+        }
+        throw lastError ?? NSError(domain: "CareCornerVM", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown retry failure"])
+    }
+
     private func calculateBreathingPaws(durationSeconds: Int) -> Int {
         guard durationSeconds >= Self.minimumRewardBreathingSeconds else { return 0 }
         return (durationSeconds / 60) * 2
@@ -32,6 +47,11 @@ final class CareCornerViewModel: ObservableObject {
         var totalMeditationSessions: Int
         var totalChallengesCompleted: Int
         var pawsBalance: Int
+    }
+
+    struct ChallengeCommunityPrefill {
+        let text: String
+        let tags: [String]
     }
 
     private struct UserPawsRow: Decodable {
@@ -52,6 +72,46 @@ final class CareCornerViewModel: ObservableObject {
         var currentUser = UserViewModel.shared.user
         currentUser?.pawsBalance = newBalance
         UserViewModel.shared.user = currentUser
+    }
+
+    func communityPrefillForCurrentChallenge() -> ChallengeCommunityPrefill? {
+        guard let challenge = dailyChallenge else { return nil }
+
+        if let template = CareChallengeCatalog.template(matching: challenge) {
+            return ChallengeCommunityPrefill(text: template.communityPostDraft, tags: template.suggestedTags)
+        }
+
+        let fallbackText = "I completed today's challenge: \(challenge.title). What I did: \(challenge.description) What helped me most today was:"
+        return ChallengeCommunityPrefill(text: fallbackText, tags: [tagForCategory(challenge.category)])
+    }
+
+    func communityPrefillFallbackForToday() -> ChallengeCommunityPrefill {
+        let templates = CareChallengeCatalog.templates
+        let dayIndex = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
+        let template = templates[dayIndex % templates.count]
+        let text = "I completed today's challenge: \(template.title). What I did: \(template.description) What helped me most today was:"
+        return ChallengeCommunityPrefill(text: text, tags: template.suggestedTags)
+    }
+
+    private func tagForCategory(_ category: String) -> String {
+        switch category.lowercased() {
+        case "stress":
+            return "STRESS"
+        case "anxiety", "calm":
+            return "ANXIETY"
+        case "gratitude":
+            return "GRATITUDE"
+        case "connection", "relationships":
+            return "RELATIONSHIPS"
+        case "affirmation":
+            return "AFFIRMATION"
+        case "focus", "work":
+            return "WORK"
+        case "mindfulness", "mental_health", "mental health":
+            return "MENTAL HEALTH"
+        default:
+            return "DAILY"
+        }
     }
     
     func fetchStats() async {
@@ -104,7 +164,7 @@ final class CareCornerViewModel: ObservableObject {
             
             let responseResp: [DBDailyChallenge] = try await supabase.from("daily_challenges")
                 .select("*")
-                .like("challenge_date", pattern: "\(today)%")
+                .eq("created_for_date", value: String(today))
                 .execute()
                 .value
             let response = responseResp
@@ -125,12 +185,7 @@ final class CareCornerViewModel: ObservableObject {
                 
                 challengeCompleted = !completions.isEmpty
             } else {
-                let templates = [
-                    (title: "Mindful Pause", description: "Spend one minute noticing five things around you.", category: "mindfulness"),
-                    (title: "Gratitude Reset", description: "Write down one thing that made you smile today.", category: "gratitude"),
-                    (title: "Slow Breath Check-In", description: "Take six slow breaths and notice how your body feels.", category: "breathing"),
-                    (title: "Quiet Moment", description: "Put your phone face down and sit with the silence for two minutes.", category: "calm")
-                ]
+                let templates = CareChallengeCatalog.templates
                 let dayIndex = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
                 let template = templates[dayIndex % templates.count]
 
@@ -154,8 +209,25 @@ final class CareCornerViewModel: ObservableObject {
     }
     
     func completeChallenge() async throws {
-        guard let challenge = dailyChallenge else { return }
-        guard let session = try? await supabase.auth.session else { return }
+        if dailyChallenge == nil {
+            await fetchDailyChallenge()
+        }
+
+        guard let challenge = dailyChallenge else {
+            throw NSError(
+                domain: "CareCornerVM",
+                code: 404,
+                userInfo: [NSLocalizedDescriptionKey: "Today's challenge is unavailable right now."]
+            )
+        }
+
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(
+                domain: "CareCornerVM",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "You need to be signed in to complete challenges."]
+            )
+        }
         
         // Check if already completed
         let existingResp: [DBUserChallengeCompletion] = try await supabase.from("user_challenge_completions")
@@ -209,17 +281,23 @@ final class CareCornerViewModel: ObservableObject {
             completedAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await supabase.from("breathing_exercises").insert(exercise).execute()
+        try await executeWithRetry {
+            try await self.supabase.from("breathing_exercises").insert(exercise).execute()
+        }
         
         // Update paws
-        let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
+        let currentPaws = try await executeWithRetry {
+            try await self.fetchCurrentPawsBalance(userId: session.user.id)
+        }
 
         struct PawsUpdate: Encodable { var paws_balance: Int }
         let updatedPaws = currentPaws + pawsEarned
-        try await supabase.from("users")
-            .update(PawsUpdate(paws_balance: updatedPaws))
-            .eq("id", value: session.user.id.uuidString)
-            .execute()
+        try await executeWithRetry {
+            try await self.supabase.from("users")
+                .update(PawsUpdate(paws_balance: updatedPaws))
+                .eq("id", value: session.user.id.uuidString)
+                .execute()
+        }
         syncSharedPawsBalance(updatedPaws)
         
         await fetchStats()
@@ -244,17 +322,23 @@ final class CareCornerViewModel: ObservableObject {
             completedAt: ISO8601DateFormatter().string(from: Date())
         )
         
-        try await supabase.from("meditation_sessions").insert(sessionData).execute()
+        try await executeWithRetry {
+            try await self.supabase.from("meditation_sessions").insert(sessionData).execute()
+        }
         
         // Update paws
-        let currentPaws = try await fetchCurrentPawsBalance(userId: session.user.id)
+        let currentPaws = try await executeWithRetry {
+            try await self.fetchCurrentPawsBalance(userId: session.user.id)
+        }
 
         struct PawsUpdate: Encodable { var paws_balance: Int }
         let updatedPaws = currentPaws + pawsEarned
-        try await supabase.from("users")
-            .update(PawsUpdate(paws_balance: updatedPaws))
-            .eq("id", value: session.user.id.uuidString)
-            .execute()
+        try await executeWithRetry {
+            try await self.supabase.from("users")
+                .update(PawsUpdate(paws_balance: updatedPaws))
+                .eq("id", value: session.user.id.uuidString)
+                .execute()
+        }
         syncSharedPawsBalance(updatedPaws)
         
         await fetchStats()

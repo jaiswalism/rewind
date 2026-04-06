@@ -125,19 +125,12 @@ class MeditationViewController: UIViewController {
         setupGestures()
         applyTheme()
         updateSoundButton()
+        setupTraitObservation()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer?.frame = view.bounds
-    }
-
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            applyTheme()
-            updateSoundButton()
-        }
     }
 
     private func setupUI() {
@@ -231,6 +224,7 @@ class MeditationViewController: UIViewController {
     @objc private func startExerciseTapped() {
         let totalSeconds = (selectedMinutes * 60) + selectedSeconds
         let sessionVC = MeditationSessionViewController(durationInSeconds: totalSeconds, soundName: selectedSound)
+        sessionVC.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(sessionVC, animated: true)
     }
 
@@ -357,5 +351,14 @@ class MeditationViewController: UIViewController {
         startButton.backgroundColor = accentColor
         startButton.layer.borderColor = (isDark ? UIColor.white.withAlphaComponent(0.14) : UIColor.black.withAlphaComponent(0.08)).cgColor
         startButton.setTitleColor(.white, for: .normal)
+    }
+
+    private func setupTraitObservation() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+                self.updateSoundButton()
+            }
+        }
     }
 }

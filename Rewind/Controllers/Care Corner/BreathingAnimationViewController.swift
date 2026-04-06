@@ -8,6 +8,74 @@
 import UIKit
 import Combine
 
+enum BreathingPattern: CaseIterable {
+    case box4444
+    case fourSevenEight
+
+    var displayName: String {
+        switch self {
+        case .box4444:
+            return "Box 4-4-4-4"
+        case .fourSevenEight:
+            return "4-7-8"
+        }
+    }
+
+    var shortPurpose: String {
+        switch self {
+        case .box4444:
+            return "Balanced rhythm for steady focus and stress reset."
+        case .fourSevenEight:
+            return "Long exhale pattern to downshift quickly and prep for sleep."
+        }
+    }
+
+    var selectionTitle: String {
+        switch self {
+        case .box4444:
+            return "Box 4-4-4-4 - Focus & balance"
+        case .fourSevenEight:
+            return "4-7-8 - Relax & sleep"
+        }
+    }
+
+    var inhaleDuration: TimeInterval {
+        switch self {
+        case .box4444:
+            return 4.0
+        case .fourSevenEight:
+            return 4.0
+        }
+    }
+
+    var inhaleHoldDuration: TimeInterval {
+        switch self {
+        case .box4444:
+            return 4.0
+        case .fourSevenEight:
+            return 7.0
+        }
+    }
+
+    var exhaleDuration: TimeInterval {
+        switch self {
+        case .box4444:
+            return 4.0
+        case .fourSevenEight:
+            return 8.0
+        }
+    }
+
+    var exhaleHoldDuration: TimeInterval {
+        switch self {
+        case .box4444:
+            return 4.0
+        case .fourSevenEight:
+            return 0.0
+        }
+    }
+}
+
 class BreathingAnimationViewController: UIViewController {
     private let accentColor = UIColor(red: 0.30, green: 0.33, blue: 0.96, alpha: 1.0)
     private let minimumRewardSeconds = CareCornerViewModel.minimumRewardBreathingSeconds
@@ -106,26 +174,35 @@ class BreathingAnimationViewController: UIViewController {
     
     // MARK: - Properties
     private var gradientLayer: CAGradientLayer?
+    private var currentPrimaryTextColor: UIColor = .white
+    private var currentSecondaryTextColor: UIColor = .white
+    private var currentControlBackground: UIColor = .clear
+    private var currentControlBorder: UIColor = .clear
     private var isPlaying = true
+    private var isCompletingSession = false
     private var timer: Timer?
     private var remainingSeconds: Int
     private var totalSeconds: Int?
     private var breathingTimer: Timer?
     private var isBreathingIn = true
+    private let breathingPattern: BreathingPattern
     
-    private let breathInDuration: TimeInterval = 4.0
-    private let breathOutDuration: TimeInterval = 4.0
-    private let holdDuration: TimeInterval = 1.0
+    private var inhaleDuration: TimeInterval { breathingPattern.inhaleDuration }
+    private var inhaleHoldDuration: TimeInterval { breathingPattern.inhaleHoldDuration }
+    private var exhaleDuration: TimeInterval { breathingPattern.exhaleDuration }
+    private var exhaleHoldDuration: TimeInterval { breathingPattern.exhaleHoldDuration }
     
     // MARK: - Init
-    init(durationInSeconds: Int) {
+    init(durationInSeconds: Int, pattern: BreathingPattern) {
         self.remainingSeconds = durationInSeconds
         self.totalSeconds = durationInSeconds
+        self.breathingPattern = pattern
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         self.remainingSeconds = 300
+        self.breathingPattern = .box4444
         super.init(coder: coder)
     }
     
@@ -136,6 +213,7 @@ class BreathingAnimationViewController: UIViewController {
         setupUI()
         setupActions()
         applyTheme()
+        setupTraitObservation()
     }
     
     override func viewDidLayoutSubviews() {
@@ -148,13 +226,6 @@ class BreathingAnimationViewController: UIViewController {
         innerCircle.layer.cornerRadius = innerCircle.bounds.width / 2
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            applyTheme()
-        }
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         startBreathingAnimation()
@@ -271,14 +342,22 @@ class BreathingAnimationViewController: UIViewController {
         isBreathingIn = true
         breathingLabel.text = "Breathe In..."
         
-        UIView.animate(withDuration: breathInDuration, delay: 0, options: [.curveEaseInOut], animations: {
+        UIView.animate(withDuration: inhaleDuration, delay: 0, options: [.curveEaseInOut], animations: {
             self.outerCircle.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
             self.middleCircle.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             self.innerCircle.transform = CGAffineTransform(scaleX: 1.25, y: 1.25)
             self.outerCircle.alpha = 0.8
             self.middleCircle.alpha = 0.9
         }) { _ in
-            self.breathingTimer = Timer.scheduledTimer(withTimeInterval: self.holdDuration, repeats: false) { _ in
+            let holdDuration = self.inhaleHoldDuration
+            guard holdDuration > 0 else {
+                self.isBreathingIn = false
+                self.performBreathingCycle()
+                return
+            }
+
+            self.breathingLabel.text = "Hold..."
+            self.breathingTimer = Timer.scheduledTimer(withTimeInterval: holdDuration, repeats: false) { _ in
                 self.isBreathingIn = false
                 self.performBreathingCycle()
             }
@@ -289,14 +368,22 @@ class BreathingAnimationViewController: UIViewController {
         isBreathingIn = false
         breathingLabel.text = "Breathe Out..."
         
-        UIView.animate(withDuration: breathOutDuration, delay: 0, options: [.curveEaseInOut], animations: {
+        UIView.animate(withDuration: exhaleDuration, delay: 0, options: [.curveEaseInOut], animations: {
             self.outerCircle.transform = .identity
             self.middleCircle.transform = .identity
             self.innerCircle.transform = .identity
             self.outerCircle.alpha = 1.0
             self.middleCircle.alpha = 1.0
         }) { _ in
-            self.breathingTimer = Timer.scheduledTimer(withTimeInterval: self.holdDuration, repeats: false) { _ in
+            let holdDuration = self.exhaleHoldDuration
+            guard holdDuration > 0 else {
+                self.isBreathingIn = true
+                self.performBreathingCycle()
+                return
+            }
+
+            self.breathingLabel.text = "Hold..."
+            self.breathingTimer = Timer.scheduledTimer(withTimeInterval: holdDuration, repeats: false) { _ in
                 self.isBreathingIn = true
                 self.performBreathingCycle()
             }
@@ -304,8 +391,8 @@ class BreathingAnimationViewController: UIViewController {
     }
     
     private func stopAllAnimations() {
-        timer?.invalidate()
-        breathingTimer?.invalidate()
+        stopTimer()
+        stopBreathingTimer()
         outerCircle.layer.removeAllAnimations()
         middleCircle.layer.removeAllAnimations()
         innerCircle.layer.removeAllAnimations()
@@ -317,6 +404,16 @@ class BreathingAnimationViewController: UIViewController {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateTimer()
         }
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    private func stopBreathingTimer() {
+        breathingTimer?.invalidate()
+        breathingTimer = nil
     }
     
     private func updateTimer() {
@@ -343,6 +440,11 @@ class BreathingAnimationViewController: UIViewController {
     }
 
     private func completeSession(durationSeconds: Int) {
+        guard !isCompletingSession else { return }
+        isCompletingSession = true
+        playPauseButton.isEnabled = false
+        completeEarlyButton.isEnabled = false
+
         let rewarded = durationSeconds >= minimumRewardSeconds
         let durationMinutes = max(1, durationSeconds / 60)
         let durationString = "\(durationMinutes)M"
@@ -364,6 +466,12 @@ class BreathingAnimationViewController: UIViewController {
                 await MainActor.run {
                     print("Error recording breathing: \(error)")
                     let fallbackPaws = rewarded ? max(0, (durationSeconds / 60) * 2) : 0
+                    if fallbackPaws > 0 {
+                        var updatedUser = UserViewModel.shared.user
+                        let currentBalance = updatedUser?.pawsBalance ?? 0
+                        updatedUser?.pawsBalance = currentBalance + fallbackPaws
+                        UserViewModel.shared.user = updatedUser
+                    }
                     let completedVC = ExerciseCompletedViewController(
                         duration: durationString,
                         pawsEarned: fallbackPaws,
@@ -413,8 +521,8 @@ class BreathingAnimationViewController: UIViewController {
         if isPlaying {
             startTimer()
             performBreathingCycle()
-            playPauseButton.backgroundColor = accentColor
             completeEarlyButton.isHidden = true
+            updatePlaybackVisualState()
             
             // Show circles with animation
             UIView.animate(withDuration: 0.3) {
@@ -423,11 +531,11 @@ class BreathingAnimationViewController: UIViewController {
                 self.innerCircle.alpha = 1.0
             }
         } else {
-            timer?.invalidate()
-            breathingTimer?.invalidate()
+            stopTimer()
+            stopBreathingTimer()
             breathingLabel.text = "Paused"
-            playPauseButton.backgroundColor = UIColor.white.withAlphaComponent(0.18)
             completeEarlyButton.isHidden = false
+            updatePlaybackVisualState()
             
             // Hide circles with animation
             UIView.animate(withDuration: 0.3) {
@@ -455,10 +563,15 @@ class BreathingAnimationViewController: UIViewController {
 
     private func applyTheme() {
         let isDark = traitCollection.userInterfaceStyle != .light
-        let primaryText = isDark ? UIColor.white : UIColor.label
-        let secondaryText = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor.secondaryLabel
-        let controlBackground = isDark ? UIColor.white.withAlphaComponent(0.16) : UIColor.systemBackground.withAlphaComponent(0.9)
-        let controlBorder = isDark ? UIColor.white.withAlphaComponent(0.22) : UIColor.black.withAlphaComponent(0.12)
+        let primaryText = isDark ? UIColor.white : UIColor(red: 0.07, green: 0.10, blue: 0.20, alpha: 1.0)
+        let secondaryText = isDark ? UIColor.white.withAlphaComponent(0.9) : UIColor(red: 0.23, green: 0.28, blue: 0.44, alpha: 1.0)
+        let controlBackground = isDark ? UIColor.white.withAlphaComponent(0.16) : UIColor.white.withAlphaComponent(0.86)
+        let controlBorder = isDark ? UIColor.white.withAlphaComponent(0.22) : UIColor(red: 0.15, green: 0.20, blue: 0.36, alpha: 0.12)
+
+        currentPrimaryTextColor = primaryText
+        currentSecondaryTextColor = secondaryText
+        currentControlBackground = controlBackground
+        currentControlBorder = controlBorder
 
         if let gradientLayer {
             gradientLayer.colors = isDark
@@ -468,9 +581,9 @@ class BreathingAnimationViewController: UIViewController {
                     UIColor(red: 0.13, green: 0.12, blue: 0.36, alpha: 1.0).cgColor
                 ]
                 : [
-                    UIColor(red: 0.93, green: 0.95, blue: 1.00, alpha: 1.0).cgColor,
-                    UIColor(red: 0.87, green: 0.91, blue: 1.00, alpha: 1.0).cgColor,
-                    UIColor(red: 0.80, green: 0.86, blue: 1.00, alpha: 1.0).cgColor
+                    UIColor(red: 0.95, green: 0.96, blue: 1.00, alpha: 1.0).cgColor,
+                    UIColor(red: 0.89, green: 0.92, blue: 1.00, alpha: 1.0).cgColor,
+                    UIColor(red: 0.84, green: 0.89, blue: 1.00, alpha: 1.0).cgColor
                 ]
         }
 
@@ -478,18 +591,40 @@ class BreathingAnimationViewController: UIViewController {
         backButton.backgroundColor = controlBackground
         backButton.layer.borderColor = controlBorder.cgColor
 
-        breathingLabel.textColor = primaryText
+        breathingLabel.textColor = .white
         timerLabel.textColor = primaryText
 
         completeEarlyButton.backgroundColor = controlBackground
         completeEarlyButton.layer.borderColor = controlBorder.cgColor
         completeEarlyButton.setTitleColor(primaryText, for: .normal)
 
-        let ringBase = isDark ? UIColor.white.withAlphaComponent(0.15) : UIColor(red: 0.25, green: 0.30, blue: 0.72, alpha: 0.12)
-        let ringMid = isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor(red: 0.25, green: 0.30, blue: 0.72, alpha: 0.18)
+        let ringBase = isDark ? UIColor.white.withAlphaComponent(0.15) : UIColor(red: 0.31, green: 0.36, blue: 0.70, alpha: 0.16)
+        let ringMid = isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor(red: 0.31, green: 0.36, blue: 0.70, alpha: 0.23)
         outerCircle.backgroundColor = ringBase
         middleCircle.backgroundColor = ringMid
         innerCircle.backgroundColor = accentColor.withAlphaComponent(isDark ? 0.95 : 0.88)
-        breathingLabel.textColor = isPlaying ? primaryText : secondaryText
+        updatePlaybackVisualState()
+    }
+
+    private func setupTraitObservation() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+            }
+        }
+    }
+
+    private func updatePlaybackVisualState() {
+        if isPlaying {
+            playPauseButton.backgroundColor = accentColor
+            playPauseButton.layer.borderColor = UIColor.white.withAlphaComponent(0.16).cgColor
+            playPauseButton.tintColor = .white
+            breathingLabel.textColor = .white
+        } else {
+            playPauseButton.backgroundColor = currentControlBackground
+            playPauseButton.layer.borderColor = currentControlBorder.cgColor
+            playPauseButton.tintColor = currentSecondaryTextColor
+            breathingLabel.textColor = UIColor.white.withAlphaComponent(0.95)
+        }
     }
 }
