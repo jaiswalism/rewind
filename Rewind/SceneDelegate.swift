@@ -43,7 +43,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Check for an active session
         if let session = try? await supabase.auth.session {
-            // Fetch the user's profile to check onboardingCompleted flag
+            // Try to fetch the user's profile to check onboardingCompleted flag
             let users: [DBUser]? = try? await supabase
                 .from("users")
                 .select()
@@ -51,7 +51,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 .execute()
                 .value
 
-            let isOnboardingDone = users?.first?.onboardingCompleted ?? false
+            // If we got data from the server, use it; otherwise fall back to UserDefaults
+            let isOnboardingDone: Bool
+            if let onboardingFromServer = users?.first?.onboardingCompleted {
+                isOnboardingDone = onboardingFromServer
+                // Sync the result to UserDefaults for offline resilience
+                UserDefaults.standard.set(onboardingFromServer, forKey: Constants.UserDefaults.hasCompletedOnboarding)
+            } else {
+                // Network unavailable or query failed—check local cache
+                isOnboardingDone = UserDefaults.standard.bool(forKey: Constants.UserDefaults.hasCompletedOnboarding)
+            }
 
             if isOnboardingDone {
                 // Fully onboarded user → go straight to main tab

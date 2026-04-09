@@ -301,6 +301,9 @@ final class AuthViewModel: ObservableObject {
         
         try await supabase.from("users").update(req).eq("id", value: userId).execute()
         
+        // Cache the completion state locally for offline resilience
+        UserDefaults.standard.set(true, forKey: Constants.UserDefaults.hasCompletedOnboarding)
+        
         await fetchCurrentUser()
     }
 }
