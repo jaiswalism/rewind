@@ -10,9 +10,12 @@ enum Constants {
         static let anonKey = "YOUR_ANON_KEY"
     }
 
-    /// Penguin intelligence HTTP API (see `Rewind/penguin-intelligence-service`). Simulator: `127.0.0.1` reaches the host Mac. **Physical device:** use your Mac’s LAN IP, e.g. `http://192.168.1.x:3001`.
-    enum PenguinService {
-        static let baseURL = "http://127.0.0.1:3001"
+    /// Pet companion service (native Swift - replaces old penguin microservice)
+    /// All core logic runs locally, LLM calls go through Supabase Edge Function
+    enum PetCompanion {
+        static let edgeFunctionName = "pet-llm"
+        static let defaultSmoothingAlpha: Double = 0.3
+        static let defaultState: (energy: Int, mood: Int, trust: Int) = (50, 50, 50)
     }
 
     enum Pagination {

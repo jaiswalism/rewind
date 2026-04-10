@@ -263,9 +263,20 @@ final class PetTalkSessionViewModel: NSObject, ObservableObject {
         } catch { /* non-fatal */ }
 
         let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.50
-        utterance.pitchMultiplier = 1.2
+        
+        // Use a cute, child-like voice
+        let allVoices = AVSpeechSynthesisVoice.speechVoices()
+        let englishVoices = allVoices.filter { $0.language.hasPrefix("en-") }
+        // Try to find a soft/child-like voice, or use default
+        let cuteVoice = englishVoices.first { $0.identifier.contains("Samantha") || $0.identifier.contains("Karen") }
+            ?? englishVoices.first
+        utterance.voice = cuteVoice ?? AVSpeechSynthesisVoice(language: "en-US")
+        
+        // Adjust for cute/childish tone
+        utterance.rate = 0.45        // Slightly slower for cuteness
+        utterance.pitchMultiplier = 1.4  // Higher pitch = more childlike
+        utterance.volume = 1.0
+        
         speechSynthesizer.speak(utterance)
     }
 

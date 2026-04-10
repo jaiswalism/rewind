@@ -863,6 +863,12 @@ struct AddJournalView: View {
 						createdAt: ISO8601DateFormatter().string(from: selectedDate),
 						updatedAt: ISO8601DateFormatter().string(from: Date())
 					)
+					
+					// Trigger pet companion inference for journal update
+					_ = Task.detached { [contentToSave, moodLabel] in
+						await Self.inferPetCompanion(content: contentToSave, emotion: moodLabel, type: .journal)
+					}
+					
 					await MainActor.run {
 						isLoading = false
 						onSaveCompleted?(updatedJournal)
@@ -881,6 +887,12 @@ struct AddJournalView: View {
 						createdAt: selectedDate,
 						journalId: targetJournalId
 					)
+					
+					// Trigger pet companion inference for new journal
+					_ = Task.detached { [contentToSave, moodLabel] in
+						await Self.inferPetCompanion(content: contentToSave, emotion: moodLabel, type: .journal)
+					}
+					
 					await MainActor.run {
 						isLoading = false
 						onSaveCompleted?(created)
@@ -971,6 +983,43 @@ struct AddJournalView: View {
 		}
 
 		return uploadedUrls
+	}
+	
+	// MARK: - Pet Companion Integration
+	
+	/// Trigger pet companion inference after journal save
+	private static func inferPetCompanion(content: String, emotion: String, type: PetInputType) async {
+		do {
+			guard let userId = UserViewModel.shared.user?.id else { return }
+			
+			let timeOfDay = currentTimeOfDay()
+			let request = PetInferenceRequest(
+				type: type,
+				content: content,
+				explicitRequest: false,
+				context: PetInferenceContext(
+					timeOfDay: timeOfDay,
+					daysInactive: 0
+				),
+				userId: userId.uuidString
+			)
+			
+			let response = try await PetCompanionService.shared.infer(request)
+			print("🐾 Pet companion inferred: emotion=\(response.emotion.primary), policy=\(response.behaviorPolicy)")
+		} catch {
+			print("🐾 Pet companion inference failed: \(error.localizedDescription)")
+		}
+	}
+	
+	/// Determine current time of day for context
+	private static func currentTimeOfDay() -> PetTimeOfDay {
+		let hour = Calendar.current.component(.hour, from: Date())
+		switch hour {
+		case 5..<12: return .morning
+		case 12..<17: return .afternoon
+		case 17..<21: return .evening
+		default: return .night
+		}
 	}
 }
 

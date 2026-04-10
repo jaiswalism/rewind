@@ -123,6 +123,18 @@ class PetTalkingViewController: UIViewController {
     private var isRecording = false
     private var audioLevelTimer: Timer?
     
+    // Auto-send timer
+    private var autoSendTimer: Timer?
+    private let autoSendDelay: TimeInterval = 3.0 // Auto-send after 3s of recording
+    private var isConversationMode = false // Continuous listen-respond cycle
+    
+    // Audio-based silence detection
+    private var silenceCheckTimer: Timer?
+    private var lastAudioLevel: Float = 0
+    private var consecutiveSilentChecks = 0
+    private let silenceThreshold: Float = 0.015 // Audio level below = silence
+    private let silentChecksRequired = 6 // Must see silence this many times in a row
+    
     // Permission states
     private var micPermissionGranted = false
     private var speechPermissionGranted = false
@@ -151,6 +163,15 @@ class PetTalkingViewController: UIViewController {
         super.viewDidAppear(animated)
         startBlobAnimation()
         requestSpeechPermission()
+        
+        // Auto-start recording when view appears
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            self.isConversationMode = true
+            self.transcriptionLabel.text = "Listening..."
+            self.startRecording()
+            print("[PetTalking] Auto-started recording on view appear")
+        }
     }
     
     // MARK: - Audio Diagnostics
@@ -709,21 +730,25 @@ class PetTalkingViewController: UIViewController {
         
         // Start Recognition Task
         print("[PetTalking] Starting recognition task...")
+        
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             if let error = error {
                 print("[PetTalking] Recognition error: \(error.localizedDescription)")
             }
-            
+
             DispatchQueue.main.async {
+                guard let self = self else { return }
+                
                 if let result = result {
                     let transcription = result.bestTranscription.formattedString
-                    self?.transcriptionLabel.text = transcription
+                    self.transcriptionLabel.text = transcription
                     print("[PetTalking] Transcription: \(transcription)")
                 }
-                
+
+                // Auto-stop on final result
                 if error != nil || result?.isFinal == true {
                     print("[PetTalking] Recognition ended, stopping recording")
-                    self?.stopRecording()
+                    self.stopRecordingAndProcess()
                 }
             }
         }
@@ -733,14 +758,41 @@ class PetTalkingViewController: UIViewController {
         } else {
             print("[PetTalking] Recognition task started")
         }
-        
+
         isRecording = true
+        consecutiveSilentChecks = 0 // Reset silence counter
         updateMicButton()
         transcriptionLabel.text = "Listening..."
         showBlobForRecording()
-        print("[PetTalking] Recording started successfully")
+        print("[PetTalking] Recording started, silence detection active")
     }
     
+    /// Auto-stop recording and process the result
+    private func stopRecordingAndProcess() {
+        // Stop auto-send timer
+        autoSendTimer?.invalidate()
+        autoSendTimer = nil
+        
+        guard isRecording else { return }
+        
+        // Get the transcription
+        let transcription = transcriptionLabel.text ?? ""
+        
+        // Stop recording
+        stopRecording()
+        
+        // Process if user actually spoke something
+        if !transcription.isEmpty && transcription != "Listening..." && transcription != "Tap to start talking..." {
+            print("[PetTalking] Auto-processing transcription: \(transcription)")
+            sendToBackend(text: transcription)
+        } else {
+            print("[PetTalking] No meaningful speech detected, resetting")
+            DispatchQueue.main.async {
+                self.transcriptionLabel.text = "Tap to start talking..."
+            }
+        }
+    }
+
     private func stopRecording() {
         print("[PetTalking] ========== STOP RECORDING ==========")
         guard isRecording else {
@@ -783,7 +835,7 @@ class PetTalkingViewController: UIViewController {
     
     private func sendToBackend(text: String) {
         transcriptionLabel.text = "Thinking..."
-        
+
         Task {
             do {
                 let (response, _, _) = try await petViewModel.sendMessage(text)
@@ -799,13 +851,13 @@ class PetTalkingViewController: UIViewController {
             }
         }
     }
-    
+
     private func speak(text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.5
-        utterance.pitchMultiplier = 1.2 // Slightly higher pitch for cute penguin
-        
+        utterance.rate = 0.45
+        utterance.pitchMultiplier = 1.4 // Higher pitch for cute voice
+
         // Ensure audio session is correct for playback
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
@@ -813,23 +865,44 @@ class PetTalkingViewController: UIViewController {
         } catch {
             print("Audio session error for playback: \(error)")
         }
-        
+
+        // Auto-restart listening after pet speaks (if in conversation mode)
+        speechSynthesizer.delegate = self
         speechSynthesizer.speak(utterance)
     }
-    
+
     private func processAudioLevel(buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
-        
         let frameLength = Int(buffer.frameLength)
         var sum: Float = 0
-        
+
         for i in 0..<frameLength {
             sum += abs(channelData[i])
         }
-        
+
         let averageLevel = sum / Float(frameLength)
         let normalizedLevel = min(averageLevel * 10, 1.0)
-        
+
+        // Track silence for auto-detection
+        if isRecording {
+            lastAudioLevel = normalizedLevel
+
+            if normalizedLevel < silenceThreshold {
+                consecutiveSilentChecks += 1
+
+                // Auto-stop if we've seen enough consecutive silent checks
+                if consecutiveSilentChecks >= silentChecksRequired {
+                    print("[PetTalking] Silence detected (audio level: \(normalizedLevel)), auto-processing")
+                    DispatchQueue.main.async { [weak self] in
+                        self?.stopRecordingAndProcess()
+                    }
+                }
+            } else {
+                // User is speaking, reset counter
+                consecutiveSilentChecks = 0
+            }
+        }
+
         DispatchQueue.main.async { [weak self] in
             self?.animateBlobForAudio(level: normalizedLevel)
         }
@@ -902,12 +975,18 @@ class PetTalkingViewController: UIViewController {
         }
         
         if isRecording {
+            // Tap while recording: Stop conversation mode
+            isConversationMode = false
+            consecutiveSilentChecks = 0
             stopRecording()
-            if let text = transcriptionLabel.text, !text.isEmpty, text != "Listening...", text != "Tap to start talking..." {
-                 sendToBackend(text: text)
-            }
+            transcriptionLabel.text = "Tap to start talking..."
+            print("[PetTalking] Conversation mode stopped by user")
         } else {
+            // Tap when stopped: Restart conversation mode
+            isConversationMode = true
+            transcriptionLabel.text = "Listening..."
             startRecording()
+            print("[PetTalking] Conversation mode restarted by user")
         }
     }
     
@@ -927,6 +1006,22 @@ class PetTalkingViewController: UIViewController {
             navController.popViewController(animated: true)
         } else {
             dismiss(animated: true)
+        }
+    }
+}
+
+// MARK: - AVSpeechSynthesizerDelegate
+
+extension PetTalkingViewController: AVSpeechSynthesizerDelegate {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        // When pet finishes speaking, auto-restart listening (if in conversation mode)
+        if isConversationMode {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self, self.isConversationMode else { return }
+                print("[PetTalking] Pet finished speaking, restarting listening...")
+                self.transcriptionLabel.text = "Listening..."
+                self.startRecording()
+            }
         }
     }
 }

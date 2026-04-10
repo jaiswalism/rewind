@@ -25,6 +25,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.makeKeyAndVisible()
         splashShownAt = Date()
 
+        // Initialize Pet Companion LLM Service
+        PetCompanionService.shared.setLLMService(
+            PetLLMService(supabaseURL: "https://jbucoyhjtwjwockxllfp.supabase.co")
+        )
+
         Task {
             if let callbackURL = connectionOptions.urlContexts.first?.url {
                 await handleOAuthCallback(url: callbackURL)

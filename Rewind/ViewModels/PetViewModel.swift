@@ -12,13 +12,14 @@ final class PetViewModel: ObservableObject {
     
     private let supabase = SupabaseConfig.shared.client
 
-    /// Must match `Rewind/penguin-intelligence-service` (`POST /infer` on port 3001). For a physical device, set `Constants.PenguinService.baseURL` to your Mac’s LAN IP (e.g. `http://192.168.1.10:3001`).
-    private var penguinInferURL: URL {
-        URL(string: "\(Constants.PenguinService.baseURL)/infer")!
+    /// Calls the deployed Supabase Edge Function for pet responses.
+    private var petInferURL: URL {
+        let base = SupabaseSecrets.supabaseURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return URL(string: "\(base)/functions/v1/\(Constants.PetCompanion.edgeFunctionName)")!
     }
 
     private var shouldSkipLocalhostInferenceOnDevice: Bool {
-        guard let host = URL(string: Constants.PenguinService.baseURL)?.host?.lowercased() else {
+        guard let host = petInferURL.host?.lowercased() else {
             return false
         }
         let isLoopback = host == "127.0.0.1" || host == "localhost"
@@ -147,155 +148,100 @@ final class PetViewModel: ObservableObject {
     }
     
     func sendMessage(_ message: String) async throws -> (response: String, emotion: String?, policy: String?) {
-        if shouldSkipLocalhostInferenceOnDevice {
-            throw NSError(
-                domain: "PetVM",
-                code: 503,
-                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
-            )
-        }
-
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
-        
+
         isTyping = true
-        
         defer { isTyping = false }
-        
-        let stateResponse: [DBPenguinState] = try await supabase.from("pet_states")
-            .select("*")
-            .eq("user_id", value: session.user.id.uuidString)
-            .execute()
-            .value
-        
-        let state = stateResponse.first
-        
-        let daysInactive = 0
-        
-        let hour = Calendar.current.component(.hour, from: Date())
-        let timeOfDay: String
-        switch hour {
-        case 5..<12: timeOfDay = "morning"
-        case 12..<17: timeOfDay = "afternoon"
-        case 17..<21: timeOfDay = "evening"
-        default: timeOfDay = "night"
+
+        // Get current pet state
+        await fetchPet()
+        guard let petData = pet else {
+            throw NSError(domain: "PetVM", code: 404, userInfo: [NSLocalizedDescriptionKey: "Pet state not available"])
         }
-        
-        var request = URLRequest(url: penguinInferURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let chatRequest = PenguinChatRequest(
-            type: "message",
+
+        // Build inference request
+        let timeOfDay = currentTimeOfDay()
+        let request = PetInferenceRequest(
+            type: .message,
             content: message,
-            explicit_request: true,
-            context: PenguinChatRequest.PenguinContext(
-                time_of_day: timeOfDay,
-                days_inactive: daysInactive,
-                last_policy: nil,
-                state: PenguinChatRequest.PenguinContext.State(
-                    energy: state?.energy ?? 100,
-                    mood: state?.happiness ?? 100,
-                    trust: state?.health ?? 50
+            explicitRequest: true,
+            context: PetInferenceContext(
+                timeOfDay: timeOfDay,
+                daysInactive: 0,
+                state: PetCompanionStateSnapshot(
+                    energy: Int(petData.state.energy),
+                    mood: Int(petData.state.mood),
+                    trust: Int(petData.state.trust)
                 )
             ),
-            user_id: session.user.id.uuidString
+            userId: session.user.id.uuidString
         )
-        
-        request.httpBody = try JSONEncoder().encode(chatRequest)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw NSError(domain: "PetVM", code: 500, userInfo: [NSLocalizedDescriptionKey: "Failed to get response from pet service"])
+
+        // Call native Swift service
+        let response = try await PetCompanionService.shared.infer(request)
+
+        // Update local pet state
+        if let currentPet = pet {
+            var updatedState = currentPet.state
+            updatedState.energy = Double(max(0, min(100, Int(currentPet.state.energy) + response.stateDelta.energy)))
+            updatedState.mood = Double(max(0, min(100, Int(currentPet.state.mood) + response.stateDelta.mood)))
+            updatedState.trust = Double(max(0, min(100, Int(currentPet.state.trust) + response.stateDelta.trust)))
+            
+            pet = PetData(
+                id: currentPet.id,
+                name: currentPet.name,
+                type: currentPet.type,
+                level: currentPet.level,
+                experience: currentPet.experience,
+                state: updatedState,
+                memory: currentPet.memory
+            )
         }
-        
-        let decoder = JSONDecoder()
-        let penguinResponse = try decoder.decode(PenguinChatResponse.self, from: data)
-        
-        if let delta = penguinResponse.penguin_state_delta {
-            if delta.energy != nil || delta.mood != nil || delta.trust != nil {
-                struct StateUpdate: Encodable {
-                    var energy: Int?
-                    var happiness: Int?
-                    var health: Int?
-                }
-                
-                let req = StateUpdate(
-                    energy: delta.energy != nil ? min(100, max(0, Int(Double(state?.energy ?? 100) + delta.energy!))) : nil,
-                    happiness: delta.mood != nil ? min(100, max(0, Int(Double(state?.happiness ?? 100) + delta.mood!))) : nil,
-                    health: delta.trust != nil ? min(100, max(0, Int(Double(state?.health ?? 50) + delta.trust!))) : nil
-                )
-                
-                try await supabase.from("pet_states")
-                    .update(req)
-                    .eq("user_id", value: session.user.id.uuidString)
-                    .execute()
-            }
-        }
-        
+
         return (
-            response: penguinResponse.text_response ?? "I'm here for you!",
-            emotion: penguinResponse.emotion?.primary,
-            policy: penguinResponse.behavior_policy
+            response: response.textResponse ?? "I'm here for you!",
+            emotion: response.emotion.primary.rawValue,
+            policy: response.behaviorPolicy.rawValue
         )
     }
     
     func analyzeJournalMood(content: String) async throws -> (emotion: String, policy: String?) {
-        if shouldSkipLocalhostInferenceOnDevice {
-            throw NSError(
-                domain: "PetVM",
-                code: 503,
-                userInfo: [NSLocalizedDescriptionKey: "Pet service is configured to localhost. On a physical device, set Constants.PenguinService.baseURL to your Mac's LAN IP."]
-            )
-        }
-
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "PetVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
-        
-        var request = URLRequest(url: penguinInferURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let hour = Calendar.current.component(.hour, from: Date())
-        let timeOfDay: String
-        switch hour {
-        case 5..<12: timeOfDay = "morning"
-        case 12..<17: timeOfDay = "afternoon"
-        case 17..<21: timeOfDay = "evening"
-        default: timeOfDay = "night"
-        }
-        
-        let chatRequest = PenguinChatRequest(
-            type: "journal",
+
+        let timeOfDay = currentTimeOfDay()
+        let request = PetInferenceRequest(
+            type: .journal,
             content: content,
-            explicit_request: false,
-            context: PenguinChatRequest.PenguinContext(
-                time_of_day: timeOfDay,
-                days_inactive: 0,
-                last_policy: nil,
-                state: PenguinChatRequest.PenguinContext.State(
-                    energy: 100,
-                    mood: 100,
-                    trust: 50
-                )
+            explicitRequest: false,
+            context: PetInferenceContext(
+                timeOfDay: timeOfDay,
+                daysInactive: 0
             ),
-            user_id: session.user.id.uuidString
+            userId: session.user.id.uuidString
         )
-        
-        request.httpBody = try JSONEncoder().encode(chatRequest)
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
-        
-        let decoder = JSONDecoder()
-        let penguinResponse = try decoder.decode(PenguinChatResponse.self, from: data)
-        
+
+        let response = try await PetCompanionService.shared.infer(request)
+
         return (
-            emotion: penguinResponse.emotion?.primary ?? "neutral",
-            policy: penguinResponse.behavior_policy
+            emotion: response.emotion.primary.rawValue,
+            policy: response.behaviorPolicy.rawValue
         )
+    }
+    
+    // MARK: - Helpers
+    
+    /// Determine current time of day for context
+    private func currentTimeOfDay() -> PetTimeOfDay {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return .morning
+        case 12..<17: return .afternoon
+        case 17..<21: return .evening
+        default: return .night
+        }
     }
 }
