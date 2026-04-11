@@ -21,12 +21,27 @@ struct PetTalkingSessionView: View {
                     if viewModel.mode == .live {
                         liveSection
                     } else {
-                        typedSection
+                        typedMessageList
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 24)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            if viewModel.mode == .type {
+                typedComposer
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.clear, Color(red: 0.11, green: 0.15, blue: 0.27).opacity(0.92)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
             }
         }
         .onAppear { viewModel.openSession() }
@@ -185,13 +200,6 @@ struct PetTalkingSessionView: View {
         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
-    private var typedSection: some View {
-        VStack(spacing: 16) {
-            typedMessageList
-            typedComposer
-        }
-    }
-
     private var typedMessageList: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Chat")
@@ -210,6 +218,10 @@ struct PetTalkingSessionView: View {
                     ForEach(viewModel.typedMessages) { message in
                         MessageBubble(message: message)
                     }
+
+                    if viewModel.typedStateIsSending {
+                        PetTypingBubble()
+                    }
                 }
             }
         }
@@ -220,36 +232,34 @@ struct PetTalkingSessionView: View {
 
     private var typedComposer: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("Type a message...", text: $viewModel.typedMessage)
-                .textInputAutocapitalization(.sentences)
-                .disableAutocorrection(true)
-                .foregroundStyle(.white)
-                .padding(.horizontal, 16)
-                .frame(height: 50)
-                .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(.white.opacity(0.08), lineWidth: 1)
-                )
-                .submitLabel(.send)
-                .onSubmit { viewModel.submitTypedMessage() }
+            HStack(spacing: 10) {
+                TextField("Type a message...", text: $viewModel.typedMessage)
+                    .textInputAutocapitalization(.sentences)
+                    .disableAutocorrection(true)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .frame(height: 50)
+                    .background(.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(.white.opacity(0.08), lineWidth: 1)
+                    )
+                    .submitLabel(.send)
+                    .onSubmit { viewModel.submitTypedMessage() }
 
-            Button {
-                viewModel.submitTypedMessage()
-            } label: {
-                HStack(spacing: 10) {
+                Button {
+                    viewModel.submitTypedMessage()
+                } label: {
                     Image(systemName: viewModel.typedStateIsSending ? "arrow.up.circle.fill" : "paperplane.fill")
-                        .font(.system(size: 16, weight: .bold))
-                    Text(viewModel.typedStateIsSending ? "Sending..." : "Send")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 50, height: 50)
+                        .background(viewModel.canSendTypedMessage ? warmAccent : Color.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(viewModel.canSendTypedMessage ? warmAccent : Color.white.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .buttonStyle(.plain)
+                .disabled(!viewModel.canSendTypedMessage)
+                .accessibilityLabel(viewModel.typedStateIsSending ? "Sending" : "Send")
             }
-            .buttonStyle(.plain)
-            .disabled(!viewModel.canSendTypedMessage)
 
             Text(viewModel.typedStatusText.isEmpty ? " " : viewModel.typedStatusText)
                 .font(.system(size: 13, weight: .medium))
@@ -309,6 +319,42 @@ private struct MessageBubble: View {
         case .user:
             return Color(red: 0.95, green: 0.81, blue: 0.50)
         }
+    }
+}
+
+private struct PetTypingBubble: View {
+    @State private var animate = false
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 6) {
+                typingDot(delay: 0)
+                typingDot(delay: 0.16)
+                typingDot(delay: 0.32)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            Spacer(minLength: 24)
+        }
+        .onAppear {
+            animate = true
+        }
+    }
+
+    private func typingDot(delay: Double) -> some View {
+        Circle()
+            .fill(Color.white.opacity(0.75))
+            .frame(width: 7, height: 7)
+            .scaleEffect(animate ? 1.0 : 0.65)
+            .opacity(animate ? 1.0 : 0.4)
+            .animation(
+                .easeInOut(duration: 0.6)
+                    .repeatForever(autoreverses: true)
+                    .delay(delay),
+                value: animate
+            )
     }
 }
 
