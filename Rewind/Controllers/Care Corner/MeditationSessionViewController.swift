@@ -475,7 +475,9 @@ class MeditationSessionViewController: UIViewController {
                 let pawsEarned = try await careCornerViewModel.recordMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
                 
                 // Trigger pet companion inference for meditation session
-                await Self.inferPetCompanionMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
+                _ = Task(priority: .utility) {
+                    await Self.inferPetCompanionMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
+                }
                 
                 await MainActor.run {
                     let completedVC = ExerciseCompletedViewController(

@@ -454,7 +454,9 @@ class BreathingAnimationViewController: UIViewController {
                 let pawsEarned = try await careCornerViewModel.recordBreathing(durationSeconds: durationSeconds)
                 
                 // Trigger pet companion inference for breathing exercise
-                await Self.inferPetCompanionBreathing(durationSeconds: durationSeconds)
+                _ = Task(priority: .utility) {
+                    await Self.inferPetCompanionBreathing(durationSeconds: durationSeconds)
+                }
                 
                 await MainActor.run {
                     let completedVC = ExerciseCompletedViewController(

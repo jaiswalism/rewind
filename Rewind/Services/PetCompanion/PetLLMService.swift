@@ -1,4 +1,5 @@
 import Foundation
+import Supabase
 
 // MARK: - LLM Service Protocol
 
@@ -13,7 +14,6 @@ protocol PetLLMServiceProtocol {
 final class PetLLMService: PetLLMServiceProtocol {
     
     private let edgeFunctionURL: String
-    private let session: URLSession
     
     /// Initialize with edge function URL
     /// - Parameters:
@@ -21,7 +21,6 @@ final class PetLLMService: PetLLMServiceProtocol {
     ///   - functionName: Edge function name (default: "pet-llm")
     init(supabaseURL: String, functionName: String = "pet-llm") {
         self.edgeFunctionURL = "\(supabaseURL)/functions/v1/\(functionName)"
-        self.session = URLSession(configuration: .ephemeral)
     }
     
     /// Generate response via Supabase Edge Function
@@ -37,7 +36,11 @@ final class PetLLMService: PetLLMServiceProtocol {
             var urlRequest = URLRequest(url: url)
             urlRequest.httpMethod = "POST"
             urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            urlRequest.setValue("rewind-pet-2026-secure-key", forHTTPHeaderField: "X-Pet-LLM-Key")
+
+            guard let authSession = try? await SupabaseConfig.shared.client.auth.session else {
+                throw PetLLMError.unauthenticated
+            }
+            urlRequest.setValue("Bearer \(authSession.accessToken)", forHTTPHeaderField: "Authorization")
             urlRequest.timeoutInterval = 30
             
             // Encode request body
@@ -111,6 +114,7 @@ final class PetLLMService: PetLLMServiceProtocol {
 
 enum PetLLMError: LocalizedError {
     case invalidURL(String)
+    case unauthenticated
     case invalidResponse
     case httpError(Int)
     case networkError(Error)
@@ -119,6 +123,8 @@ enum PetLLMError: LocalizedError {
         switch self {
         case .invalidURL(let url):
             return "Invalid URL: \(url)"
+        case .unauthenticated:
+            return "User is not authenticated"
         case .invalidResponse:
             return "Invalid response from LLM service"
         case .httpError(let code):

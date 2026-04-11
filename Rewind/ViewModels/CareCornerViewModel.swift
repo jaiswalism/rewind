@@ -251,11 +251,13 @@ final class CareCornerViewModel: ObservableObject {
             .execute()
         syncSharedPawsBalance(updatedPaws)
 
-        // Trigger pet companion inference for challenge completion
-        await inferPetCompanionChallenge(challenge: challenge)
-
         challengeCompleted = true
         await fetchStats()
+
+        // Trigger pet companion inference in background so completion UX stays responsive.
+        _ = Task(priority: .utility) {
+            await self.inferPetCompanionChallenge(challenge: challenge)
+        }
     }
     
     func recordBreathing(durationSeconds: Int) async throws -> Int {

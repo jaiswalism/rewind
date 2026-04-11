@@ -865,7 +865,7 @@ struct AddJournalView: View {
 					)
 					
 					// Trigger pet companion inference for journal update
-					_ = Task.detached { [contentToSave, moodLabel] in
+					_ = Task(priority: .utility) { [contentToSave, moodLabel] in
 						await Self.inferPetCompanion(content: contentToSave, emotion: moodLabel, type: .journal)
 					}
 					
@@ -889,7 +889,7 @@ struct AddJournalView: View {
 					)
 					
 					// Trigger pet companion inference for new journal
-					_ = Task.detached { [contentToSave, moodLabel] in
+					_ = Task(priority: .utility) { [contentToSave, moodLabel] in
 						await Self.inferPetCompanion(content: contentToSave, emotion: moodLabel, type: .journal)
 					}
 					

@@ -115,8 +115,10 @@ final class PetCompanionService: ObservableObject {
             )
             
             // 9. Generate text response
+            // Only explicit/user-facing conversation flows should call LLM.
+            let shouldUseLLMText = request.explicitRequest || request.type == .message
             var textResponse: String?
-            if allowsTextResponse {
+            if allowsTextResponse && shouldUseLLMText {
                 textResponse = try await generateTextResponse(
                     policy: policy,
                     emotion: emotion,
@@ -125,8 +127,9 @@ final class PetCompanionService: ObservableObject {
                     userId: request.userId
                 )
             } else {
-                // Silent companion uses fallback
-                textResponse = PetConstants.fallbackText
+                // Passive/background inferences still update state and journal, but skip network LLM.
+                let seed = "\(policy.rawValue)-\(emotion.primary.rawValue)-\(Date().timeIntervalSince1970)"
+                textResponse = PetOfflineReplies.pickOfflineReply(kind: .general, seed: seed)
             }
             
             // 10. Build explainability
