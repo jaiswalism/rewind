@@ -59,6 +59,18 @@ private struct ImageUpdate: Encodable, Sendable {
     var updated_at: String
 }
 
+private struct DeleteAccountResponse: Decodable {
+    let success: Bool
+    let error: String?
+    let deletionDueAt: String?
+}
+
+private struct ClearDeletionRequestUpdate: Encodable, Sendable {
+    var account_deletion_requested_at: String?
+    var account_deletion_due_at: String?
+    var updated_at: String
+}
+
 @MainActor
 final class UserViewModel: ObservableObject {
     static let shared = UserViewModel()
@@ -123,6 +135,64 @@ final class UserViewModel: ObservableObject {
             await fetchProfile()
         } catch {
             throw NSError(domain: "UserVM", code: 2, userInfo: [NSLocalizedDescriptionKey: "Image UPDATE User Error: \(error.localizedDescription)"])
+        }
+    }
+
+    func deleteCurrentAccount() async throws {
+        let session = try await supabase.auth.session
+
+        var request = URLRequest(url: SupabaseSecrets.supabaseURL.appendingPathComponent("functions/v1/delete-account"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(SupabaseSecrets.supabaseKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw NSError(domain: "UserVM", code: 900, userInfo: [NSLocalizedDescriptionKey: "Invalid server response while deleting account."])
+        }
+
+        if !(200...299).contains(http.statusCode) {
+            let message = String(data: data, encoding: .utf8) ?? "Delete account failed."
+            throw NSError(domain: "UserVM", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+
+        if let parsed = try? JSONDecoder().decode(DeleteAccountResponse.self, from: data), parsed.success == false {
+            throw NSError(domain: "UserVM", code: 901, userInfo: [NSLocalizedDescriptionKey: parsed.error ?? "Delete account failed."])
+        }
+
+        try await supabase.auth.signOut()
+        user = nil
+    }
+
+    func restoreScheduledAccountDeletionIfNeeded() async {
+        guard let user,
+              let requestedAt = user.accountDeletionRequestedAt,
+              let dueAt = user.accountDeletionDueAt else {
+            return
+        }
+
+        let formatter = ISO8601DateFormatter()
+        guard let dueDate = formatter.date(from: dueAt), Date() < dueDate else {
+            return
+        }
+
+        let update = ClearDeletionRequestUpdate(
+            account_deletion_requested_at: nil,
+            account_deletion_due_at: nil,
+            updated_at: formatter.string(from: Date())
+        )
+
+        guard let session = try? await supabase.auth.session else { return }
+
+        do {
+            try await supabase.from("users")
+                .update(update)
+                .eq("id", value: session.user.id.uuidString)
+                .execute()
+            await fetchProfile()
+        } catch {
+            print("Failed to clear scheduled account deletion: \(error)")
         }
     }
 

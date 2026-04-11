@@ -1,6 +1,20 @@
 import SwiftUI
 import Supabase
 
+// MARK: - Button Style
+
+private struct SettingsRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                configuration.isPressed
+                    ? Color.primary.opacity(0.06)
+                    : Color.clear
+            )
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
 // MARK: - Settings View
 
 struct SettingsView: View {
@@ -8,11 +22,18 @@ struct SettingsView: View {
     // MARK: - Dependencies / Callbacks
     var onBack: () -> Void = {}
     var onPersonalInfoTapped: () -> Void = {}
+    var onInviteFriends: () -> Void = {}
+    var onSubmitFeedback: () -> Void = {}
     var onLogOut: () -> Void = {}
 
     // MARK: - State
     @StateObject private var userViewModel = UserViewModel.shared
     @StateObject private var journalViewModel = JournalViewModel()
+
+    @State private var showLogOutConfirm = false
+    @State private var showDeleteConfirm = false
+    @State private var isDeletingAccount = false
+    @State private var settingsErrorMessage: String?
 
     // MARK: - Body
     var body: some View {
@@ -42,9 +63,9 @@ struct SettingsView: View {
                     settingsCard {
                         settingsRow(icon: "person.fill", title: "Personal Information", action: onPersonalInfoTapped)
                         Divider().padding(.leading, 70)
-                        settingsRow(icon: "square.and.arrow.up", title: "Invite Friends", action: {})
+                        settingsRow(icon: "square.and.arrow.up", title: "Invite Friends", action: onInviteFriends)
                         Divider().padding(.leading, 70)
-                        settingsRow(icon: "message.fill", title: "Submit Feedback", action: {})
+                        settingsRow(icon: "message.fill", title: "Submit Feedback", action: onSubmitFeedback)
                     }
                     .padding(.top, 12)
                     .padding(.horizontal, 20)
@@ -55,6 +76,8 @@ struct SettingsView: View {
 
                     settingsCard {
                         logOutRow()
+                        Divider().padding(.leading, 70)
+                        deleteAccountRow()
                     }
                     .padding(.top, 12)
                     .padding(.horizontal, 20)
@@ -68,6 +91,34 @@ struct SettingsView: View {
         .task {
             await userViewModel.fetchProfile()
             await journalViewModel.fetchJournals(refresh: true)
+        }
+        .alert("Log Out", isPresented: $showLogOutConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Log Out", role: .destructive) {
+                performLogOut()
+            }
+        } message: {
+            Text("You will need to sign in again to access your account.")
+        }
+        .sheet(isPresented: $showDeleteConfirm) {
+            DeleteAccountConfirmationSheet(isDeletingAccount: isDeletingAccount) { confirmationText in
+                guard confirmationText == "DELETE" else {
+                    settingsErrorMessage = "Type DELETE to confirm account deletion."
+                    return
+                }
+                performDeleteAccount()
+            }
+            .presentationDetents([.fraction(0.6)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(24)
+        }
+        .alert("Error", isPresented: .init(
+            get: { settingsErrorMessage != nil },
+            set: { if !$0 { settingsErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(settingsErrorMessage ?? "")
         }
     }
 
@@ -272,7 +323,7 @@ struct SettingsView: View {
     }
 
     private func logOutRow() -> some View {
-        Button(action: performLogOut) {
+        Button(action: { showLogOutConfirm = true }) {
             HStack(spacing: 14) {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.red.opacity(0.12))
@@ -300,26 +351,165 @@ struct SettingsView: View {
         .buttonStyle(SettingsRowButtonStyle())
     }
 
-    // MARK: - Log Out Logic
+    private func deleteAccountRow() -> some View {
+        Button(action: { showDeleteConfirm = true }) {
+            HStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.red.opacity(0.16))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Group {
+                            if isDeletingAccount {
+                                ProgressView().tint(.red)
+                            } else {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundStyle(Color.red)
+                            }
+                        }
+                    )
+
+                Text(isDeletingAccount ? "Deleting Account..." : "Delete Account")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Color.red)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.red.opacity(0.4))
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 62)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SettingsRowButtonStyle())
+        .disabled(isDeletingAccount)
+    }
+
+    // MARK: - Account Actions
 
     private func performLogOut() {
         Task {
-            try? await SupabaseConfig.shared.client.auth.signOut()
-            await MainActor.run { onLogOut() }
+            do {
+                try await SupabaseConfig.shared.client.auth.signOut()
+                await MainActor.run { onLogOut() }
+            } catch {
+                await MainActor.run {
+                    settingsErrorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func performDeleteAccount() {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+
+        Task {
+            do {
+                try await userViewModel.deleteCurrentAccount()
+                await MainActor.run { onLogOut() }
+            } catch {
+                await MainActor.run {
+                    isDeletingAccount = false
+                    settingsErrorMessage = error.localizedDescription
+                }
+            }
         }
     }
 }
 
-// MARK: - Button Style
+private struct DeleteAccountConfirmationSheet: View {
+    let isDeletingAccount: Bool
+    let onDeleteConfirmed: (String) -> Void
 
-private struct SettingsRowButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                configuration.isPressed
-                    ? Color.primary.opacity(0.06)
-                    : Color.clear
-            )
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmationText = ""
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.red.opacity(0.16))
+                            .frame(width: 48, height: 48)
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(Color.red)
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Delete Account")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(.primary)
+                        Text("Permanent action")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.red.opacity(0.9))
+                    }
+                    Spacer()
+                }
+
+                Text("This is a destructive action. Your account will be scheduled for deletion today and permanently removed after 14 days. If you sign back in before the deadline, the deletion will be canceled and your account will be preserved.")
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Type DELETE to confirm")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    TextField("DELETE", text: $confirmationText)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 16)
+                        .frame(height: 54)
+                        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.red.opacity(0.35), lineWidth: 1)
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("You can log back in within 14 days to cancel deletion.", systemImage: "clock.badge.checkmark")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Label("After that, the account and data will be permanently removed.", systemImage: "trash.fill")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 32)
+            .padding(.bottom, 16)
+        }
+        .background(Color(.systemBackground))
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Divider()
+                HStack(spacing: 12) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.primary)
+
+                    Button(isDeletingAccount ? "Deleting..." : "Delete Account", role: .destructive) {
+                        onDeleteConfirmed(confirmationText.trimmingCharacters(in: .whitespacesAndNewlines))
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.red)
+                    .disabled(confirmationText.trimmingCharacters(in: .whitespacesAndNewlines) != "DELETE" || isDeletingAccount)
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 16)
+            }
+            .frame(height: 70)
+            .background(Color(.systemBackground))
+        }
+        .presentationBackground(Color(.systemBackground))
     }
 }

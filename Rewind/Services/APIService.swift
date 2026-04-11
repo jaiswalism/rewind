@@ -4,6 +4,7 @@ enum APIError: Error, LocalizedError {
     case invalidURL
     case noData
     case decodingError
+    case encodingError
     case serverError(message: String)
     case unauthorized
     
@@ -15,6 +16,8 @@ enum APIError: Error, LocalizedError {
             return "No data received from server"
         case .decodingError:
             return "Failed to process server response"
+        case .encodingError:
+            return "Failed to encode request body"
         case .serverError(let message):
             return message
         case .unauthorized:
@@ -126,21 +129,26 @@ class APIService {
         
         do {
             let fileData = try Data(contentsOf: fileUrl)
-            
+
+            guard let openingBoundary = "--\(boundary)\r\n".data(using: .utf8),
+                  let disposition = "Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8),
+                  let contentType = "Content-Type: \(fileType)\r\n\r\n".data(using: .utf8),
+                  let lineBreak = "\r\n".data(using: .utf8),
+                  let closingBoundary = "--\(boundary)--\r\n".data(using: .utf8) else {
+                completion(.failure(APIError.encodingError))
+                return
+            }
+
             var body = Data()
-            
-            // File
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: \(fileType)\r\n\r\n".data(using: .utf8)!)
+            body.append(openingBoundary)
+            body.append(disposition)
+            body.append(contentType)
             body.append(fileData)
-            body.append("\r\n".data(using: .utf8)!)
-            
-            // Close Boundary
-            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-            
+            body.append(lineBreak)
+            body.append(closingBoundary)
+
             request.httpBody = body
-            
+
         } catch {
             print("❌ File Read Error: \(error)")
             completion(.failure(error))

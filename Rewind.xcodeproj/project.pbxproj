@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5275E8DA2F69C8A10093C480 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5275E83B2F69C8A10093C480 /* Resources/Assets.xcassets */; };
 		5275E91E2F69C8A10093C480 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E83A2F69C8A10093C480 /* AppDelegate.swift */; };
 		5275E9322F69C8A10093C480 /* OnboardingScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */; };
 		5275E9412F69C8A10093C480 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E8A12F69C8A10093C480 /* ViewController.swift */; };
@@ -39,7 +38,6 @@
 
 /* Begin PBXFileReference section */
 		5275E83A2F69C8A10093C480 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5275E83B2F69C8A10093C480 /* Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
 		5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScreenViewController.swift; sourceTree = "<group>"; };
 		5275E8952F69C8A10093C480 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		5275E8A12F69C8A10093C480 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -155,16 +153,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5214F6672EBD0CD5005020AA /* Rewind */ = {
-			isa = PBXGroup;
-			children = (
-				524F02552F8855A100497D79 /* Utils */,
-				5275E83A2F69C8A10093C480 /* AppDelegate.swift */,
-				5275E83B2F69C8A10093C480 /* Resources/Assets.xcassets */,
-				5275E83E2F69C8A10093C480 /* Configuration */,
-				5275E8732F69C8A10093C480 /* Controllers */,
-				5275E87D2F69C8A10093C480 /* Core */,
-				5275E88C2F69C8A10093C480 /* Models */,
+			5214F6672EBD0CD5005020AA /* Rewind */ = {
+				isa = PBXGroup;
+				children = (
+					524F02552F8855A100497D79 /* Utils */,
+					5275E83A2F69C8A10093C480 /* AppDelegate.swift */,
+					5275E83E2F69C8A10093C480 /* Configuration */,
+					5275E8732F69C8A10093C480 /* Controllers */,
+					5275E87D2F69C8A10093C480 /* Core */,
+					5275E88C2F69C8A10093C480 /* Models */,
 				5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */,
 				5275E8942F69C8A10093C480 /* Resources */,
 				5275E8952F69C8A10093C480 /* SceneDelegate.swift */,
@@ -330,15 +327,14 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		52A84E282EB9531100D47157 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				5275E8DA2F69C8A10093C480 /* Resources/Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+	/* Begin PBXResourcesBuildPhase section */
+			52A84E282EB9531100D47157 /* Resources */ = {
+				isa = PBXResourcesBuildPhase;
+				buildActionMask = 2147483647;
+				files = (
+				);
+				runOnlyForDeploymentPostprocessing = 0;
+			};
 		52A84E422EB9531200D47157 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;

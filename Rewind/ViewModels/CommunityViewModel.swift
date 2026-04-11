@@ -234,6 +234,34 @@ final class CommunityViewModel: ObservableObject {
             }
         }
     }
+
+    func reportPost(postId: UUID, reason: String, details: String? = nil) async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "CommunityVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        struct ReportPayload: Encodable {
+            let post_id: UUID
+            let reporter_user_id: UUID
+            let reason: String
+            let details: String?
+            let created_at: String
+        }
+
+        let payload = ReportPayload(
+            post_id: postId,
+            reporter_user_id: session.user.id,
+            reason: reason,
+            details: details?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true ? nil : details,
+            created_at: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await supabase.from("community_reports").insert(payload).execute()
+        } catch {
+            throw NSError(domain: "CommunityVM", code: 410, userInfo: [NSLocalizedDescriptionKey: "Unable to submit report right now. Please try again."])
+        }
+    }
     
     func toggleLike(postId: UUID) async throws -> (liked: Bool, count: Int) {
         guard let session = try? await supabase.auth.session else {

@@ -9,6 +9,8 @@ struct CommunityView: View {
     @State private var showingCommentSheet = false
     @State private var selectedPostIdForComments: String? = nil
     @State private var editingPost: CommunityViewModel.CommunityPostWithUser?
+    @State private var reportingPost: CommunityViewModel.CommunityPostWithUser?
+    @State private var reportBannerMessage: String?
     
     // Tags matching the Create Post screen
     let tags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
@@ -50,7 +52,7 @@ struct CommunityView: View {
                                     },
                                     onShare: { sharePost(post: post) },
                                     onReport: {
-                                        print("Report tapped")
+                                        reportingPost = post
                                     },
                                     onEdit: {
                                         editingPost = post
@@ -101,6 +103,27 @@ struct CommunityView: View {
             CreatePostView(postToEdit: post)
                 .presentationCornerRadius(28)
         }
+        .sheet(item: $reportingPost) { post in
+            ReportPostSheet(postWithUser: post) { reason, details in
+                Task {
+                    do {
+                        try await communityViewModel.reportPost(postId: post.id, reason: reason, details: details)
+                        await MainActor.run {
+                            reportBannerMessage = "Thanks. Your report has been submitted."
+                            reportingPost = nil
+                        }
+                    } catch {
+                        await MainActor.run {
+                            reportBannerMessage = error.localizedDescription
+                            reportingPost = nil
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(24)
+        }
         .onChange(of: showingCommentSheet) { _, showing in
             if !showing {
                 selectedPostIdForComments = nil
@@ -113,6 +136,14 @@ struct CommunityView: View {
                     .presentationDragIndicator(.visible)
                     .presentationCornerRadius(24)
             }
+        }
+        .alert("Community", isPresented: .init(
+            get: { reportBannerMessage != nil },
+            set: { if !$0 { reportBannerMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(reportBannerMessage ?? "")
         }
     }
     
@@ -273,6 +304,56 @@ struct CommunityView: View {
         
         if let root = window?.rootViewController {
             root.present(activityVC, animated: true, completion: nil)
+        }
+    }
+}
+
+private struct ReportPostSheet: View {
+    let postWithUser: CommunityViewModel.CommunityPostWithUser
+    let onSubmit: (String, String?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedReason = "harassment"
+    @State private var details = ""
+
+    private let reasons: [(label: String, value: String)] = [
+        ("Harassment or bullying", "harassment"),
+        ("Hate or abuse", "hate_speech"),
+        ("Sexual content", "sexual_content"),
+        ("Spam or scam", "spam"),
+        ("Misinformation", "misinformation"),
+        ("Other", "other")
+    ]
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Reason") {
+                    Picker("Reason", selection: $selectedReason) {
+                        ForEach(reasons, id: \.value) { reason in
+                            Text(reason.label).tag(reason.value)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                }
+
+                Section("Details (optional)") {
+                    TextField("Add context", text: $details, axis: .vertical)
+                        .lineLimit(3...5)
+                }
+            }
+            .navigationTitle("Report Post")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Submit") {
+                        onSubmit(selectedReason, details)
+                    }
+                }
+            }
         }
     }
 }

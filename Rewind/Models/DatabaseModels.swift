@@ -21,6 +21,8 @@ struct DBUser: Codable, Identifiable {
     var totalPosts: Int?
     var onboardingCompleted: Bool?
     var ownedStyles: [String]?
+    var accountDeletionRequestedAt: String?
+    var accountDeletionDueAt: String?
     let createdAt: String
     var updatedAt: String
 
@@ -34,6 +36,8 @@ struct DBUser: Codable, Identifiable {
         case totalPosts = "total_posts"
         case onboardingCompleted = "onboarding_completed"
         case ownedStyles = "owned_styles"
+        case accountDeletionRequestedAt = "account_deletion_requested_at"
+        case accountDeletionDueAt = "account_deletion_due_at"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
