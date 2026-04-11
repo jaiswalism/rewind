@@ -132,7 +132,7 @@ final class PetRepository {
     ///   - delta: State delta to apply
     ///   - smoothingAlpha: Smoothing factor
     /// - Returns: Updated state after applying delta
-    func applyStateDelta(userId: String, delta: PetStateDelta, smoothingAlpha: Double = PetConstants.smoothingAlpha) async throws -> PetCompanionState {
+    func applyStateDelta(userId: String, delta: PetStateDelta, smoothingAlpha: Double = 0.3) async throws -> PetCompanionState {
         // Get current state
         let currentState = try await getOrCreatePetCompanionState(userId: userId)
         

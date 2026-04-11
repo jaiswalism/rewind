@@ -2,92 +2,105 @@
 //  PetTalkingViewController.swift
 //  Rewind
 //
-//  Created on 12/26/25.
-//
 
 import UIKit
-import Speech
 import AVFoundation
 import SceneKit
 import Combine
 
 class PetTalkingViewController: UIViewController {
-    
+
     // MARK: - Init
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         hidesBottomBarWhenPushed = true
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         hidesBottomBarWhenPushed = true
     }
-    
+
     // MARK: - Constants
     private let petBaseScale: Float = 0.13
-    
+
     // MARK: - ViewModels
     private let petViewModel = PetViewModel()
-    
+
+    // MARK: - Services
+    private let voiceService = PetVoiceService.shared
+
+    // MARK: - Session State
+    private enum SessionState {
+        case connecting
+        case listening      // Mic open, streaming continuously
+        case petSpeaking    // Gemini is sending audio
+        case ended
+    }
+    private var sessionState: SessionState = .connecting
+
+    // MARK: - Interaction Mode
+    private enum InteractionMode { case voice, text }
+    private var currentMode: InteractionMode = .voice
+
+    // MARK: - Permission
+    private var micPermissionGranted = false
+
     // MARK: - UI Components
+
     private let backButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        
         var config = UIButton.Configuration.plain()
         let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
         config.image = UIImage(systemName: "chevron.left", withConfiguration: imageConfig)
         config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
         button.configuration = config
-        
-        button.backgroundColor = UIColor.clear
-        button.isUserInteractionEnabled = true
-        button.isEnabled = true
+        button.backgroundColor = .clear
         return button
     }()
-    
+
+    private let modeSwitchButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        var config = UIButton.Configuration.plain()
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        config.image = UIImage(systemName: "keyboard", withConfiguration: imageConfig)
+        config.baseForegroundColor = UIColor(named: "colors/Primary/Light") ?? .white
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        button.configuration = config
+        button.backgroundColor = .clear
+        return button
+    }()
+
     private let petView = PetAvatarView()
-    
+
+    // Blob layers
     private let animatedBlobContainer: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; return v
     }()
-    
     private let outerBlob: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-        return view
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = UIColor.white.withAlphaComponent(0.1); return v
     }()
-    
     private let middleBlob: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        return view
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = UIColor.white.withAlphaComponent(0.2); return v
     }()
-    
     private let innerBlob: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(named: "colors/Primary/Light")?.withAlphaComponent(0.8) ?? UIColor.white.withAlphaComponent(0.8)
-        return view
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = (UIColor(named: "colors/Primary/Light") ?? .white).withAlphaComponent(0.8); return v
     }()
-    
     private let centerDot: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = UIColor(named: "colors/Primary/Dark") ?? UIColor.blue
-        return view
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = UIColor(named: "colors/Primary/Dark") ?? .blue; return v
     }()
-    
-    private let transcriptionLabel: UILabel = {
+
+    private let statusLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Tap to start talking..."
+        label.text = "Connecting..."
         label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
         label.textColor = UIColor(named: "colors/Primary/Light") ?? .white
         label.textAlignment = .center
@@ -95,211 +108,417 @@ class PetTalkingViewController: UIViewController {
         label.alpha = 0.8
         return label
     }()
-    
-    private let micButton: UIButton = {
+
+    /// In voice mode this is the "End Session" hang-up button.
+    /// In text mode it is hidden.
+    private let endCallButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .bold)
-        let image = UIImage(systemName: "mic.fill", withConfiguration: config)
+        let image = UIImage(systemName: "phone.down.fill", withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
-        button.backgroundColor = UIColor(named: "colors/Primary/Dark")?.withAlphaComponent(0.3) ?? UIColor.blue.withAlphaComponent(0.3)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.systemRed.withAlphaComponent(0.85)
         button.layer.cornerRadius = 30
         return button
     }()
-    
-    // variables
+
+    // Text mode UI
+    private let textInputContainer: UIView = {
+        let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false
+        v.isHidden = true; return v
+    }()
+    private let textInputField: UITextField = {
+        let field = UITextField()
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.placeholder = "Type a message..."
+        field.font = UIFont.systemFont(ofSize: 16)
+        field.textColor = .white
+        field.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        field.layer.cornerRadius = 20
+        field.layer.masksToBounds = true
+        field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
+        field.leftViewMode = .always
+        field.returnKeyType = .send
+        field.isHidden = true
+        return field
+    }()
+    private let sendButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        button.setImage(UIImage(systemName: "arrow.up.circle.fill", withConfiguration: config), for: .normal)
+        button.tintColor = UIColor(named: "colors/Primary/Light") ?? .white
+        button.backgroundColor = .clear
+        button.isEnabled = false
+        button.alpha = 0.5
+        button.isHidden = true
+        return button
+    }()
+
+    // MARK: - Visual State
 
     private var gradientLayer: CAGradientLayer?
-    private var animationTimer: Timer?
     private var isAnimating = false
-    
-    // Speech Recognition Properties
-    // Use system default locale to match Siri language settings
-    private lazy var speechRecognizer = SFSpeechRecognizer()
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognitionTask: SFSpeechRecognitionTask?
-    private lazy var audioEngine = AVAudioEngine()
-    private var isRecording = false
-    private var audioLevelTimer: Timer?
-    
-    // Auto-send timer
-    private var autoSendTimer: Timer?
-    private let autoSendDelay: TimeInterval = 3.0 // Auto-send after 3s of recording
-    private var isConversationMode = false // Continuous listen-respond cycle
-    
-    // Audio-based silence detection
-    private var silenceCheckTimer: Timer?
-    private var lastAudioLevel: Float = 0
-    private var consecutiveSilentChecks = 0
-    private let silenceThreshold: Float = 0.015 // Audio level below = silence
-    private let silentChecksRequired = 6 // Must see silence this many times in a row
-    
-    // Permission states
-    private var micPermissionGranted = false
-    private var speechPermissionGranted = false
-    
-    // 3D Model Properties
     private var idleAnimation: SCNAction?
-    
-    // TTS Properties
-    private let speechSynthesizer = AVSpeechSynthesizer()
-    
-    // lifecycle
+
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupActions()
         setup3DPenguin()
         setupAudioRouteChangeNotifications()
-        printAudioDiagnostics()
+        setupVoiceCallbacks()
     }
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
+        Task { [weak self] in
+            await MainActor.run {
+                self?.voiceService.disconnect()
+            }
+        }
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         startBlobAnimation()
-        requestSpeechPermission()
-        
-        // Auto-start recording when view appears
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self = self else { return }
-            self.isConversationMode = true
-            self.transcriptionLabel.text = "Listening..."
-            self.startRecording()
-            print("[PetTalking] Auto-started recording on view appear")
-        }
+        requestMicPermissionThenConnect()
     }
-    
-    // MARK: - Audio Diagnostics
-    private func printAudioDiagnostics() {
-        print("[PetTalking] ========== AUDIO DIAGNOSTICS ==========")
-        
-        #if targetEnvironment(simulator)
-        print("[PetTalking] Running on iOS SIMULATOR")
-        print("[PetTalking] NOTE: Simulator uses Mac's microphone. Ensure:")
-        print("[PetTalking]   1. Mac's System Preferences > Security & Privacy > Microphone allows Xcode/Simulator")
-        print("[PetTalking]   2. Mac has a working audio input device selected")
-        print("[PetTalking]   3. Try: System Preferences > Sound > Input - check if input level moves")
-        #else
-        print("[PetTalking] Running on PHYSICAL DEVICE")
-        #endif
-        
-        let audioSession = AVAudioSession.sharedInstance()
-        print("[PetTalking] Current category: \(audioSession.category.rawValue)")
-        print("[PetTalking] Current mode: \(audioSession.mode.rawValue)")
-        print("[PetTalking] Input available: \(audioSession.isInputAvailable)")
-        print("[PetTalking] Sample rate: \(audioSession.sampleRate)")
-        print("[PetTalking] Input channels: \(audioSession.inputNumberOfChannels)")
-        
-        if let inputs = audioSession.availableInputs {
-            print("[PetTalking] Available audio inputs (\(inputs.count)):")
-            for (index, input) in inputs.enumerated() {
-                print("[PetTalking]   [\(index)] \(input.portName) (\(input.portType.rawValue))")
-            }
-        } else {
-            print("[PetTalking] WARNING: No available audio inputs!")
-        }
-        
-        if let currentInput = audioSession.currentRoute.inputs.first {
-            print("[PetTalking] Current input: \(currentInput.portName) (\(currentInput.portType.rawValue))")
-        } else {
-            print("[PetTalking] WARNING: No current input route!")
-        }
-        
-        print("[PetTalking] ================================================")
-    }
-    
-    private func setupAudioRouteChangeNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleAudioRouteChange),
-            name: AVAudioSession.routeChangeNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleAudioInterruption),
-            name: AVAudioSession.interruptionNotification,
-            object: nil
-        )
-    }
-    
-    @objc private func handleAudioRouteChange(notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
-            return
-        }
-        
-        print("[PetTalking] Audio route changed: \(reason.rawValue)")
-        
-        switch reason {
-        case .newDeviceAvailable:
-            print("[PetTalking] New audio device available")
-            printAudioDiagnostics()
-        case .oldDeviceUnavailable:
-            print("[PetTalking] Audio device removed")
-            if isRecording {
-                DispatchQueue.main.async {
-                    self.stopRecording()
-                    self.transcriptionLabel.text = "Audio device disconnected"
-                }
-            }
-        case .categoryChange:
-            print("[PetTalking] Audio category changed")
-        default:
-            break
-        }
-    }
-    
-    @objc private func handleAudioInterruption(notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
-            return
-        }
-        
-        switch type {
-        case .began:
-            print("[PetTalking] Audio interruption BEGAN")
-            if isRecording {
-                DispatchQueue.main.async {
-                    self.stopRecording()
-                    self.transcriptionLabel.text = "Interrupted"
-                }
-            }
-        case .ended:
-            print("[PetTalking] Audio interruption ENDED")
-        @unknown default:
-            break
-        }
-    }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopBlobAnimation()
-        stopRecording()
+        voiceService.disconnect()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer?.frame = view.bounds
-        
-        // Set corner radius for blob elements
         outerBlob.layer.cornerRadius = outerBlob.bounds.width / 2
         middleBlob.layer.cornerRadius = middleBlob.bounds.width / 2
         innerBlob.layer.cornerRadius = innerBlob.bounds.width / 2
         centerDot.layer.cornerRadius = centerDot.bounds.width / 2
     }
-    
+
+    // MARK: - Voice Service Callbacks
+
+    private func setupVoiceCallbacks() {
+        voiceService.onConnected = { [weak self] in
+            print("[PetTalking] ✅ Connected")
+            self?.startLiveSession()
+        }
+
+        voiceService.onDisconnected = { [weak self] in
+            print("[PetTalking] ❌ Disconnected")
+            self?.sessionState = .ended
+            self?.statusLabel.text = "Disconnected"
+            self?.hideBlobAnimated()
+        }
+
+        voiceService.onTranscription = { [weak self] text in
+            // Show what the pet said (text transcript alongside audio)
+            self?.statusLabel.text = text
+        }
+
+        voiceService.onPetStartedSpeaking = { [weak self] in
+            guard let self else { return }
+            self.sessionState = .petSpeaking
+            self.statusLabel.text = "Pet is speaking..."
+            self.showBlobAnimated()
+        }
+
+        voiceService.onResponseComplete = { [weak self] in
+            guard let self else { return }
+            // Pet finished — back to listening
+            self.sessionState = .listening
+            UIView.animate(withDuration: 0.3) {
+                self.statusLabel.text = "Listening..."
+            }
+        }
+
+        voiceService.onAudioLevel = { [weak self] level in
+            // Drive blob in real time from mic RMS
+            self?.animateBlobForLevel(level)
+        }
+
+        voiceService.onError = { [weak self] error in
+            print("[PetTalking] ⚠️ \(error)")
+            self?.statusLabel.text = "Connection issue — tap to retry"
+        }
+    }
+
+    // MARK: - Connection Flow
+
+    private func requestMicPermissionThenConnect() {
+        if #available(iOS 17.0, *) {
+            AVAudioApplication.requestRecordPermission { [weak self] granted in
+                DispatchQueue.main.async { self?.handleMicPermission(granted) }
+            }
+        } else {
+            AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
+                DispatchQueue.main.async { self?.handleMicPermission(granted) }
+            }
+        }
+    }
+
+    private func handleMicPermission(_ granted: Bool) {
+        micPermissionGranted = granted
+        guard granted else {
+            statusLabel.text = "Microphone permission required"
+            return
+        }
+        Task { await connectToVoiceService() }
+    }
+
+    private func connectToVoiceService() async {
+        do {
+            try await voiceService.connect()
+        } catch {
+            print("[PetTalking] Failed to connect: \(error)")
+            statusLabel.text = "Failed to connect"
+        }
+    }
+
+    /// Called once voiceService.onConnected fires — starts mic streaming immediately.
+    private func startLiveSession() {
+        guard micPermissionGranted, currentMode == .voice else { return }
+        sessionState = .listening
+        statusLabel.text = "Listening..."
+        showBlobAnimated()
+
+        Task {
+            do {
+                try await voiceService.startStreaming()
+                print("[PetTalking] 🎙️ Live streaming started")
+            } catch {
+                print("[PetTalking] Failed to start streaming: \(error)")
+                await MainActor.run { self.statusLabel.text = "Audio error" }
+            }
+        }
+    }
+
+    // MARK: - 3D Penguin
+
+    private func setup3DPenguin() {
+        petView.enableCameraControl(true)
+        petView.configure(scale: petBaseScale, position: SCNVector3(0, -1.8, 0))
+    }
+
+    private func animatePenguinForLevel(_ level: Float) {
+        guard let penguin = petView.penguinNode else { return }
+        let scale = CGFloat(petBaseScale) * (1.0 + CGFloat(level) * 0.3)
+        penguin.runAction(SCNAction.scale(to: scale, duration: 0.1), forKey: "voiceScale")
+    }
+
+    // MARK: - Blob Animation
+
+    private func startBlobAnimation() {
+        guard !isAnimating else { return }
+        isAnimating = true
+        outerBlob.alpha = 0
+        middleBlob.alpha = 0
+        innerBlob.alpha = 0
+        centerDot.alpha = 0
+    }
+
+    private func stopBlobAnimation() {
+        isAnimating = false
+        outerBlob.layer.removeAllAnimations()
+        middleBlob.layer.removeAllAnimations()
+        innerBlob.layer.removeAllAnimations()
+        centerDot.layer.removeAllAnimations()
+    }
+
+    private func showBlobAnimated() {
+        UIView.animate(withDuration: 0.3) {
+            self.outerBlob.alpha = 0.15
+            self.middleBlob.alpha = 0.3
+            self.innerBlob.alpha = 0.85
+            self.centerDot.alpha = 1.0
+        }
+    }
+
+    private func hideBlobAnimated() {
+        UIView.animate(withDuration: 0.3) {
+            self.outerBlob.alpha = 0
+            self.middleBlob.alpha = 0
+            self.innerBlob.alpha = 0
+            self.centerDot.alpha = 0
+        }
+        outerBlob.transform = .identity
+        middleBlob.transform = .identity
+        innerBlob.transform = .identity
+        centerDot.transform = .identity
+    }
+
+    /// Drives the blob layers directly from the real-time mic RMS level [0...1].
+    private func animateBlobForLevel(_ level: Float) {
+        let intensity = CGFloat(level)
+        let scale = 1.0 + intensity * 0.5
+
+        UIView.animate(withDuration: 0.08, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+            self.outerBlob.transform = CGAffineTransform(scaleX: scale * 1.1, y: scale * 1.1)
+            self.middleBlob.transform = CGAffineTransform(scaleX: scale * 1.2, y: scale * 1.2)
+            self.innerBlob.transform = CGAffineTransform(scaleX: scale * 1.3, y: scale * 1.3)
+            self.centerDot.transform = CGAffineTransform(scaleX: scale * 1.4, y: scale * 1.4)
+
+            self.outerBlob.alpha = 0.1 + intensity * 0.3
+            self.middleBlob.alpha = 0.2 + intensity * 0.4
+            self.innerBlob.alpha = 0.75 + intensity * 0.25
+            self.centerDot.alpha = 1.0
+        }
+
+        animatePenguinForLevel(level)
+    }
+
+    // MARK: - Mode Switching
+
+    private func switchToTextMode() {
+        currentMode = .text
+        voiceService.stopStreaming()
+
+        endCallButton.isHidden = true
+        animatedBlobContainer.isHidden = true
+        textInputContainer.isHidden = false
+        textInputField.isHidden = false
+        sendButton.isHidden = false
+
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        modeSwitchButton.setImage(UIImage(systemName: "mic.fill", withConfiguration: imageConfig), for: .normal)
+
+        statusLabel.text = "Type a message..."
+        textInputField.becomeFirstResponder()
+    }
+
+    private func switchToVoiceMode() {
+        currentMode = .voice
+
+        textInputContainer.isHidden = true
+        textInputField.isHidden = true
+        sendButton.isHidden = true
+        textInputField.resignFirstResponder()
+
+        endCallButton.isHidden = false
+        animatedBlobContainer.isHidden = false
+
+        let imageConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+        modeSwitchButton.setImage(UIImage(systemName: "keyboard", withConfiguration: imageConfig), for: .normal)
+
+        // Resume streaming if we're connected
+        if sessionState == .ended || sessionState == .connecting { return }
+        statusLabel.text = "Listening..."
+        Task {
+            try? await voiceService.startStreaming()
+        }
+    }
+
+    // MARK: - Actions
+
+    @objc private func endCallButtonTapped() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        voiceService.disconnect()
+        if let nav = navigationController {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    @objc private func modeSwitchButtonTapped() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        if currentMode == .voice { switchToTextMode() } else { switchToVoiceMode() }
+    }
+
+    @objc private func sendButtonTapped() {
+        guard let text = textInputField.text, !text.isEmpty else { return }
+        statusLabel.text = "Pet is thinking..."
+        textInputField.text = ""
+        textInputField.resignFirstResponder()
+        Task {
+            do {
+                let userId = UserDefaults.standard.string(forKey: Constants.UserDefaults.currentUserID)
+                let currentState = await MainActor.run { PetCompanionService.shared.currentState }
+                let context = PetInferenceContext(
+                    timeOfDay: currentTimeOfDay(),
+                    daysInactive: 0,
+                    state: currentState.map { PetCompanionStateSnapshot(from: $0) }
+                )
+
+                let request = PetInferenceRequest(
+                    type: .message,
+                    content: text,
+                    explicitRequest: true,
+                    context: context,
+                    userId: userId
+                )
+
+                let response = try await PetCompanionService.shared.infer(request)
+                await MainActor.run {
+                    self.statusLabel.text = response.textResponse ?? PetConstants.fallbackText
+                }
+            } catch {
+                await MainActor.run { self.statusLabel.text = "Failed to send" }
+            }
+        }
+    }
+
+    private func currentTimeOfDay() -> PetTimeOfDay {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return .morning
+        case 12..<17:
+            return .afternoon
+        case 17..<21:
+            return .evening
+        default:
+            return .night
+        }
+    }
+
+    @objc private func backButtonTapped() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        UIView.animate(withDuration: 0.1) { self.backButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9) } completion: { _ in
+            UIView.animate(withDuration: 0.1) { self.backButton.transform = .identity }
+        }
+        voiceService.disconnect()
+        if let nav = navigationController { nav.popViewController(animated: true) } else { dismiss(animated: true) }
+    }
+
+    // MARK: - Audio Route Change Handling
+
+    private func setupAudioRouteChangeNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAudioRouteChange),
+                                               name: AVAudioSession.routeChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAudioInterruption),
+                                               name: AVAudioSession.interruptionNotification, object: nil)
+    }
+
+    @objc private func handleAudioRouteChange(notification: Notification) {
+        guard let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else { return }
+        if reason == .oldDeviceUnavailable {
+            print("[PetTalking] Audio device removed")
+        }
+    }
+
+    @objc private func handleAudioInterruption(notification: Notification) {
+        guard let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+        if type == .began {
+            print("[PetTalking] Audio interruption — pausing")
+        }
+    }
+
     // MARK: - Setup
+
     private func setupUI() {
         view.backgroundColor = UIColor(named: "colors/Blue&Shades/blue-400") ?? UIColor(red: 0.38, green: 0.38, blue: 1.0, alpha: 1.0)
-        
+
         let gradient = CAGradientLayer()
         gradient.frame = view.bounds
         gradient.colors = [
@@ -309,719 +528,126 @@ class PetTalkingViewController: UIViewController {
         gradient.locations = [0.0, 1.0]
         view.layer.insertSublayer(gradient, at: 0)
         gradientLayer = gradient
-        
+
         navigationController?.setNavigationBarHidden(true, animated: false)
-        
+
         petView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(petView)
-        view.addSubview(transcriptionLabel)
+        view.addSubview(statusLabel)
         view.addSubview(animatedBlobContainer)
-        view.addSubview(micButton)
+        view.addSubview(endCallButton)
         view.addSubview(backButton)
-        
+        view.addSubview(modeSwitchButton)
+
+        view.addSubview(textInputContainer)
+        textInputContainer.addSubview(textInputField)
+        textInputContainer.addSubview(sendButton)
+
         animatedBlobContainer.addSubview(outerBlob)
         animatedBlobContainer.addSubview(middleBlob)
         animatedBlobContainer.addSubview(innerBlob)
         animatedBlobContainer.addSubview(centerDot)
-  
-        view.bringSubviewToFront(micButton)
+
+        view.bringSubviewToFront(endCallButton)
         view.bringSubviewToFront(backButton)
-        
+        view.bringSubviewToFront(modeSwitchButton)
+
         setupConstraints()
     }
-    
+
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            // Back Button
             backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             backButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             backButton.widthAnchor.constraint(equalToConstant: 50),
             backButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            // Penguin 3D Scene View 
+
+            modeSwitchButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            modeSwitchButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            modeSwitchButton.widthAnchor.constraint(equalToConstant: 50),
+            modeSwitchButton.heightAnchor.constraint(equalToConstant: 50),
+
             petView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             petView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             petView.widthAnchor.constraint(equalToConstant: 350),
             petView.heightAnchor.constraint(equalToConstant: 350),
-            
-            // Transcription Label 
-            transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            transcriptionLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: 30),
-            transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
-            transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
-            
-            // Mic Button 
-            micButton.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 60),
-            micButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            micButton.widthAnchor.constraint(equalToConstant: 60),
-            micButton.heightAnchor.constraint(equalToConstant: 60),
-            
-            // Animated Blob Container 
-            animatedBlobContainer.centerXAnchor.constraint(equalTo: micButton.centerXAnchor),
-            animatedBlobContainer.centerYAnchor.constraint(equalTo: micButton.centerYAnchor),
+
+            statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statusLabel.topAnchor.constraint(equalTo: petView.bottomAnchor, constant: 30),
+            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+
+            // End call button replaces the old mic button
+            endCallButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 60),
+            endCallButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            endCallButton.widthAnchor.constraint(equalToConstant: 60),
+            endCallButton.heightAnchor.constraint(equalToConstant: 60),
+
+            animatedBlobContainer.centerXAnchor.constraint(equalTo: endCallButton.centerXAnchor),
+            animatedBlobContainer.centerYAnchor.constraint(equalTo: endCallButton.centerYAnchor),
             animatedBlobContainer.widthAnchor.constraint(equalToConstant: 120),
             animatedBlobContainer.heightAnchor.constraint(equalToConstant: 120),
-            
-            // Outer Blob
+
             outerBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             outerBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
             outerBlob.widthAnchor.constraint(equalToConstant: 120),
             outerBlob.heightAnchor.constraint(equalToConstant: 120),
-            
-            // Middle Blob
+
             middleBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             middleBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
             middleBlob.widthAnchor.constraint(equalToConstant: 90),
             middleBlob.heightAnchor.constraint(equalToConstant: 90),
-            
-            // Inner Blob
+
             innerBlob.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             innerBlob.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
             innerBlob.widthAnchor.constraint(equalToConstant: 70),
             innerBlob.heightAnchor.constraint(equalToConstant: 70),
-            
-            // Center Dot
+
             centerDot.centerXAnchor.constraint(equalTo: animatedBlobContainer.centerXAnchor),
             centerDot.centerYAnchor.constraint(equalTo: animatedBlobContainer.centerYAnchor),
             centerDot.widthAnchor.constraint(equalToConstant: 20),
-            centerDot.heightAnchor.constraint(equalToConstant: 20)
+            centerDot.heightAnchor.constraint(equalToConstant: 20),
+
+            textInputContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            textInputContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            textInputContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            textInputContainer.heightAnchor.constraint(equalToConstant: 50),
+
+            textInputField.leadingAnchor.constraint(equalTo: textInputContainer.leadingAnchor),
+            textInputField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -10),
+            textInputField.centerYAnchor.constraint(equalTo: textInputContainer.centerYAnchor),
+            textInputField.heightAnchor.constraint(equalToConstant: 44),
+
+            sendButton.trailingAnchor.constraint(equalTo: textInputContainer.trailingAnchor),
+            sendButton.centerYAnchor.constraint(equalTo: textInputContainer.centerYAnchor),
+            sendButton.widthAnchor.constraint(equalToConstant: 44),
+            sendButton.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
-    
+
     private func setupActions() {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        micButton.addTarget(self, action: #selector(micButtonTapped), for: .touchUpInside)
-    }
-    
-    // 3d penguin stuff
-
-    private func setup3DPenguin() {
-        petView.enableCameraControl(true)
-        
-        petView.configure(scale: petBaseScale, position: SCNVector3(0, -1.8, 0))
-    }
-    
-    private func animatePenguinForVoice(intensity: Float) {
-        guard let penguin = petView.penguinNode else { return }
-        
-        
-        // Scale animation based on voice intensity
-        let scale = CGFloat(petBaseScale) * (1.0 + (CGFloat(intensity) * 0.3))
-        let scaleAction = SCNAction.scale(to: scale, duration: 0.1)
-        penguin.runAction(scaleAction, forKey: "voiceScale")
-        
-        // Slight tilt when speaking
-        if intensity > 0.3 {
-            let tiltAngle = CGFloat(intensity) * 0.2
-            let tiltAction = SCNAction.rotateBy(x: tiltAngle, y: 0, z: 0, duration: 0.2)
-            penguin.runAction(tiltAction, forKey: "voiceTilt")
-        }
-    }
-    
-    // blob animation
-
-    private func startBlobAnimation() {
-        guard !isAnimating else { return }
-        isAnimating = true
-        
-        outerBlob.alpha = 0
-        middleBlob.alpha = 0
-        innerBlob.alpha = 0
-        centerDot.alpha = 0
-    }
-    
-    private func stopBlobAnimation() {
-        isAnimating = false
-        animationTimer?.invalidate()
-        animationTimer = nil
-        
-        outerBlob.layer.removeAllAnimations()
-        middleBlob.layer.removeAllAnimations()
-        innerBlob.layer.removeAllAnimations()
-        centerDot.layer.removeAllAnimations()
-    }
-    
-    private func animateBlobPulse() {
-        guard isRecording else { return }
-        
-        UIView.animate(withDuration: 2.0, delay: 0, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
-            self.outerBlob.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-            self.outerBlob.alpha = 0.3
-        })
-        
-        UIView.animate(withDuration: 1.5, delay: 0.2, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
-            self.middleBlob.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
-            self.middleBlob.alpha = 0.5
-        })
-        
-        UIView.animate(withDuration: 1.0, delay: 0.4, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
-            self.innerBlob.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
-            self.innerBlob.alpha = 0.9
-        })
-        
-        UIView.animate(withDuration: 0.8, delay: 0.6, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
-            self.centerDot.transform = CGAffineTransform(scaleX: 1.3, y: 1.3)
-        })
-    }
-    
-    // MARK: - Speech Recognition
-    private func requestSpeechPermission() {
-        print("[PetTalking] Requesting permissions...")
-        
-        // Request Speech Recognition Permission
-        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
-            print("[PetTalking] Speech recognition authorization status: \(authStatus.rawValue)")
-            DispatchQueue.main.async {
-                switch authStatus {
-                case .authorized:
-                    print("[PetTalking] Speech recognition AUTHORIZED")
-                    self?.speechPermissionGranted = true
-                    self?.updatePermissionStatus()
-                case .denied:
-                    print("[PetTalking] Speech recognition DENIED")
-                    self?.speechPermissionGranted = false
-                    self?.transcriptionLabel.text = "Speech recognition denied"
-                case .restricted:
-                    print("[PetTalking] Speech recognition RESTRICTED")
-                    self?.speechPermissionGranted = false
-                    self?.transcriptionLabel.text = "Speech recognition restricted"
-                case .notDetermined:
-                    print("[PetTalking] Speech recognition NOT DETERMINED")
-                    self?.speechPermissionGranted = false
-                    self?.transcriptionLabel.text = "Speech recognition not available"
-                @unknown default:
-                    break
-                }
-            }
-        }
-        
-        // Request Microphone Permission
-        if #available(iOS 17.0, *) {
-            AVAudioApplication.requestRecordPermission { [weak self] allowed in
-                print("[PetTalking] Microphone permission (iOS 17+): \(allowed ? "GRANTED" : "DENIED")")
-                DispatchQueue.main.async {
-                    self?.micPermissionGranted = allowed
-                    if !allowed {
-                        self?.transcriptionLabel.text = "Microphone permission needed"
-                    } else {
-                        self?.updatePermissionStatus()
-                    }
-                }
-            }
-        } else {
-            AVAudioSession.sharedInstance().requestRecordPermission { [weak self] allowed in
-                print("[PetTalking] Microphone permission: \(allowed ? "GRANTED" : "DENIED")")
-                DispatchQueue.main.async {
-                    self?.micPermissionGranted = allowed
-                    if !allowed {
-                        self?.transcriptionLabel.text = "Microphone permission needed"
-                    } else {
-                        self?.updatePermissionStatus()
-                    }
-                }
-            }
-        }
-    }
-    
-    private func updatePermissionStatus() {
-        if micPermissionGranted && speechPermissionGranted {
-            print("[PetTalking] All permissions granted - Ready to record")
-            transcriptionLabel.text = "Tap to start talking..."
-        }
-    }
-    
-    private func verifyPermissionsBeforeRecording() -> Bool {
-        print("[PetTalking] Verifying permissions before recording...")
-        
-        // Check Speech Recognition
-        let speechStatus = SFSpeechRecognizer.authorizationStatus()
-        print("[PetTalking] Speech recognition status: \(speechStatus.rawValue)")
-        guard speechStatus == .authorized else {
-            print("[PetTalking] ERROR: Speech recognition not authorized")
-            transcriptionLabel.text = "Speech permission required"
-            return false
-        }
-        
-        // Check Microphone
-        var micGranted = false
-        if #available(iOS 17.0, *) {
-            let micStatus = AVAudioApplication.shared.recordPermission
-            micGranted = (micStatus == .granted)
-            print("[PetTalking] Microphone permission status (iOS 17+): \(micStatus)")
-        } else {
-            let micStatus = AVAudioSession.sharedInstance().recordPermission
-            micGranted = (micStatus == .granted)
-            print("[PetTalking] Microphone permission status: \(micStatus.rawValue)")
-        }
-        guard micGranted else {
-            print("[PetTalking] ERROR: Microphone permission not granted")
-            transcriptionLabel.text = "Microphone permission required"
-            return false
-        }
-        
-        // Check SpeechRecognizer availability
-        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
-            print("[PetTalking] ERROR: Speech recognizer not available")
-            transcriptionLabel.text = "Speech recognition unavailable"
-            return false
-        }
-        print("[PetTalking] Speech recognizer available: \(recognizer.isAvailable)")
-        
-        print("[PetTalking] All permissions verified - ready to record")
-        return true
-    }
-    
-    private func startRecording() {
-        print("[PetTalking] ========== START RECORDING ==========")
-        guard !isRecording else {
-            print("[PetTalking] Already recording, ignoring start request")
-            return
-        }
-        
-        // Verify permissions before starting
-        guard verifyPermissionsBeforeRecording() else {
-            print("[PetTalking] ERROR: Permissions not verified, aborting recording")
-            return
-        }
-        
-        // Stop any existing recording first
-        if audioEngine.isRunning {
-            print("[PetTalking] WARNING: Audio engine already running, stopping first")
-            audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
-        }
-        
-        // Cancel any previous recognition task
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        
-        // Setup audio session - Use playAndRecord for compatibility with playback
-        let audioSession = AVAudioSession.sharedInstance()
-        print("[PetTalking] Configuring audio session...")
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
-            print("[PetTalking] Audio session category set: playAndRecord, mode: measurement")
-            
-            // CRITICAL: Activate the session BEFORE checking inputs
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            print("[PetTalking] Audio session ACTIVATED successfully")
-            
-            // Explicitly select the preferred input (important for Simulator)
-            if let availableInputs = audioSession.availableInputs, !availableInputs.isEmpty {
-                print("[PetTalking] Found \(availableInputs.count) available input(s)")
-                
-                let preferredInput = availableInputs.first { input in
-                    input.portType == .builtInMic
-                } ?? availableInputs.first
-                
-                if let input = preferredInput {
-                    try audioSession.setPreferredInput(input)
-                    print("[PetTalking] Preferred input set to: \(input.portName) (\(input.portType.rawValue))")
-                }
-            } else {
-                print("[PetTalking] WARNING: No available inputs found!")
-                #if targetEnvironment(simulator)
-                print("[PetTalking] SIMULATOR: Check that your Mac's microphone is enabled and Xcode has microphone permission")
-                #endif
-            }
-            
-            print("[PetTalking] Sample rate: \(audioSession.sampleRate)")
-            print("[PetTalking] Input available: \(audioSession.isInputAvailable)")
-            print("[PetTalking] Input channels: \(audioSession.inputNumberOfChannels)")
-            
-            let currentRoute = audioSession.currentRoute
-            print("[PetTalking] Current audio route inputs: \(currentRoute.inputs.map { $0.portName })")
-            print("[PetTalking] Current audio route outputs: \(currentRoute.outputs.map { $0.portName })")
-            
-            if let inputDataSource = audioSession.inputDataSource {
-                print("[PetTalking] Input data source: \(inputDataSource.dataSourceName)")
-            }
-            
-            guard audioSession.isInputAvailable else {
-                print("[PetTalking] ERROR: No audio input available after activation!")
-                transcriptionLabel.text = "No microphone available"
-                return
-            }
-        } catch {
-            print("[PetTalking] ERROR: Audio session setup failed: \(error.localizedDescription)")
-            print("[PetTalking] Error details: \(error)")
-            transcriptionLabel.text = "Audio setup failed"
-            return
-        }
-        
-        // Setup recognition request
-        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else {
-            print("[PetTalking] ERROR: Could not create recognition request")
-            transcriptionLabel.text = "Recognition setup failed"
-            return
-        }
-        recognitionRequest.shouldReportPartialResults = true
-        print("[PetTalking] Recognition request created")
-        
-        // Setup Audio Engine Input
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
-        // CRITICAL: Validate recording format
-        print("[PetTalking] Recording format: \(recordingFormat)")
-        print("[PetTalking] Format sample rate: \(recordingFormat.sampleRate)")
-        print("[PetTalking] Format channel count: \(recordingFormat.channelCount)")
-        
-        guard recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 else {
-            print("[PetTalking] ERROR: Invalid recording format - sample rate or channels is 0")
-            print("[PetTalking] Format details: \(recordingFormat.description)")
-            print("[PetTalking] This typically means no audio input is available")
-            
-            #if targetEnvironment(simulator)
-            print("[PetTalking] ==================== SIMULATOR TROUBLESHOOTING ====================")
-            print("[PetTalking] The iOS Simulator uses your Mac's microphone.")
-            print("[PetTalking] Please check the following:")
-            print("[PetTalking]   1. System Preferences > Security & Privacy > Privacy > Microphone")
-            print("[PetTalking]      - Ensure Xcode is listed and ENABLED")
-            print("[PetTalking]   2. System Preferences > Sound > Input")
-            print("[PetTalking]      - Select a working input device")
-            print("[PetTalking]      - Check if input level indicator moves when you speak")
-            print("[PetTalking]   3. Try restarting the Simulator")
-            print("[PetTalking]   4. Try running on a physical device instead")
-            print("[PetTalking] =================================================================")
-            transcriptionLabel.text = "Simulator: Check Mac microphone"
-            #else
-            transcriptionLabel.text = "No audio input available"
-            #endif
-            
-            // Try to show available inputs for debugging
-            if let availableInputs = audioSession.availableInputs {
-                print("[PetTalking] Available inputs: \(availableInputs.map { "\($0.portName) (\($0.portType.rawValue))" })")
-            } else {
-                print("[PetTalking] No available inputs detected")
-            }
-            
-            // Log current route
-            let currentRoute = audioSession.currentRoute
-            print("[PetTalking] Current route inputs: \(currentRoute.inputs)")
-            print("[PetTalking] Current route outputs: \(currentRoute.outputs)")
-            
-            return
-        }
-        
-        // Remove existing tap and install new one
-        inputNode.removeTap(onBus: 0)
-        print("[PetTalking] Installing audio tap...")
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            recognitionRequest.append(buffer)
-            self?.processAudioLevel(buffer: buffer)
-        }
-        print("[PetTalking] Audio tap installed")
-        
-        // Start audio engine
-        audioEngine.prepare()
-        print("[PetTalking] Audio engine prepared")
-        
-        do {
-            try audioEngine.start()
-            print("[PetTalking] Audio engine STARTED successfully")
-        } catch {
-            print("[PetTalking] ERROR: Audio engine start failed: \(error.localizedDescription)")
-            transcriptionLabel.text = "Audio engine failed to start"
-            inputNode.removeTap(onBus: 0)
-            return
-        }
-        
-        // Start Recognition Task
-        print("[PetTalking] Starting recognition task...")
-        
-        recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
-            if let error = error {
-                print("[PetTalking] Recognition error: \(error.localizedDescription)")
-            }
-
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                if let result = result {
-                    let transcription = result.bestTranscription.formattedString
-                    self.transcriptionLabel.text = transcription
-                    print("[PetTalking] Transcription: \(transcription)")
-                }
-
-                // Auto-stop on final result
-                if error != nil || result?.isFinal == true {
-                    print("[PetTalking] Recognition ended, stopping recording")
-                    self.stopRecordingAndProcess()
-                }
-            }
-        }
-        
-        if recognitionTask == nil {
-            print("[PetTalking] WARNING: Recognition task is nil - speech recognizer may be unavailable")
-        } else {
-            print("[PetTalking] Recognition task started")
-        }
-
-        isRecording = true
-        consecutiveSilentChecks = 0 // Reset silence counter
-        updateMicButton()
-        transcriptionLabel.text = "Listening..."
-        showBlobForRecording()
-        print("[PetTalking] Recording started, silence detection active")
-    }
-    
-    /// Auto-stop recording and process the result
-    private func stopRecordingAndProcess() {
-        // Stop auto-send timer
-        autoSendTimer?.invalidate()
-        autoSendTimer = nil
-        
-        guard isRecording else { return }
-        
-        // Get the transcription
-        let transcription = transcriptionLabel.text ?? ""
-        
-        // Stop recording
-        stopRecording()
-        
-        // Process if user actually spoke something
-        if !transcription.isEmpty && transcription != "Listening..." && transcription != "Tap to start talking..." {
-            print("[PetTalking] Auto-processing transcription: \(transcription)")
-            sendToBackend(text: transcription)
-        } else {
-            print("[PetTalking] No meaningful speech detected, resetting")
-            DispatchQueue.main.async {
-                self.transcriptionLabel.text = "Tap to start talking..."
-            }
-        }
-    }
-
-    private func stopRecording() {
-        print("[PetTalking] ========== STOP RECORDING ==========")
-        guard isRecording else {
-            print("[PetTalking] Not currently recording, ignoring stop request")
-            return
-        }
-        
-        print("[PetTalking] Stopping audio engine...")
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
-        print("[PetTalking] Audio engine stopped, tap removed")
-        
-        recognitionRequest?.endAudio()
-        recognitionRequest = nil
-        
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        print("[PetTalking] Recognition request ended, task cancelled")
-        
-        audioLevelTimer?.invalidate()
-        audioLevelTimer = nil
-        
-        isRecording = false
-        updateMicButton()
-        
-        // Get transcription before resetting
-        let currentText = transcriptionLabel.text ?? ""
-        
-        if currentText == "Listening..." {
-            transcriptionLabel.text = "Tap to start talking..."
-        } else if !currentText.isEmpty && currentText != "Tap to start talking..." {
-            // Send transcription to backend
-            print("[PetTalking] Sending transcription to backend: \(currentText)")
-            sendToBackend(text: currentText)
-        }
-        
-        hideBlobAfterRecording()
-        print("[PetTalking] Recording stopped successfully")
-    }
-    
-    private func sendToBackend(text: String) {
-        transcriptionLabel.text = "Thinking..."
-
-        Task {
-            do {
-                let (response, _, _) = try await petViewModel.sendMessage(text)
-                await MainActor.run {
-                    self.transcriptionLabel.text = response
-                    self.speak(text: response)
-                }
-            } catch {
-                await MainActor.run {
-                    print("Chat error: \(error)")
-                    self.transcriptionLabel.text = "Thinking failed."
-                }
-            }
-        }
-    }
-
-    private func speak(text: String) {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.45
-        utterance.pitchMultiplier = 1.4 // Higher pitch for cute voice
-
-        // Ensure audio session is correct for playback
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Audio session error for playback: \(error)")
-        }
-
-        // Auto-restart listening after pet speaks (if in conversation mode)
-        speechSynthesizer.delegate = self
-        speechSynthesizer.speak(utterance)
-    }
-
-    private func processAudioLevel(buffer: AVAudioPCMBuffer) {
-        guard let channelData = buffer.floatChannelData?[0] else { return }
-        let frameLength = Int(buffer.frameLength)
-        var sum: Float = 0
-
-        for i in 0..<frameLength {
-            sum += abs(channelData[i])
-        }
-
-        let averageLevel = sum / Float(frameLength)
-        let normalizedLevel = min(averageLevel * 10, 1.0)
-
-        // Track silence for auto-detection
-        if isRecording {
-            lastAudioLevel = normalizedLevel
-
-            if normalizedLevel < silenceThreshold {
-                consecutiveSilentChecks += 1
-
-                // Auto-stop if we've seen enough consecutive silent checks
-                if consecutiveSilentChecks >= silentChecksRequired {
-                    print("[PetTalking] Silence detected (audio level: \(normalizedLevel)), auto-processing")
-                    DispatchQueue.main.async { [weak self] in
-                        self?.stopRecordingAndProcess()
-                    }
-                }
-            } else {
-                // User is speaking, reset counter
-                consecutiveSilentChecks = 0
-            }
-        }
-
-        DispatchQueue.main.async { [weak self] in
-            self?.animateBlobForAudio(level: normalizedLevel)
-        }
-    }
-    
-    private func animateBlobForAudio(level: Float) {
-        guard isRecording else { return }
-        
-        let intensity = CGFloat(level)
-        let scale = 1.0 + (intensity * 0.5)
-        
-        UIView.animate(withDuration: 0.1, delay: 0, options: [.curveEaseOut], animations: {
-            self.outerBlob.transform = CGAffineTransform(scaleX: scale * 1.1, y: scale * 1.1)
-            self.middleBlob.transform = CGAffineTransform(scaleX: scale * 1.2, y: scale * 1.2)
-            self.innerBlob.transform = CGAffineTransform(scaleX: scale * 1.3, y: scale * 1.3)
-            self.centerDot.transform = CGAffineTransform(scaleX: scale * 1.4, y: scale * 1.4)
-            
-            self.outerBlob.alpha = 0.1 + (intensity * 0.3)
-            self.middleBlob.alpha = 0.2 + (intensity * 0.4)
-            self.innerBlob.alpha = 0.8 + (intensity * 0.2)
-            self.centerDot.alpha = 1.0
-        })
-        
-        animatePenguinForVoice(intensity: level)
-    }
-    
-    private func showBlobForRecording() {
-        UIView.animate(withDuration: 0.3) {
-            self.outerBlob.alpha = 0.1
-            self.middleBlob.alpha = 0.2
-            self.innerBlob.alpha = 0.8
-            self.centerDot.alpha = 1.0
-        }
-        animateBlobPulse()
-    }
-    
-    private func hideBlobAfterRecording() {
-        UIView.animate(withDuration: 0.3) {
-            self.outerBlob.alpha = 0
-            self.middleBlob.alpha = 0
-            self.innerBlob.alpha = 0
-            self.centerDot.alpha = 0
-        }
-    }
-    
-    private func updateMicButton() {
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .bold)
-        let imageName = isRecording ? "mic.slash.fill" : "mic.fill"
-        let image = UIImage(systemName: imageName, withConfiguration: config)
-        micButton.setImage(image, for: .normal)
-        
-        UIView.animate(withDuration: 0.2) {
-            self.micButton.backgroundColor = self.isRecording ?
-                UIColor.red.withAlphaComponent(0.3) :
-                UIColor(named: "colors/Primary/Dark")?.withAlphaComponent(0.3) ?? UIColor.blue.withAlphaComponent(0.3)
-        }
-    }
-    
-    // MARK: - Actions
-    @objc private func micButtonTapped() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        
-        UIView.animate(withDuration: 0.1, animations: {
-            self.micButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.micButton.transform = .identity
-            }
-        }
-        
-        if isRecording {
-            // Tap while recording: Stop conversation mode
-            isConversationMode = false
-            consecutiveSilentChecks = 0
-            stopRecording()
-            transcriptionLabel.text = "Tap to start talking..."
-            print("[PetTalking] Conversation mode stopped by user")
-        } else {
-            // Tap when stopped: Restart conversation mode
-            isConversationMode = true
-            transcriptionLabel.text = "Listening..."
-            startRecording()
-            print("[PetTalking] Conversation mode restarted by user")
-        }
-    }
-    
-    @objc private func backButtonTapped() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
-        
-        UIView.animate(withDuration: 0.1, animations: {
-            self.backButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.backButton.transform = .identity
-            }
-        }
-        
-        if let navController = navigationController {
-            navController.popViewController(animated: true)
-        } else {
-            dismiss(animated: true)
-        }
+        endCallButton.addTarget(self, action: #selector(endCallButtonTapped), for: .touchUpInside)
+        modeSwitchButton.addTarget(self, action: #selector(modeSwitchButtonTapped), for: .touchUpInside)
+        sendButton.addTarget(self, action: #selector(sendButtonTapped), for: .touchUpInside)
+        textInputField.delegate = self
     }
 }
 
-// MARK: - AVSpeechSynthesizerDelegate
+// MARK: - UITextFieldDelegate
 
-extension PetTalkingViewController: AVSpeechSynthesizerDelegate {
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        // When pet finishes speaking, auto-restart listening (if in conversation mode)
-        if isConversationMode {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self, self.isConversationMode else { return }
-                print("[PetTalking] Pet finished speaking, restarting listening...")
-                self.transcriptionLabel.text = "Listening..."
-                self.startRecording()
-            }
-        }
+extension PetTalkingViewController: UITextFieldDelegate {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let currentText = textField.text ?? ""
+        guard let stringRange = Range(range, in: currentText) else { return true }
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
+        sendButton.isEnabled = !updatedText.isEmpty
+        sendButton.alpha = updatedText.isEmpty ? 0.5 : 1.0
+        return true
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        sendButtonTapped()
+        return true
     }
 }

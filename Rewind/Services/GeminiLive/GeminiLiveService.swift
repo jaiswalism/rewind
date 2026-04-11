@@ -1,8 +1,8 @@
 import Foundation
 import AVFoundation
 
-/// Gemini Live API service for real-time audio conversations
-/// Uses WebSocket streaming for unlimited quota and instant responses
+/// Pet talking websocket client for real-time audio conversations.
+/// The Gemini API key stays on the server; the app only connects to the talking service.
 final class GeminiLiveService: NSObject {
     
     static let shared = GeminiLiveService()
@@ -10,6 +10,7 @@ final class GeminiLiveService: NSObject {
     private var webSocketTask: URLSessionWebSocketTask?
     private var audioStreamTask: Task<Void, Never>?
     private var responseStreamTask: Task<Void, Never>?
+    private var connectContinuation: CheckedContinuation<Void, Error>?
     private var isStreaming = false
     
     // Audio configuration
@@ -23,6 +24,9 @@ final class GeminiLiveService: NSObject {
     var onError: ((Error) -> Void)?
     var onConnected: (() -> Void)?
     var onDisconnected: (() -> Void)?
+    /// Fires when Gemini signals the end of its turn (server-side VAD turnComplete).
+    /// PetVoiceService subscribes to this to know when the pet has finished speaking.
+    static var onTurnComplete: (() -> Void)?
     
     private override init() {
         super.init()
@@ -30,13 +34,9 @@ final class GeminiLiveService: NSObject {
     
     /// Connect to Gemini Live API
     func connect() async throws {
-        guard let apiKey = GeminiLiveConfig.apiKey else {
-            throw GeminiLiveError.missingAPIKey
-        }
-        
-        let wsURL = GeminiLiveConfig.webSocketURL + "?key=" + apiKey
-        guard let url = URL(string: wsURL) else {
-            throw GeminiLiveError.invalidURL(wsURL)
+        guard let wsURL = GeminiLiveConfig.webSocketURL(apiKey: GeminiLiveConfig.apiKey),
+              let url = URL(string: wsURL) else {
+            throw GeminiLiveError.invalidURL(GeminiLiveConfig.serviceURL)
         }
         
         var request = URLRequest(url: url)
@@ -44,17 +44,11 @@ final class GeminiLiveService: NSObject {
         
         let session = URLSession(configuration: .ephemeral, delegate: self, delegateQueue: nil)
         webSocketTask = session.webSocketTask(with: request)
-        webSocketTask?.resume()
-        
-        isStreaming = true
-        
-        // Send initial setup
-        try await sendSetupMessage()
-        
-        // Start listening for responses
-        startListeningForResponses()
-        
-        onConnected?()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            connectContinuation = continuation
+            isStreaming = true
+            webSocketTask?.resume()
+        }
     }
     
     /// Disconnect from Gemini Live API
@@ -62,6 +56,8 @@ final class GeminiLiveService: NSObject {
         isStreaming = false
         audioStreamTask?.cancel()
         responseStreamTask?.cancel()
+        connectContinuation?.resume(throwing: GeminiLiveError.notConnected)
+        connectContinuation = nil
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
         webSocketTask = nil
         onDisconnected?()
@@ -75,9 +71,11 @@ final class GeminiLiveService: NSObject {
         
         // Wrap audio in Gemini Live API format
         let message = GeminiLiveMessage.realtimeInput(
-            mediaChunk: GeminiMediaChunk(
-                mimeType: "audio/pcm;rate=\(sampleRate)",
-                data: audioData.base64EncodedString()
+            input: GeminiRealtimeInput(
+                audio: GeminiBlob(
+                    mimeType: "audio/pcm;rate=\(Int(sampleRate))",
+                    data: audioData.base64EncodedString()
+                )
             )
         )
         
@@ -90,56 +88,63 @@ final class GeminiLiveService: NSObject {
         guard isStreaming, let webSocketTask = webSocketTask else {
             throw GeminiLiveError.notConnected
         }
-        
-        let message = GeminiLiveMessage.clientContent(
-            content: GeminiContent(
-                parts: [GeminiPart(text: text)]
-            )
-        )
-        
-        let jsonData = try JSONEncoder.geminiLive.encode(message)
-        try await webSocketTask.send(.string(String(data: jsonData, encoding: .utf8)!))
+
+        // Use correct format: clientContent with turns array
+        let message: [String: Any] = [
+            "clientContent": [
+                "turns": [
+                    ["role": "user", "parts": [["text": text]]]
+                ],
+                "turnComplete": true
+            ]
+        ]
+
+        let jsonData = try JSONSerialization.data(withJSONObject: message)
+        let jsonStr = String(data: jsonData, encoding: .utf8)!
+        try await webSocketTask.send(.string(jsonStr))
     }
-    
+
     /// End current turn (triggers response)
     func endTurn() async throws {
         guard isStreaming, let webSocketTask = webSocketTask else {
             throw GeminiLiveError.notConnected
         }
-        
-        let message = GeminiLiveMessage.clientContent(
-            content: GeminiContent(
-                parts: [],
-                role: "user"
-            )
-        )
-        
-        let jsonData = try JSONEncoder.geminiLive.encode(message)
-        try await webSocketTask.send(.string(String(data: jsonData, encoding: .utf8)!))
+
+        // Send empty turn with turnComplete
+        let message: [String: Any] = [
+            "clientContent": [
+                "turns": [],
+                "turnComplete": true
+            ]
+        ]
+
+        let jsonData = try JSONSerialization.data(withJSONObject: message)
+        let jsonStr = String(data: jsonData, encoding: .utf8)!
+        try await webSocketTask.send(.string(jsonStr))
     }
     
     // MARK: - Private
     
     private func sendSetupMessage() async throws {
         guard let webSocketTask = webSocketTask else { return }
-        
-        let systemInstruction = GeminiContent(
-            parts: [GeminiPart(text: GeminiLiveConfig.systemPrompt)],
-            role: "system"
-        )
-        
-        let setup = GeminiLiveMessage.setup(
-            setupContent: GeminiLiveSetupContent(
-                model: "models/\(GeminiLiveConfig.modelName)",
-                systemInstruction: systemInstruction,
-                generationConfig: GeminiLiveGenerationConfig(
-                    responseModalities: ["TEXT"]
-                )
-            )
-        )
-        
-        let jsonData = try JSONEncoder.geminiLive.encode(setup)
-        try await webSocketTask.send(.string(String(data: jsonData, encoding: .utf8)!))
+
+        // BidiGenerateContentSetup proto spec — outer key is "setup", responseModalities
+        // lives inside generationConfig. The relay server forwards this to Gemini v1beta.
+        let setup: [String: Any] = [
+            "setup": [
+                "model": "models/\(GeminiLiveConfig.modelName)",
+                "generationConfig": [
+                    "responseModalities": ["AUDIO"]
+                ],
+                "systemInstruction": [
+                    "parts": [["text": GeminiLiveConfig.systemPrompt]]
+                ]
+            ]
+        ]
+
+        let jsonData = try JSONSerialization.data(withJSONObject: setup)
+        let jsonStr = String(data: jsonData, encoding: .utf8)!
+        try await webSocketTask.send(.string(jsonStr))
     }
     
     private func startListeningForResponses() {
@@ -180,28 +185,57 @@ final class GeminiLiveService: NSObject {
     @MainActor
     private func handleResponseMessage(_ message: String) async {
         guard let data = message.data(using: .utf8) else { return }
-        
+
         do {
-            let response = try JSONDecoder.geminiLive.decode(GeminiLiveResponse.self, from: data)
-            
-            switch response {
-            case .serverContent(let serverContent):
-                if let text = serverContent.modelTurn?.parts.first?.text {
-                    onTextResponse?(text)
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+            // Check for setupComplete
+            if json?["setupComplete"] != nil {
+                print("🐾 [LiveAPI] Setup complete")
+                if let continuation = self.connectContinuation {
+                    self.connectContinuation = nil
+                    continuation.resume()
                 }
-                
-                if serverContent.turnComplete == true {
-                    // Response is complete
+                self.onConnected?()
+                return
+            }
+
+            // Check for serverContent
+            if let serverContent = json?["serverContent"] as? [String: Any] {
+                // Check for turnComplete (server-side VAD fired — pet finished speaking)
+                if serverContent["turnComplete"] as? Bool == true {
+                    print("🐾 [LiveAPI] Turn complete")
+                    GeminiLiveService.onTurnComplete?()
                 }
-                
-            case .toolCall:
-                break
-            case .toolCallCancellation:
-                break
-            case .setupComplete:
-                break
-            case .unknown:
-                break
+
+                // Check for generationComplete
+                if serverContent["generationComplete"] as? Bool == true {
+                    print("🐾 [LiveAPI] Generation complete")
+                    return
+                }
+
+                // Check for modelTurn
+                if let modelTurn = serverContent["modelTurn"] as? [String: Any],
+                   let parts = modelTurn["parts"] as? [[String: Any]] {
+                    for part in parts {
+                        // Check for text (including thought)
+                        if let text = part["text"] as? String {
+                            let isThought = part["thought"] as? Bool ?? false
+                            if !isThought {
+                                onTextResponse?(text)
+                            }
+                        }
+
+                        // Check for audio data
+                        if let inlineData = part["inlineData"] as? [String: Any],
+                           let mimeType = inlineData["mimeType"] as? String,
+                           let audioData = inlineData["data"] as? String,
+                           mimeType.hasPrefix("audio/"),
+                           let audioBytes = Data(base64Encoded: audioData) {
+                            onAudioData?(audioBytes)
+                        }
+                    }
+                }
             }
         } catch {
             // Log but don't fail on parsing errors
@@ -214,6 +248,10 @@ final class GeminiLiveService: NSObject {
 extension GeminiLiveService: URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         isStreaming = false
+        if let continuation = connectContinuation {
+            connectContinuation = nil
+            continuation.resume(throwing: GeminiLiveError.notConnected)
+        }
         Task { @MainActor in
             self.onDisconnected?()
         }
@@ -221,6 +259,17 @@ extension GeminiLiveService: URLSessionWebSocketDelegate {
     
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         print("🐾 [LiveAPI] WebSocket connected")
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.sendSetupMessage()
+                self.startListeningForResponses()
+            } catch {
+                self.connectContinuation?.resume(throwing: error)
+                self.connectContinuation = nil
+                self.onError?(error)
+            }
+        }
     }
 }
 
@@ -251,11 +300,42 @@ enum GeminiLiveError: LocalizedError {
 // MARK: - Config
 enum GeminiLiveConfig {
     static var apiKey: String? {
-        Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String
+        normalizedInfoValue(for: "PET_TALKING_API_KEY") ?? "rewind-pet-2026-secure-key"
     }
-    
-    static let modelName = "gemini-2.5-flash"
-    static let webSocketURL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
+
+    static var serviceURL: String {
+        normalizedInfoValue(for: "PET_TALKING_SERVICE_URL") ?? "wss://api.rewind.shyamjaiswal.in/ws"
+    }
+
+    static func webSocketURL(apiKey: String?) -> String? {
+        guard var components = URLComponents(string: serviceURL) else {
+            return nil
+        }
+
+        if let apiKey, !apiKey.isEmpty {
+            var queryItems = components.queryItems ?? []
+            queryItems.append(URLQueryItem(name: "api_key", value: apiKey))
+            components.queryItems = queryItems
+        }
+
+        return components.string
+    }
+
+    private static func normalizedInfoValue(for key: String) -> String? {
+        guard let rawValue = Bundle.main.infoDictionary?[key] as? String else {
+            return nil
+        }
+
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !trimmed.hasPrefix("$(") else {
+            return nil
+        }
+        return trimmed
+    }
+
+    // gemini-3.1-flash-live-preview is the current recommended live model (Apr 2026).
+    // Fallback: gemini-2.5-flash-native-audio-preview-12-2025
+    static let modelName = "gemini-3.1-flash-live-preview"
     
     static let systemPrompt = """
     You are a calm virtual companion in a wellness app. Be warm, empathetic, and conversational.
