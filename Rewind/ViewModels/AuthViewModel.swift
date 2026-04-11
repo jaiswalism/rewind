@@ -200,6 +200,7 @@ final class AuthViewModel: ObservableObject {
             try await supabase.auth.signOut()
             currentUser = nil
             isLoggedIn = false
+            UserDefaults.standard.set(false, forKey: Constants.UserDefaults.pendingPasswordReset)
         } catch {
             self.error = error.localizedDescription
         }
@@ -207,12 +208,95 @@ final class AuthViewModel: ObservableObject {
     
     func forgotPassword(email: String) async throws {
         isLoading = true
+        error = nil
         defer { isLoading = false }
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         
         do {
-            try await supabase.auth.resetPasswordForEmail(email)
+            try await supabase.auth.resetPasswordForEmail(
+                normalizedEmail,
+                redirectTo: Constants.Auth.oauthRedirectURL
+            )
         } catch {
-            self.error = error.localizedDescription
+            self.error = "Unable to send reset link. Please try again."
+            throw error
+        }
+    }
+
+    func verifyPasswordResetOTP(email: String, code: String) async throws {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedCode = code.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedCode.isEmpty else {
+            let validationError = NSError(
+                domain: "AuthViewModel",
+                code: 400,
+                userInfo: [NSLocalizedDescriptionKey: "Enter the code from your email."]
+            )
+            self.error = "Enter the code from your email."
+            throw validationError
+        }
+
+        do {
+            _ = try await supabase.auth.verifyOTP(
+                email: normalizedEmail,
+                token: trimmedCode,
+                type: .recovery
+            )
+            UserDefaults.standard.set(true, forKey: Constants.UserDefaults.pendingPasswordReset)
+        } catch {
+            self.error = "That code did not work. Check the email and try again."
+            throw error
+        }
+    }
+
+    func resendPasswordReset(email: String) async throws {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        do {
+            try await supabase.auth.resetPasswordForEmail(
+                normalizedEmail,
+                redirectTo: Constants.Auth.oauthRedirectURL
+            )
+        } catch {
+            self.error = "Unable to resend reset link right now. Please wait a few seconds and try again."
+            throw error
+        }
+    }
+
+    func updatePassword(newPassword: String) async throws {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        guard newPassword.count >= 8 else {
+            let validationError = NSError(
+                domain: "AuthViewModel",
+                code: 400,
+                userInfo: [NSLocalizedDescriptionKey: "Password must be at least 8 characters."]
+            )
+            self.error = "Password must be at least 8 characters."
+            throw validationError
+        }
+
+        do {
+            try await supabase.auth.update(
+                user: UserAttributes(password: newPassword)
+            )
+            UserDefaults.standard.set(false, forKey: Constants.UserDefaults.pendingPasswordReset)
+            try await supabase.auth.signOut()
+            currentUser = nil
+            isLoggedIn = false
+        } catch {
+            self.error = "Unable to update password. Please request a new reset link."
             throw error
         }
     }
@@ -300,6 +384,9 @@ final class AuthViewModel: ObservableObject {
         )
         
         try await supabase.from("users").update(req).eq("id", value: userId).execute()
+        
+        // Cache the completion state locally for offline resilience
+        UserDefaults.standard.set(true, forKey: Constants.UserDefaults.hasCompletedOnboarding)
         
         await fetchCurrentUser()
     }

@@ -37,8 +37,8 @@ class OnboardingScreenViewController: UIViewController {
           loginVC.modalPresentationStyle = .fullScreen
           self.present(loginVC, animated: true, completion: nil)
           
-          // Optional: Mark onboarding as complete (if you plan to skip next time)
-          UserDefaults.standard.set(true, forKey: "onboardingCompleted")
+          // Mark onboarding as complete locally for offline resilience
+          UserDefaults.standard.set(true, forKey: Constants.UserDefaults.hasCompletedOnboarding)
       }
 
     /*

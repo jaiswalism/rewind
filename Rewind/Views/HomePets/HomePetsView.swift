@@ -59,25 +59,24 @@ private enum HomeStatInfoTopic: String, Identifiable {
 
 struct HomePetsView: View {
     @StateObject private var viewModel:   PetViewModel
-    @StateObject private var talkSession: PetTalkSessionViewModel
+    @StateObject private var talkSession: PetConversationSessionViewModel
     @StateObject private var userViewModel: UserViewModel
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(Constants.UserDefaults.selectedPetMartStyle) private var selectedPetMartStyle = "basicPanda"
 
     var onSettingsTapped:      () -> Void = {}
     var onPetMartTapped:       () -> Void = {}
-    // onMicTapped removed – talk is now inline
 
     @State private var showBubble = false
-    @State private var isTalking  = false   // drives the inline panel
     @State private var bubbleQuote = ""
     @State private var hasInitializedData = false
     @State private var selectedStatTopic: HomeStatInfoTopic?
+    @State private var showingTalkSession = false
 
     init() {
         let pet = PetViewModel()
         _viewModel   = StateObject(wrappedValue: pet)
-        _talkSession = StateObject(wrappedValue: PetTalkSessionViewModel(petViewModel: pet))
+        _talkSession = StateObject(wrappedValue: PetConversationSessionViewModel(petViewModel: pet))
         _userViewModel = StateObject(wrappedValue: UserViewModel.shared)
     }
 
@@ -99,16 +98,9 @@ struct HomePetsView: View {
 
                 Spacer(minLength: 0)
 
-                // Action row stays; it just morphs into the talk panel
-                if isTalking {
-                    talkPanel
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                } else {
-                    actionSection
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 32)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
+                actionSection
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 32)
             }
         }
         .task {
@@ -133,7 +125,11 @@ struct HomePetsView: View {
             HomeStatsInfoSheet(topic: topic)
                 .presentationDetents([.medium, .large])
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: isTalking)
+        .fullScreenCover(isPresented: $showingTalkSession, onDismiss: {
+            talkSession.closeSession()
+        }) {
+            PetTalkingSessionView(viewModel: talkSession)
+        }
     }
 
     // MARK: - Top Bar
@@ -223,7 +219,7 @@ struct HomePetsView: View {
                 .blur(radius: 7)
                 .offset(x: -14, y: 198)
 
-            if showBubble && !isTalking {
+            if showBubble {
                 speechBubble
                     .offset(x: 50, y: -170)
                     .transition(.scale(scale: 0.5, anchor: .bottomLeading).combined(with: .opacity))
@@ -273,13 +269,10 @@ struct HomePetsView: View {
     private var actionSection: some View {
         VStack(spacing: 12) {
             Button {
-                talkSession.openSession()
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
-                    isTalking = true
-                }
+                showingTalkSession = true
             } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "mic.fill")
+                    Image(systemName: "message.and.waveform.fill")
                         .font(.system(size: 16, weight: .semibold))
                     Text("Talk")
                         .font(.system(size: 16, weight: .semibold))
@@ -299,145 +292,6 @@ struct HomePetsView: View {
         }
     }
 
-    // MARK: - Talk Panel
-
-    private var talkPanel: some View {
-        VStack(spacing: 0) {
-            // handle + close row
-            HStack {
-                Spacer()
-                Button {
-                    talkSession.closeSession()
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
-                        isTalking = false
-                    }
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(.secondary)
-                        .symbolRenderingMode(.hierarchical)
-                }
-                .accessibilityLabel("Close conversation")
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
-
-            // Animated blob + mic
-            ZStack {
-                BlobRing(scale: 1 + CGFloat(talkSession.audioLevel) * 0.55,
-                         opacity: 0.12 + Double(talkSession.audioLevel) * 0.25,
-                         diameter: 130)
-                BlobRing(scale: 1 + CGFloat(talkSession.audioLevel) * 0.40,
-                         opacity: 0.20 + Double(talkSession.audioLevel) * 0.30,
-                         diameter: 100)
-                BlobRing(scale: 1 + CGFloat(talkSession.audioLevel) * 0.25,
-                         opacity: 0.50 + Double(talkSession.audioLevel) * 0.30,
-                         diameter: 72)
-
-                Button(action: { talkSession.toggleMic() }) {
-                    ZStack {
-                        Circle()
-                            .fill(micFill)
-                            .frame(width: 60, height: 60)
-                            .shadow(color: micShadow, radius: 10, y: 4)
-
-                        Image(systemName: micIcon)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                }
-                .accessibilityLabel(talkSession.sessionState == .listening ? "Stop recording" : "Start recording")
-                .disabled(!micEnabled)
-                .scaleEffect(talkSession.sessionState == .listening ? 1.08 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6),
-                            value: talkSession.sessionState == .listening)
-            }
-            .frame(height: 140)
-
-            // Status + text area
-            VStack(spacing: 6) {
-                Text(statusText)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                    .tracking(0.8)
-                    .animation(.easeInOut(duration: 0.2), value: statusText)
-
-                ScrollView {
-                    Text(displayText)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .frame(maxWidth: .infinity)
-                        .animation(.easeInOut(duration: 0.25), value: displayText)
-                }
-                .frame(maxHeight: 80)
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 28)
-        }
-        .background(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.regularMaterial)
-                .shadow(color: .black.opacity(0.15), radius: 20, y: -4)
-        )
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-    }
-
-    // MARK: - Talk Panel Helpers
-
-    private var micIcon: String {
-        switch talkSession.sessionState {
-        case .listening:    return "mic.slash.fill"
-        case .thinking:     return "ellipsis"
-        case .responding:   return "speaker.wave.2.fill"
-        default:            return "mic.fill"
-        }
-    }
-
-    private var micFill: Color {
-        switch talkSession.sessionState {
-        case .listening:  return Color(red: 0.9, green: 0.2, blue: 0.2)
-        case .thinking:   return Color(red: 0.55, green: 0.45, blue: 0.95)
-        case .responding: return Color(red: 0.25, green: 0.72, blue: 0.55)
-        default:          return Color(red: 0.38, green: 0.38, blue: 1.0)
-        }
-    }
-
-    private var micShadow: Color {
-        micFill.opacity(0.45)
-    }
-
-    private var micEnabled: Bool {
-        switch talkSession.sessionState {
-        case .thinking, .responding: return false
-        default: return true
-        }
-    }
-
-    private var statusText: String {
-        switch talkSession.sessionState {
-        case .idle:           return "Tap to talk"
-        case .listening:      return "Listening"
-        case .thinking:       return "Thinking…"
-        case .responding:     return "Responding"
-        case .error(let msg): return msg
-        }
-    }
-
-    private var displayText: String {
-        switch talkSession.sessionState {
-        case .listening:     return talkSession.transcription.isEmpty ? "…" : talkSession.transcription
-        case .thinking:      return talkSession.transcription
-        case .responding,
-             .idle where !talkSession.petResponse.isEmpty:
-            return talkSession.petResponse
-        case .error(let m):  return m
-        default:             return ""
-        }
-    }
 }
 
 private struct HomeStatsInfoSheet: View {

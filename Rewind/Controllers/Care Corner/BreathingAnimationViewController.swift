@@ -452,6 +452,12 @@ class BreathingAnimationViewController: UIViewController {
         Task {
             do {
                 let pawsEarned = try await careCornerViewModel.recordBreathing(durationSeconds: durationSeconds)
+                
+                // Trigger pet companion inference for breathing exercise
+                _ = Task(priority: .utility) {
+                    await Self.inferPetCompanionBreathing(durationSeconds: durationSeconds)
+                }
+                
                 await MainActor.run {
                     let completedVC = ExerciseCompletedViewController(
                         duration: durationString,
@@ -625,6 +631,44 @@ class BreathingAnimationViewController: UIViewController {
             playPauseButton.layer.borderColor = currentControlBorder.cgColor
             playPauseButton.tintColor = currentSecondaryTextColor
             breathingLabel.textColor = UIColor.white.withAlphaComponent(0.95)
+        }
+    }
+    
+    // MARK: - Pet Companion Integration
+    
+    /// Trigger pet companion inference after breathing exercise
+    private static func inferPetCompanionBreathing(durationSeconds: Int) async {
+        do {
+            guard let userId = UserViewModel.shared.user?.id else { return }
+            
+            let timeOfDay = currentTimeOfDay()
+            let content = "Completed \(durationSeconds / 60) minutes of breathing exercise"
+            let request = PetInferenceRequest(
+                type: .breathing,
+                content: content,
+                explicitRequest: false,
+                context: PetInferenceContext(
+                    timeOfDay: timeOfDay,
+                    daysInactive: 0
+                ),
+                userId: userId.uuidString
+            )
+            
+            let response = try await PetCompanionService.shared.infer(request)
+            print("🐾 Pet companion breathing: emotion=\(response.emotion.primary), policy=\(response.behaviorPolicy)")
+        } catch {
+            print("🐾 Pet companion breathing inference failed: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Determine current time of day for context
+    private static func currentTimeOfDay() -> PetTimeOfDay {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return .morning
+        case 12..<17: return .afternoon
+        case 17..<21: return .evening
+        default: return .night
         }
     }
 }

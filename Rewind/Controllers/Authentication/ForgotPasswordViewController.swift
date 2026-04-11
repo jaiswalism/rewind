@@ -1,34 +1,25 @@
-//
-//  ForgotPasswordViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 06/11/25.
-//
-
 import UIKit
+import SwiftUI
 
-class ForgotPasswordViewController: UIViewController {
+final class ForgotPasswordViewController: UIHostingController<ForgotPasswordView> {
 
-    @IBOutlet var emailPhoneField: UITextField!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    init(prefilledEmail: String? = nil) {
+        var view = ForgotPasswordView(prefilledEmail: prefilledEmail)
+        super.init(rootView: view)
 
-        emailPhoneField.styleRoundedInput()
+        view.onBackTapped = { [weak self] in self?.dismiss(animated: true) }
+
+        view.onCodeSent = { [weak self] email in
+            guard let self else { return }
+            let otpController = OTPVerifyViewController(prefilledEmail: email)
+            otpController.modalPresentationStyle = .fullScreen
+            self.present(otpController, animated: true)
+        }
+
+        self.rootView = view
     }
 
-    @IBAction func backButton(_ sender: Any) {
-        // back to login
-
-             let loginVC = LoginViewController()
-             
-             loginVC.modalPresentationStyle = .fullScreen
-             present(loginVC, animated: true, completion: nil)
-         }
-    @IBAction func sendOTPButton(_ sender: Any) {
-        // Navigate to OTPVerifyViewController
-                let otpVC = OTPVerifyViewController(nibName: "OTPVerifyViewController", bundle: nil)
-                otpVC.modalPresentationStyle = .fullScreen
-                present(otpVC, animated: true, completion: nil)
-            }
-        }
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

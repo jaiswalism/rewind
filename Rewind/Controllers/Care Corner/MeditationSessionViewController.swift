@@ -473,6 +473,12 @@ class MeditationSessionViewController: UIViewController {
         Task {
             do {
                 let pawsEarned = try await careCornerViewModel.recordMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
+                
+                // Trigger pet companion inference for meditation session
+                _ = Task(priority: .utility) {
+                    await Self.inferPetCompanionMeditation(durationSeconds: durationSeconds, soundName: selectedSound)
+                }
+                
                 await MainActor.run {
                     let completedVC = ExerciseCompletedViewController(
                         duration: durationString,
@@ -653,6 +659,45 @@ class MeditationSessionViewController: UIViewController {
             playPauseButton.backgroundColor = currentControlBackground
             playPauseButton.layer.borderColor = currentControlBorder.cgColor
             playPauseButton.tintColor = currentSecondaryTextColor
+        }
+    }
+    
+    // MARK: - Pet Companion Integration
+    
+    /// Trigger pet companion inference after meditation session
+    private static func inferPetCompanionMeditation(durationSeconds: Int, soundName: String?) async {
+        do {
+            guard let userId = UserViewModel.shared.user?.id else { return }
+            
+            let timeOfDay = currentTimeOfDay()
+            let soundText = soundName.map { " with \(String(describing: $0))" } ?? ""
+            let content = "Completed \(durationSeconds / 60) minutes of meditation\(soundText)"
+            let request = PetInferenceRequest(
+                type: .breathing, // Using breathing type for meditation
+                content: content,
+                explicitRequest: false,
+                context: PetInferenceContext(
+                    timeOfDay: timeOfDay,
+                    daysInactive: 0
+                ),
+                userId: userId.uuidString
+            )
+            
+            let response = try await PetCompanionService.shared.infer(request)
+            print("🐾 Pet companion meditation: emotion=\(response.emotion.primary), policy=\(response.behaviorPolicy)")
+        } catch {
+            print("🐾 Pet companion meditation inference failed: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Determine current time of day for context
+    private static func currentTimeOfDay() -> PetTimeOfDay {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return .morning
+        case 12..<17: return .afternoon
+        case 17..<21: return .evening
+        default: return .night
         }
     }
 }
