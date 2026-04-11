@@ -36,5 +36,7 @@ enum Constants {
         static let currentUserID = "currentUserID"
         static let selectedPetMartStyle = "selectedPetMartStyle"
         static let ownedPetMartStyles = "ownedPetMartStyles"
+        static let pendingPasswordReset = "pendingPasswordReset"
+        static let passwordResetCodeSentAt = "passwordResetCodeSentAt"
     }
 }

@@ -1,28 +1,23 @@
-//
-//  ResetPasswordViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 07/11/25.
-//
-
 import UIKit
+import SwiftUI
 
-class ResetPasswordViewController: UIViewController {
+final class ResetPasswordViewController: UIHostingController<ResetPasswordView> {
 
-    @IBOutlet var passwordField: UITextField!
-    @IBOutlet var confirmPasswordField: UITextField!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    init() {
+        var view = ResetPasswordView()
+        super.init(rootView: view)
 
-        let fields = [passwordField, confirmPasswordField]
-            fields.forEach { $0?.styleRoundedInput() }
+        view.onDoneTapped = { [weak self] in
+            guard let self else { return }
+            let loginVC = LoginViewController()
+            loginVC.modalPresentationStyle = .fullScreen
+            self.present(loginVC, animated: true)
+        }
+
+        self.rootView = view
     }
 
-    @IBAction func backButton(_ sender: Any) {
-        // Navigate back to OTPVerifyViewController
-               let otpVC = OTPVerifyViewController(nibName: "OTPVerifyViewController", bundle: nil)
-               otpVC.modalPresentationStyle = .fullScreen
-               present(otpVC, animated: true, completion: nil)
-           }
-       }
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

@@ -14,6 +14,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     private var splashShownAt: Date?
     private let minimumSplashDuration: TimeInterval = 1.8
+    private var pendingRecoveryRoute = false
+    private var initialRoutingTask: Task<Void, Never>?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
@@ -30,11 +32,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             PetLLMService(supabaseURL: "https://jbucoyhjtwjwockxllfp.supabase.co")
         )
 
-        Task {
+        initialRoutingTask = Task {
             if let callbackURL = connectionOptions.urlContexts.first?.url {
                 await handleOAuthCallback(url: callbackURL)
                 return
             }
+
+            if let universalLink = connectionOptions.userActivities.first?.webpageURL {
+                await handleOAuthCallback(url: universalLink)
+                return
+            }
+
             await resolveInitialScreen()
         }
     }
@@ -43,8 +51,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     @MainActor
     private func resolveInitialScreen() async {
+        guard !Task.isCancelled else { return }
+
+        if pendingRecoveryRoute {
+            pendingRecoveryRoute = false
+            await waitForMinimumSplashDuration()
+            setRoot(ForgotPasswordViewController())
+            return
+        }
+
         let supabase = SupabaseConfig.shared.client
         var nextViewController: UIViewController?
+        let hasPendingPasswordReset = UserDefaults.standard.bool(forKey: Constants.UserDefaults.pendingPasswordReset)
+
+        if hasPendingPasswordReset {
+            if (try? await supabase.auth.session) != nil {
+                try? await supabase.auth.signOut()
+            }
+            UserDefaults.standard.set(false, forKey: Constants.UserDefaults.pendingPasswordReset)
+        }
 
         // Check for an active session
         if let session = try? await supabase.auth.session {
@@ -85,6 +110,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         await waitForMinimumSplashDuration()
+
+        guard !Task.isCancelled else { return }
+
+        if pendingRecoveryRoute {
+            pendingRecoveryRoute = false
+            setRoot(ForgotPasswordViewController())
+            return
+        }
+
         if let nextViewController {
             setRoot(nextViewController)
         } else {
@@ -129,14 +163,70 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else {
+            return
+        }
+
+        Task {
+            await handleOAuthCallback(url: url)
+        }
+    }
+
     @MainActor
     private func handleOAuthCallback(url: URL) async {
+        let isRecoveryLink = isRecoveryCallback(url)
+        pendingRecoveryRoute = isRecoveryLink
+
+        if isRecoveryLink {
+            initialRoutingTask?.cancel()
+            initialRoutingTask = nil
+        }
+
         do {
             _ = try await SupabaseConfig.shared.client.auth.session(from: url)
         } catch {
             SupabaseConfig.shared.client.handle(url)
         }
 
+        if isRecoveryLink {
+            pendingRecoveryRoute = false
+            setRoot(ForgotPasswordViewController())
+            return
+        }
+
         await resolveInitialScreen()
+    }
+
+    private func isRecoveryCallback(_ url: URL) -> Bool {
+        let lowercasedURL = url.absoluteString.lowercased()
+        if lowercasedURL.contains("type=recovery") {
+            return true
+        }
+
+        if lowercasedURL.contains("token_hash=") {
+            return true
+        }
+
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           components.queryItems?.contains(where: { item in
+               let name = item.name.lowercased()
+               let value = item.value?.lowercased()
+               return (name == "type" && value == "recovery") || name == "token_hash"
+           }) == true {
+            return true
+        }
+
+        if let fragment = URLComponents(string: "https://placeholder.app/?\(url.fragment ?? "")"),
+           fragment.queryItems?.contains(where: { item in
+               let name = item.name.lowercased()
+               let value = item.value?.lowercased()
+               return (name == "type" && value == "recovery") || name == "token_hash"
+           }) == true {
+            return true
+        }
+
+        return false
     }
 }

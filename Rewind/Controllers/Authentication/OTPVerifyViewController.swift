@@ -1,35 +1,26 @@
-//
-//  OTPVerifyViewController.swift
-//  Rewind
-//
-//  Created by Shyam on 07/11/25.
-//
-
 import UIKit
+import SwiftUI
 
-class OTPVerifyViewController: UIViewController {
+final class OTPVerifyViewController: UIHostingController<PasswordRecoveryOTPView> {
 
-    @IBOutlet var otpInput1: UITextField!
-    @IBOutlet var otpInput2: UITextField!
-    @IBOutlet var otpInput3: UITextField!
-    @IBOutlet var otpInput4: UITextField!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    init(prefilledEmail: String? = nil) {
+        let email = prefilledEmail ?? ""
+        var view = PasswordRecoveryOTPView(email: email)
+        super.init(rootView: view)
 
-        // Do any additional setup after loading the view.
-        let fields = [otpInput1, otpInput2, otpInput3, otpInput4]
-        fields.forEach { $0?.styleRoundedInput() }
+        view.onBackTapped = { [weak self] in self?.dismiss(animated: true) }
+
+        view.onVerified = { [weak self] in
+            guard let self else { return }
+            let resetVC = ResetPasswordViewController()
+            resetVC.modalPresentationStyle = .fullScreen
+            self.present(resetVC, animated: true)
+        }
+
+        self.rootView = view
     }
-    @IBAction func backButton(_ sender: Any) {
-        // Navigate back to ForgotPasswordViewController 
-              let forgotVC = ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil)
-              forgotVC.modalPresentationStyle = .fullScreen
-              present(forgotVC, animated: true, completion: nil)
-          }
-    @IBAction func verifyCodeButton(_ sender: Any) {
-              let resetVC = ResetPasswordViewController(nibName: "ResetPasswordViewController", bundle: nil)
-              resetVC.modalPresentationStyle = .fullScreen
-              present(resetVC, animated: true, completion: nil)
-          }
-      }
+
+    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

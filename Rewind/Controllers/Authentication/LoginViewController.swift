@@ -36,7 +36,7 @@ class LoginViewController: UIHostingController<LoginView> {
         }
         
         loginView.onForgotPasswordTapped = { [weak self] in
-            let forgetVC = ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil)
+            let forgetVC = ForgotPasswordViewController()
             forgetVC.modalPresentationStyle = .fullScreen
             self?.present(forgetVC, animated: true, completion: nil)
         }
