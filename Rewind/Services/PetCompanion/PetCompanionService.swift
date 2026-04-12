@@ -154,7 +154,7 @@ final class PetCompanionService: ObservableObject {
             
             // 12. Persist state if userId provided
             if let userId = request.userId {
-                try await repository.updatePetCompanionState(clippedState)
+                _ = try await repository.updatePetCompanionState(clippedState)
                 self.currentState = clippedState
                 
                 // Persist journal entry if content exists

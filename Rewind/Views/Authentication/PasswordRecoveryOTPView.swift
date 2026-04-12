@@ -37,7 +37,7 @@ struct PasswordRecoveryOTPView: View {
                 .padding(.bottom, 24)
             }
             .onTapGesture { isCodeFocused = false }
-            .onChange(of: code) { newValue in
+            .onChange(of: code) { _, newValue in
                 let digitsOnly = newValue.filter(\.isNumber)
                 if digitsOnly != newValue {
                     code = String(digitsOnly.prefix(8))
@@ -48,7 +48,7 @@ struct PasswordRecoveryOTPView: View {
             .onReceive(ticker) { _ in
                 refreshResendCooldown()
             }
-            .onChange(of: scenePhase) { newPhase in
+            .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
                     refreshResendCooldown()
                 }

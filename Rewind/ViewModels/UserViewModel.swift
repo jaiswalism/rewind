@@ -167,7 +167,7 @@ final class UserViewModel: ObservableObject {
 
     func restoreScheduledAccountDeletionIfNeeded() async {
         guard let user,
-              let requestedAt = user.accountDeletionRequestedAt,
+              user.accountDeletionRequestedAt != nil,
               let dueAt = user.accountDeletionDueAt else {
             return
         }
