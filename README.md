@@ -1,72 +1,43 @@
-# ⏪ Rewind - iOS Client
+# rewind
 
-This repository contains the native iOS client for **Rewind**, a comprehensive mental health, wellness, and self-care application. The app offers habit tracking, journaling, community engagement, and a gamified virtual companion to promote daily mental wellbeing.
+iOS Xcode workspace for the Rewind app — personal journaling, guided care, community, and a virtual companion that evolves with your wellness journey.
 
----
+> Internal repository for the Rewind. Not open for external contributions.
 
-## 🏗️ Architecture & Stack
-This project adheres to a strict coding standard outlined in `RULES.md`. All contributions **must** follow these principles.
+## Features
 
-*   **Design Pattern:** Strict **MVVM** (Model-View-ViewModel).
-*   **UI Framework:** Hybrid approach utilizing **SwiftUI** for new components and **UIKit** for core routing and legacy views.
-*   **Reactivity:** Deep integration of **Combine** for reactive data bindings between ViewModels (`@Published`) and Views (`AnyCancellable`).
-*   **Backend:** Serverless architecture directly interfacing with **Supabase**. There is no traditional middleware API for core CRUD operations.
+- **Journal** — Text and voice entries with emotion tags and streaks
+- **Care Corner** — Breathing exercises, meditation, and daily challenges
+- **Community** — Anonymous social feed for sharing and support
+- **HomePets** — Virtual companion with dynamic states tied to your activity
+- **Pet Talking** — Real-time voice sessions with the companion
 
----
+## Stack
 
-## 🛠️ Project Setup
+- SwiftUI + UIKit, MVVM, Combine
+- Supabase (Auth, Postgres + RLS, Storage)
+- `rewind-voice-relay` — WebSocket proxy for Live voice sessions
 
-### 1. Prerequisites
-*   **macOS** (latest recommended)
-*   **Xcode 15+**
-*   An active **Supabase** project instance (for database, auth, and storage).
+## Structure
 
-### 2. Environment Configuration
-The app will crash on launch if it cannot connect to the backend. You must configure the Supabase client locally:
+```
+Rewind/Controllers/   → UIKit and hosting controllers
+Rewind/Views/         → SwiftUI views
+Rewind/ViewModels/    → Feature logic and state
+Rewind/Models/        → Database and domain models
+Rewind/Services/      → Voice, onboarding, and other integrations
+```
 
-1. Open the project in Xcode (`Rewind.xcodeproj`).
-2. Navigate to `Rewind/Core/` and create a new Swift file named `SupabaseSecrets.swift`.
-3. Add the following code with your Supabase credentials:
-   ```swift
-   import Foundation
+## Key files
 
-   public enum SupabaseSecrets {
-       public static let supabaseURL = URL(string: "YOUR_SUPABASE_URL")!
-       public static let supabaseKey = "YOUR_SUPABASE_ANON_KEY"
-   }
-   ```
-4. *Note: Ensure this file is added to your `.gitignore` to prevent leaking secrets.*
+- `RULES.md` — Enforced coding standards (MVVM, no external dependencies, file size limits)
+- `ARCHITECTURE.md` — How ViewModels talk to Supabase and how UI is composed
 
-### 3. Running the App
-1. Open `Rewind.xcodeproj`.
-2. Wait for **Swift Package Manager (SPM)** to finish resolving dependencies (primarily `supabase-swift`).
-3. Select your target simulator or physical device and run (`Cmd + R`).
+## License & Copyright
+
+**Proprietary and Confidential.**
+All rights reserved. This project, including all source code, assets, and concepts, is the exclusive property of Rewind. It is not open-source. You may not copy, distribute, reproduce, or use any part of this repository without explicit written permission.
 
 ---
 
-## 🚦 Core Dependencies
-This project operates under a "zero unnecessary external libraries" policy. We rely on native Apple frameworks wherever possible.
-
-*   `supabase-swift` - The official Supabase client for Swift (Auth, Database, Storage).
-*   *Native Frameworks:* `Combine`, `SwiftUI`, `UIKit`, `AVFoundation` (for voice journals/meditation).
-
----
-
-## 🚨 Development Rules (CRITICAL)
-If you are developing or using an AI assistant on this repository, you are strictly bound by the `RULES.md` file. Highlights include:
-1. **Max file size:** `300 lines`. Break views and logic down aggressively.
-2. **Max function size:** `40 lines`.
-3. **No logic in views:** UI files are for rendering **only**.
-4. **No force unwraps:** `!` is strictly prohibited unless provably safe.
-5. **No AI abstractions:** If an AI generates complex, abstracted code, remove it or rewrite it. Clarity > Cleverness.
-
-If your code doesn't meet the Definition of Done (Zero warnings, zero force unwrap risks, highly readable), it will be rejected.
-
----
-
-## 🗺️ Feature Map
-*   **`/Controllers`**: UIKit ViewControllers and SwiftUI hosting controllers grouped by feature.
-*   **`/ViewModels`**: Pure logic and state management handling network requests.
-*   **`/Models`**: Codable Swift structs that mirror our Supabase PostgreSQL tables.
-*   **`/Core`**: Singletons and configurations (e.g., `SupabaseConfig.swift`).
-*   **`/Services`**: Interfacing logic for external microservices (like the `rewind-pet-microservice`).
+© 2026 Rewind · [rewind@shyamjaiswal.in](mailto:rewind@shyamjaiswal.in)
