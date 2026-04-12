@@ -2,7 +2,7 @@
 
 iOS Xcode workspace for the Rewind app — personal journaling, guided care, community, and a virtual companion that evolves with your wellness journey.
 
-> Personal project. Not intended for external contributors.
+> Internal repository for the Rewind. Not open for external contributions.
 
 ## Features
 
@@ -10,13 +10,13 @@ iOS Xcode workspace for the Rewind app — personal journaling, guided care, com
 - **Care Corner** — Breathing exercises, meditation, and daily challenges
 - **Community** — Anonymous social feed for sharing and support
 - **HomePets** — Virtual companion with dynamic states tied to your activity
-- **Pet Talking** — Real-time voice sessions with the companion via Gemini Live
+- **Pet Talking** — Real-time voice sessions with the companion
 
 ## Stack
 
 - SwiftUI + UIKit, MVVM, Combine
 - Supabase (Auth, Postgres + RLS, Storage)
-- `rewind-voice-relay` — WebSocket proxy for Gemini Live voice sessions
+- `rewind-voice-relay` — WebSocket proxy for Live voice sessions
 
 ## Structure
 
