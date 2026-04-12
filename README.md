@@ -1,40 +1,43 @@
-# Rewind iOS App
+# rewind
 
-Rewind is an iOS mental wellness app that combines personal reflection, guided care activities, a community feed, and a companion pet experience.
+iOS Xcode workspace for the Rewind app — personal journaling, guided care, community, and a virtual companion that evolves with your wellness journey.
 
-## What The App Does
+> Personal project. Not intended for external contributors.
 
-- Journals: write text journals and record voice journals
-- Care Corner: breathing, meditation, and challenge-based routines
-- Community: post, browse, like, and comment in a shared feed
-- HomePets: track and interact with a virtual companion tied to your activity
-- Pet Talking: real-time voice interaction with the companion
+## Features
 
-## Tech Stack
+- **Journal** — Text and voice entries with emotion tags and streaks
+- **Care Corner** — Breathing exercises, meditation, and daily challenges
+- **Community** — Anonymous social feed for sharing and support
+- **HomePets** — Virtual companion with dynamic states tied to your activity
+- **Pet Talking** — Real-time voice sessions with the companion via Gemini Live
 
-- Client: UIKit + SwiftUI
-- Architecture: MVVM
-- Backend: Supabase (Auth, Postgres, Storage, Edge Functions)
-- iOS libraries/frameworks: supabase-swift, AVFoundation, Combine
+## Stack
 
-## Project Structure
+- SwiftUI + UIKit, MVVM, Combine
+- Supabase (Auth, Postgres + RLS, Storage)
+- `rewind-voice-relay` — WebSocket proxy for Gemini Live voice sessions
 
-- Rewind/: main iOS target source code
-- Rewind/Controllers: UIKit and hosting controllers
-- Rewind/Views: SwiftUI views and feature UI
-- Rewind/ViewModels: feature logic and state
-- Rewind/Models: database and domain models
-- Rewind/Services: service integrations (voice, onboarding, etc.)
+## Structure
 
-## Backend Services
+```
+Rewind/Controllers/   → UIKit and hosting controllers
+Rewind/Views/         → SwiftUI views
+Rewind/ViewModels/    → Feature logic and state
+Rewind/Models/        → Database and domain models
+Rewind/Services/      → Voice, onboarding, and other integrations
+```
 
-- Primary backend: Supabase
-- Active voice backend: rewind-pet-talking-service (proxy for live pet voice)
-- Legacy service: rewind-pet-microservice (kept in repo history, no longer relevant to current app flow)
+## Key files
 
-## Local Setup
+- `RULES.md` — Enforced coding standards (MVVM, no external dependencies, file size limits)
+- `ARCHITECTURE.md` — How ViewModels talk to Supabase and how UI is composed
 
-1. Open Rewind.xcodeproj in Xcode.
-2. Ensure Supabase credentials are set in Rewind/Core/SupabaseSecrets.swift for your environment.
-3. Resolve Swift packages.
-4. Run on simulator or device.
+## License & Copyright
+
+**Proprietary and Confidential.**
+All rights reserved. This project, including all source code, assets, and concepts, is the exclusive property of Rewind. It is not open-source. You may not copy, distribute, reproduce, or use any part of this repository without explicit written permission.
+
+---
+
+© 2026 Rewind · [rewind@shyamjaiswal.in](mailto:rewind@shyamjaiswal.in)
