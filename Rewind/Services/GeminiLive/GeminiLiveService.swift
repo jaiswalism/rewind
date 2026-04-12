@@ -80,7 +80,10 @@ final class GeminiLiveService: NSObject {
         )
         
         let jsonData = try JSONEncoder.geminiLive.encode(message)
-        try await webSocketTask.send(.string(String(data: jsonData, encoding: .utf8)!))
+        guard let messageString = String(data: jsonData, encoding: .utf8) else {
+            throw GeminiLiveError.connectionFailed
+        }
+        try await webSocketTask.send(.string(messageString))
     }
     
     /// Send text message
@@ -277,6 +280,7 @@ extension GeminiLiveService: URLSessionWebSocketDelegate {
 enum GeminiLiveError: LocalizedError {
     case missingAPIKey
     case invalidURL(String)
+    case connectionFailed
     case notConnected
     case unexpectedDataType
     case unknownMessageType
@@ -287,6 +291,8 @@ enum GeminiLiveError: LocalizedError {
             return "Missing Gemini API key"
         case .invalidURL(let url):
             return "Invalid URL: \(url)"
+        case .connectionFailed:
+            return "Connection failed"
         case .notConnected:
             return "Not connected to Gemini"
         case .unexpectedDataType:

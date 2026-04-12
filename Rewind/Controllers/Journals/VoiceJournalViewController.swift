@@ -499,8 +499,14 @@ class VoiceJournalViewController: UIViewController {
         }
         
         // Setup Audio File for writing
+        guard let recordingURL else {
+            print("[VoiceJournal] ERROR: Missing recording URL")
+            statusLabel.text = "File setup failed"
+            return
+        }
+
         do {
-            audioFile = try AVAudioFile(forWriting: recordingURL!, settings: recordingFormat.settings)
+            audioFile = try AVAudioFile(forWriting: recordingURL, settings: recordingFormat.settings)
             print("[VoiceJournal] Audio file created successfully")
         } catch {
             print("[VoiceJournal] ERROR: Audio File setup failed: \(error.localizedDescription)")

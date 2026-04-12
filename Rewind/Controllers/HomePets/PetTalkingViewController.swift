@@ -175,10 +175,9 @@ class PetTalkingViewController: UIViewController {
 
     deinit {
         NotificationCenter.default.removeObserver(self)
-        Task { [weak self] in
-            await MainActor.run {
-                self?.voiceService.disconnect()
-            }
+        let voiceService = voiceService
+        Task { @MainActor in
+            voiceService.disconnect()
         }
     }
 

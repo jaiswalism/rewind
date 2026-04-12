@@ -314,6 +314,8 @@ final class AuthViewModel: ObservableObject {
             await MainActor.run {
                 self.currentUser = responseResp.first
             }
+
+            await handlePendingDeletionState()
         } catch let DecodingError.dataCorrupted(context) {
             print(context)
             self.error = "Data corrupted: \(context.debugDescription)"
@@ -328,6 +330,35 @@ final class AuthViewModel: ObservableObject {
             self.error = "Type mismatch for: \(context.codingPath.last?.stringValue ?? "")"
         } catch {
             print("Other error: \(error)")
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func handlePendingDeletionState() async {
+        guard let user = currentUser,
+              let dueAt = user.accountDeletionDueAt else {
+            return
+        }
+
+        let formatter = ISO8601DateFormatter()
+        guard let dueDate = formatter.date(from: dueAt) else {
+            return
+        }
+
+        if Date() < dueDate {
+            await UserViewModel.shared.restoreScheduledAccountDeletionIfNeeded()
+            self.error = "Your account deletion was canceled because you signed back in before the 14-day deadline."
+            return
+        }
+
+        do {
+            try await supabase.auth.signOut()
+            await MainActor.run {
+                self.currentUser = nil
+                self.isLoggedIn = false
+            }
+            self.error = "This account is past the 14-day deletion window. Please contact support if you need help."
+        } catch {
             self.error = error.localizedDescription
         }
     }

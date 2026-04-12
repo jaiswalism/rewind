@@ -14,6 +14,19 @@ final class CommunityViewModel: ObservableObject {
     private let supabase = SupabaseConfig.shared.client
     var currentPage = 1
     let perPage = 20
+
+    private struct ToggleLikeResponse: Decodable {
+        let success: Bool
+        let liked: Bool?
+        let likeCount: Int?
+        let error: String?
+    }
+
+    private struct LikedPostsResponse: Decodable {
+        let success: Bool
+        let likedPostIds: [String]?
+        let error: String?
+    }
     
     struct PaginationInfo {
         let page: Int
@@ -70,21 +83,7 @@ final class CommunityViewModel: ObservableObject {
             
             let session = try? await supabase.auth.session
             let currentUserId = session?.user.id.uuidString
-            
-            var likedPostIds: Set<String> = []
-            if let currentUserId = currentUserId, !postData.isEmpty {
-                struct LikeResult: Decodable { let post_id: UUID }
-                let postIds = postData.map { $0.id.uuidString }
-                let likedPosts: [LikeResult]? = try? await supabase.from("post_likes")
-                    .select("post_id")
-                    .eq("user_id", value: currentUserId)
-                    .in("post_id", values: postIds)
-                    .execute()
-                    .value
-                if let likes = likedPosts {
-                    likedPostIds = Set(likes.map { $0.post_id.uuidString })
-                }
-            }
+            let likedPostIds = await fetchLikedPostIdsFromEdge(postIds: postData.map(\.id)) ?? []
             
             var postsWithUsers: [CommunityPostWithUser] = []
             for post in postData {
@@ -98,7 +97,7 @@ final class CommunityViewModel: ObservableObject {
                     user = userResponse?.first
                 }
                 let isMine = post.userId?.uuidString == currentUserId
-                let isLiked = likedPostIds.contains(post.id.uuidString)
+                let isLiked = likedPostIds.contains(post.id.uuidString.lowercased())
                 postsWithUsers.append(CommunityPostWithUser(post: post, user: user, isMine: isMine, isLiked: isLiked))
             }
             
@@ -108,13 +107,38 @@ final class CommunityViewModel: ObservableObject {
             } else {
                 posts.append(contentsOf: postsWithUsers)
             }
-            
+
             currentPage = page
         } catch {
             self.error = error.localizedDescription
         }
         
         isLoading = false
+    }
+
+    private func fetchLikedPostIdsFromEdge(postIds: [UUID]) async -> Set<String>? {
+        guard !postIds.isEmpty else { return [] }
+        guard let session = try? await supabase.auth.session else { return nil }
+
+        var request = URLRequest(url: SupabaseSecrets.supabaseURL.appendingPathComponent("functions/v1/liked-posts"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(SupabaseSecrets.supabaseKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+
+        let payload = ["post_ids": postIds.map(\.uuidString)]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode),
+              let decoded = try? JSONDecoder().decode(LikedPostsResponse.self, from: data),
+              decoded.success
+        else {
+            return nil
+        }
+
+        return Set((decoded.likedPostIds ?? []).map { $0.lowercased() })
     }
     
     func createPost(content: String, isAnonymous: Bool, tags: [String], mediaUrls: [String]? = nil) async throws -> DBCommunityPost {
@@ -234,99 +258,124 @@ final class CommunityViewModel: ObservableObject {
             }
         }
     }
-    
-    func toggleLike(postId: UUID) async throws -> (liked: Bool, count: Int) {
+
+    func reportPost(postId: UUID, reason: String, details: String? = nil) async throws {
         guard let session = try? await supabase.auth.session else {
             throw NSError(domain: "CommunityVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
-        
-        // Check if already liked
-        let existingLikeResp: [DBPostLike] = try await supabase.from("post_likes")
-            .select("*")
-            .eq("post_id", value: postId.uuidString)
-            .eq("user_id", value: session.user.id.uuidString)
-            .execute()
-            .value
-        
-        if let existing = existingLikeResp.first {
-            // Unlike
-            try await supabase.from("post_likes").delete().eq("id", value: existing.id.uuidString).execute()
-            
-            // Update count
-            if let index = posts.firstIndex(where: { $0.id == postId }) {
-                let newCount = max(0, posts[index].post.likeCount - 1)
-                
-                // Sync count to remote DB
-                struct UpdateLikeCount: Encodable { let like_count: Int }
-                _ = try? await supabase.from("community_posts")
-                    .update(UpdateLikeCount(like_count: newCount))
-                    .eq("id", value: postId.uuidString)
-                    .execute()
 
-                posts[index] = CommunityPostWithUser(
-                    post: DBCommunityPost(
-                        id: posts[index].post.id,
-                        userId: posts[index].post.userId,
-                        content: posts[index].post.content,
-                        isAnonymous: posts[index].post.isAnonymous,
-                        tags: posts[index].post.tags,
-                        mediaUrls: posts[index].post.mediaUrls,
-                        likeCount: newCount,
-                        commentCount: posts[index].post.commentCount,
-                        isDeleted: posts[index].post.isDeleted,
-                        createdAt: posts[index].post.createdAt,
-                        updatedAt: posts[index].post.updatedAt
-                    ),
-                    user: posts[index].user,
-                    isMine: posts[index].isMine,
-                    isLiked: false
-                )
-                return (false, newCount)
-            }
-            return (false, 0)
-        } else {
-            // Like
-            let newLike = DBPostLike(
-                id: UUID(),
-                postId: postId,
-                userId: session.user.id,
-                createdAt: ISO8601DateFormatter().string(from: Date())
-            )
-            
-            try await supabase.from("post_likes").insert(newLike).execute()
-            
-            if let index = posts.firstIndex(where: { $0.id == postId }) {
-                let newCount = posts[index].post.likeCount + 1
-                
-                // Sync count to remote DB
-                struct UpdateLikeCount: Encodable { let like_count: Int }
-                _ = try? await supabase.from("community_posts")
-                    .update(UpdateLikeCount(like_count: newCount))
-                    .eq("id", value: postId.uuidString)
-                    .execute()
-
-                posts[index] = CommunityPostWithUser(
-                    post: DBCommunityPost(
-                        id: posts[index].post.id,
-                        userId: posts[index].post.userId,
-                        content: posts[index].post.content,
-                        isAnonymous: posts[index].post.isAnonymous,
-                        tags: posts[index].post.tags,
-                        mediaUrls: posts[index].post.mediaUrls,
-                        likeCount: newCount,
-                        commentCount: posts[index].post.commentCount,
-                        isDeleted: posts[index].post.isDeleted,
-                        createdAt: posts[index].post.createdAt,
-                        updatedAt: posts[index].post.updatedAt
-                    ),
-                    user: posts[index].user,
-                    isMine: posts[index].isMine,
-                    isLiked: true
-                )
-                return (true, newCount)
-            }
-            return (true, 1)
+        struct ReportPayload: Encodable {
+            let post_id: UUID
+            let reporter_user_id: UUID
+            let reason: String
+            let details: String?
+            let created_at: String
         }
+
+        let payload = ReportPayload(
+            post_id: postId,
+            reporter_user_id: session.user.id,
+            reason: reason,
+            details: details?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true ? nil : details,
+            created_at: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await supabase.from("community_reports").insert(payload).execute()
+        } catch {
+            throw NSError(domain: "CommunityVM", code: 410, userInfo: [NSLocalizedDescriptionKey: "Unable to submit report right now. Please try again."])
+        }
+    }
+    
+    func toggleLike(postId: UUID) async throws -> (liked: Bool, count: Int) {
+        guard let index = posts.firstIndex(where: { $0.id == postId }) else {
+            throw NSError(domain: "CommunityVM", code: 404, userInfo: [NSLocalizedDescriptionKey: "Post not found. Please refresh and try again."])
+        }
+
+        // Quick optimistic feedback; server response will correct the truth.
+        let optimisticCount = max(0, posts[index].post.likeCount + (posts[index].isLiked ? -1 : 1))
+        let previousValue = posts[index]
+
+        posts[index] = CommunityPostWithUser(
+            post: DBCommunityPost(
+                id: posts[index].post.id,
+                userId: posts[index].post.userId,
+                content: posts[index].post.content,
+                isAnonymous: posts[index].post.isAnonymous,
+                tags: posts[index].post.tags,
+                mediaUrls: posts[index].post.mediaUrls,
+                likeCount: optimisticCount,
+                commentCount: posts[index].post.commentCount,
+                isDeleted: posts[index].post.isDeleted,
+                createdAt: posts[index].post.createdAt,
+                updatedAt: posts[index].post.updatedAt
+            ),
+            user: posts[index].user,
+            isMine: posts[index].isMine,
+            isLiked: !posts[index].isLiked
+        )
+
+        do {
+            let edgeResult = try await toggleLikeViaEdge(postId: postId)
+
+            let authoritativeCount = edgeResult.likeCount
+            let liked = edgeResult.liked
+
+            let current = posts[index]
+            posts[index] = CommunityPostWithUser(
+                post: DBCommunityPost(
+                    id: current.post.id,
+                    userId: current.post.userId,
+                    content: current.post.content,
+                    isAnonymous: current.post.isAnonymous,
+                    tags: current.post.tags,
+                    mediaUrls: current.post.mediaUrls,
+                    likeCount: authoritativeCount,
+                    commentCount: current.post.commentCount,
+                    isDeleted: current.post.isDeleted,
+                    createdAt: current.post.createdAt,
+                    updatedAt: current.post.updatedAt
+                ),
+                user: current.user,
+                isMine: current.isMine,
+                isLiked: liked
+            )
+
+            return (liked, authoritativeCount)
+        } catch {
+            posts[index] = previousValue
+            throw error
+        }
+    }
+
+    private func toggleLikeViaEdge(postId: UUID) async throws -> (liked: Bool, likeCount: Int) {
+        let session = try await supabase.auth.session
+
+        var request = URLRequest(url: SupabaseSecrets.supabaseURL.appendingPathComponent("functions/v1/toggle-post-like"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(SupabaseSecrets.supabaseKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+
+        let payload = ["post_id": postId.uuidString]
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw NSError(domain: "CommunityVM", code: 900, userInfo: [NSLocalizedDescriptionKey: "Invalid server response while toggling like."])
+        }
+
+        guard (200...299).contains(http.statusCode) else {
+            let message = String(data: data, encoding: .utf8) ?? "Unable to update like right now."
+            throw NSError(domain: "CommunityVM", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+
+        let decoded = try JSONDecoder().decode(ToggleLikeResponse.self, from: data)
+        guard decoded.success, let liked = decoded.liked, let likeCount = decoded.likeCount else {
+            throw NSError(domain: "CommunityVM", code: 901, userInfo: [NSLocalizedDescriptionKey: decoded.error ?? "Unable to update like right now."])
+        }
+
+        return (liked, likeCount)
     }
     
     func fetchComments(postId: UUID, page: Int = 1) async {

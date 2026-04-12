@@ -126,13 +126,9 @@ struct CreatePostView: View {
 
             Spacer()
 
-            Text("Create Post")
-                .opacity(isEditMode ? 0 : 1)
-                .overlay {
-                    Text(isEditMode ? "Edit Post" : "Create Post")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.primary)
-                }
+            Text(isEditMode ? "Edit Post" : "Create Post")
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(.primary)
 
             Spacer()
 

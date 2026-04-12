@@ -37,10 +37,6 @@
 			</array>
 		</dict>
 	</dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 	<key>PET_TALKING_SERVICE_URL</key>
 	<string>$(PET_TALKING_SERVICE_URL)</string>
 	<key>PET_TALKING_API_KEY</key>

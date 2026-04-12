@@ -15,7 +15,6 @@ struct PersonalInformationView: View {
     
     @State private var name: String = ""
     @State private var email: String = ""
-    @State private var location: String = ""
     @State private var age: String = ""
     @State private var passwordPlaceholder: String = "••••••••"
     
@@ -158,7 +157,6 @@ struct PersonalInformationView: View {
         VStack(spacing: 24) {
             formField(title: "Full Name", icon: "person.fill", text: $name)
             formField(title: "Email Address", icon: "envelope.fill", text: $email, isDisabled: true)
-            formField(title: "Location", icon: "location.fill", text: $location)
             formField(title: "Age", icon: "person.text.rectangle", text: $age, isNumber: true)
         }
     }
@@ -214,7 +212,6 @@ struct PersonalInformationView: View {
             await MainActor.run {
                 name = user.name
                 email = user.email ?? ""
-                location = user.location ?? ""
                 if let userAge = user.age {
                     age = String(userAge)
                 } else {
@@ -244,7 +241,7 @@ struct PersonalInformationView: View {
                 
                 try await userViewModel.updateProfile(
                     name: name,
-                    location: location.isEmpty ? nil : location,
+                    location: userViewModel.user?.location,
                     age: Int(age)
                 )
                 
