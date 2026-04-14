@@ -9,9 +9,7 @@ final class ResetPasswordViewController: UIHostingController<ResetPasswordView> 
 
         view.onDoneTapped = { [weak self] in
             guard let self else { return }
-            let loginVC = LoginViewController()
-            loginVC.modalPresentationStyle = .fullScreen
-            self.present(loginVC, animated: true)
+            self.setRootViewController(LoginViewController())
         }
 
         self.rootView = view

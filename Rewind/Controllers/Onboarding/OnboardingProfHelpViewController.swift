@@ -17,8 +17,7 @@ class OnboardingProfHelpViewController: UIViewController {
     @IBAction func backButton(_ sender: Any) {
         // Navigate back to OnboardingAgeViewController (XIB)
                 let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
-                ageVC.modalPresentationStyle = .fullScreen
-                present(ageVC, animated: true, completion: nil)
+                self.setRootViewController(ageVC)
     }
     @IBAction func yesButton(_ sender: Any) {
         submitOnboarding(seekingHelp: true)
@@ -34,13 +33,7 @@ class OnboardingProfHelpViewController: UIViewController {
             do {
                 let _ = try await OnboardingDataManager.shared.submit()
                 await MainActor.run {
-                    let mainTabVC = MainTabBarController()
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                        sceneDelegate.setRoot(mainTabVC)
-                    } else {
-                        mainTabVC.modalPresentationStyle = .fullScreen
-                        self.present(mainTabVC, animated: true, completion: nil)
-                    }
+                    self.setRootViewController(MainTabBarController())
                 }
             } catch {
                 await MainActor.run {

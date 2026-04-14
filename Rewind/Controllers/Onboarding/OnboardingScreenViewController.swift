@@ -32,10 +32,7 @@ class OnboardingScreenViewController: UIViewController {
     // We will connect the FINAL button in the storyboard to this
     @IBAction func finishOnboardingTapped(_ sender: Any) {
         let loginVC = LoginViewController()
-          
-          // Present it full screen
-          loginVC.modalPresentationStyle = .fullScreen
-          self.present(loginVC, animated: true, completion: nil)
+        self.setRootViewController(loginVC)
           
           // Mark onboarding as complete locally for offline resilience
           UserDefaults.standard.set(true, forKey: Constants.UserDefaults.hasCompletedOnboarding)

@@ -11,17 +11,9 @@ class LoginViewController: UIHostingController<LoginView> {
         let routeAfterAuthentication: (Bool) -> Void = { [weak self] isCompleted in
             DispatchQueue.main.async {
                 if isCompleted {
-                    let mainTabVC = MainTabBarController()
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                        sceneDelegate.setRoot(mainTabVC)
-                    } else {
-                        mainTabVC.modalPresentationStyle = .fullScreen
-                        self?.present(mainTabVC, animated: true)
-                    }
+                    self?.setRootViewController(MainTabBarController())
                 } else {
-                    let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-                    goalVC.modalPresentationStyle = .fullScreen
-                    self?.present(goalVC, animated: true)
+                    self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
                 }
             }
         }
@@ -30,15 +22,11 @@ class LoginViewController: UIHostingController<LoginView> {
         loginView.onOAuthSuccess = routeAfterAuthentication
         
         loginView.onSignUpTapped = { [weak self] in
-            let signupVC = SignupViewController()
-            signupVC.modalPresentationStyle = .fullScreen
-            self?.present(signupVC, animated: true, completion: nil)
+            self?.setRootViewController(SignupViewController())
         }
         
         loginView.onForgotPasswordTapped = { [weak self] in
-            let forgetVC = ForgotPasswordViewController()
-            forgetVC.modalPresentationStyle = .fullScreen
-            self?.present(forgetVC, animated: true, completion: nil)
+            self?.setRootViewController(ForgotPasswordViewController())
         }
         
         // Reassign the configured view to the host

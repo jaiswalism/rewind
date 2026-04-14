@@ -7,13 +7,11 @@ final class ForgotPasswordViewController: UIHostingController<ForgotPasswordView
         var view = ForgotPasswordView(prefilledEmail: prefilledEmail)
         super.init(rootView: view)
 
-        view.onBackTapped = { [weak self] in self?.dismiss(animated: true) }
+        view.onBackTapped = { [weak self] in self?.setRootViewController(LoginViewController()) }
 
         view.onCodeSent = { [weak self] email in
             guard let self else { return }
-            let otpController = OTPVerifyViewController(prefilledEmail: email)
-            otpController.modalPresentationStyle = .fullScreen
-            self.present(otpController, animated: true)
+            self.setRootViewController(OTPVerifyViewController(prefilledEmail: email))
         }
 
         self.rootView = view

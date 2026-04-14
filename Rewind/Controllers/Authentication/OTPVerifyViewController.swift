@@ -8,13 +8,11 @@ final class OTPVerifyViewController: UIHostingController<PasswordRecoveryOTPView
         var view = PasswordRecoveryOTPView(email: email)
         super.init(rootView: view)
 
-        view.onBackTapped = { [weak self] in self?.dismiss(animated: true) }
+        view.onBackTapped = { [weak self] in self?.setRootViewController(ForgotPasswordViewController()) }
 
         view.onVerified = { [weak self] in
             guard let self else { return }
-            let resetVC = ResetPasswordViewController()
-            resetVC.modalPresentationStyle = .fullScreen
-            self.present(resetVC, animated: true)
+            self.setRootViewController(ResetPasswordViewController())
         }
 
         self.rootView = view

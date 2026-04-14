@@ -79,15 +79,13 @@ class OnboardingAgeViewController: UIViewController {
     }
     @IBAction func backButton(_ sender: Any) {
         let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
-        genderVC.modalPresentationStyle = .fullScreen
-        present(genderVC, animated: true, completion: nil)
+        self.setRootViewController(genderVC)
     }
     @IBAction func nextButton(_ sender: Any) {
         OnboardingDataManager.shared.age = selectedAge
         
         let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
-        profhelpVC.modalPresentationStyle = .fullScreen
-        present(profhelpVC, animated: true, completion: nil)
+        self.setRootViewController(profhelpVC)
     }
 }
 
