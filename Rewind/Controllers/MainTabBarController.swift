@@ -42,15 +42,16 @@ class MainTabBarController: UITabBarController {
         let careCornerNav = UINavigationController(rootViewController: careCornerVC)
 
         // Community Tab
-        let communityVC = UIHostingController(rootView: CommunityView())
-        communityVC.tabBarItem = UITabBarItem(
+        let communityView = CommunityView()
+        let communityHostingVC = UIHostingController(rootView: communityView)
+        communityHostingVC.tabBarItem = UITabBarItem(
             title: "Community",
             image: UIImage(systemName: "person.2"),
             selectedImage: UIImage(systemName: "person.2.fill")
         )
-        let communityNav = UINavigationController(rootViewController: communityVC)
+        let communityNav = UINavigationController(rootViewController: communityHostingVC)
         communityNav.isNavigationBarHidden = true
-
+        
         // Set view controllers — Home first
         viewControllers = [homePetsNav, journalsNav, careCornerNav, communityNav]
     }

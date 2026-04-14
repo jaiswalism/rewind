@@ -11,6 +11,8 @@ struct CommunityView: View {
     @State private var editingPost: CommunityViewModel.CommunityPostWithUser?
     @State private var reportingPost: CommunityViewModel.CommunityPostWithUser?
     @State private var reportBannerMessage: String?
+    @State private var showBlockConfirmation: Bool = false
+    @State private var userIdToBlock: UUID? = nil
     
     // Tags matching the Create Post screen
     let tags = ["STRESS", "ANXIETY", "HAPPINESS", "GRATITUDE", "WORK", "RELATIONSHIPS", "MENTAL HEALTH", "AFFIRMATION", "DAILY"]
@@ -29,7 +31,13 @@ struct CommunityView: View {
 
                 ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 20) {
-                        if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
+                        if communityViewModel.isLoading && communityViewModel.posts.isEmpty {
+                            // Skeleton loading state
+                            ForEach(0..<3) { _ in
+                                CommunityPostSkeleton()
+                                    .padding(.horizontal, 20)
+                            }
+                        } else if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
                             VStack(spacing: 16) {
                                 Image(systemName: "person.2.square.stack")
                                     .font(.system(size: 48))
@@ -54,6 +62,20 @@ struct CommunityView: View {
                                     onReport: {
                                         reportingPost = post
                                     },
+                                    onHide: {
+                                        Task {
+                                            do {
+                                                try await communityViewModel.hidePost(postId: post.id)
+                                                reportBannerMessage = "Post hidden."
+                                            } catch {}
+                                        }
+                                    },
+                                    onBlock: {
+                                        if let userId = post.post.userId {
+                                            userIdToBlock = userId
+                                            showBlockConfirmation = true
+                                        }
+                                    },
                                     onEdit: {
                                         editingPost = post
                                     },
@@ -62,6 +84,26 @@ struct CommunityView: View {
                                     }
                                 )
                                 .padding(.horizontal, 20)
+                                    .alert(
+                                        "Are you sure you want to block this user?",
+                                        isPresented: $showBlockConfirmation,
+                                        actions: {
+                                            Button("Cancel", role: .cancel) {
+                                                userIdToBlock = nil
+                                            }
+                                            Button("Yes", role: .destructive) {
+                                                if let userId = userIdToBlock {
+                                                    Task {
+                                                        do {
+                                                            try await communityViewModel.blockUser(userId: userId)
+                                                            reportBannerMessage = "User blocked."
+                                                        } catch {}
+                                                    }
+                                                }
+                                                userIdToBlock = nil
+                                            }
+                                        }
+                                    )
                             }
                         }
                     }
@@ -104,7 +146,7 @@ struct CommunityView: View {
                 .presentationCornerRadius(28)
         }
         .sheet(item: $reportingPost) { post in
-            ReportPostSheet(postWithUser: post) { reason, details in
+            ReportContentSheet(type: .post) { reason, details in
                 Task {
                     do {
                         try await communityViewModel.reportPost(postId: post.id, reason: reason, details: details)
@@ -120,7 +162,7 @@ struct CommunityView: View {
                     }
                 }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
             .presentationCornerRadius(24)
         }
@@ -304,56 +346,6 @@ struct CommunityView: View {
         
         if let root = window?.rootViewController {
             root.present(activityVC, animated: true, completion: nil)
-        }
-    }
-}
-
-private struct ReportPostSheet: View {
-    let postWithUser: CommunityViewModel.CommunityPostWithUser
-    let onSubmit: (String, String?) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedReason = "harassment"
-    @State private var details = ""
-
-    private let reasons: [(label: String, value: String)] = [
-        ("Harassment or bullying", "harassment"),
-        ("Hate or abuse", "hate_speech"),
-        ("Sexual content", "sexual_content"),
-        ("Spam or scam", "spam"),
-        ("Misinformation", "misinformation"),
-        ("Other", "other")
-    ]
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Reason") {
-                    Picker("Reason", selection: $selectedReason) {
-                        ForEach(reasons, id: \.value) { reason in
-                            Text(reason.label).tag(reason.value)
-                        }
-                    }
-                    .pickerStyle(.inline)
-                }
-
-                Section("Details (optional)") {
-                    TextField("Add context", text: $details, axis: .vertical)
-                        .lineLimit(3...5)
-                }
-            }
-            .navigationTitle("Report Post")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Submit") {
-                        onSubmit(selectedReason, details)
-                    }
-                }
-            }
         }
     }
 }

@@ -56,7 +56,8 @@ final class CommunityViewModel: ObservableObject {
     struct CommentWithUser: Identifiable {
         let comment: DBComment
         let user: DBUser?
-        
+        var isMine: Bool = false
+
         var id: UUID { comment.id }
     }
     
@@ -85,8 +86,26 @@ final class CommunityViewModel: ObservableObject {
             let currentUserId = session?.user.id.uuidString
             let likedPostIds = await fetchLikedPostIdsFromEdge(postIds: postData.map(\.id)) ?? []
             
+            struct HiddenPostRow: Decodable { let post_id: UUID }
+            struct BlockedUserRow: Decodable { let blocked_id: UUID }
+            
+            var hiddenPostIds: Set<UUID> = []
+            var blockedUserIds: Set<UUID> = []
+            
+            if let uid = currentUserId {
+                let hidden: [HiddenPostRow]? = try? await supabase.from("hidden_posts").select("post_id").eq("user_id", value: uid).execute().value
+                let blocked: [BlockedUserRow]? = try? await supabase.from("user_blocks").select("blocked_id").eq("blocker_id", value: uid).execute().value
+                hidden?.forEach { hiddenPostIds.insert($0.post_id) }
+                blocked?.forEach { blockedUserIds.insert($0.blocked_id) }
+            }
+            
             var postsWithUsers: [CommunityPostWithUser] = []
             for post in postData {
+                // local moderation evaluation
+                if ContentFilter.containsObjectionableContent(text: post.content) { continue }
+                if hiddenPostIds.contains(post.id) { continue }
+                if let postUid = post.userId, blockedUserIds.contains(postUid) { continue }
+                
                 var user: DBUser? = nil
                 if !post.isAnonymous, let userId = post.userId?.uuidString {
                     let userResponse: [DBUser]? = try? await supabase.from("users")
@@ -241,10 +260,16 @@ final class CommunityViewModel: ObservableObject {
             var updated_at: String
         }
         let req = DeletePostReq(is_deleted: true, updated_at: ISO8601DateFormatter().string(from: Date()))
-        try await supabase.from("community_posts")
-            .update(req)
-            .eq("id", value: id.uuidString)
-            .execute()
+        
+        do {
+            try await supabase.from("community_posts")
+                .update(req)
+                .eq("id", value: id.uuidString)
+                .execute()
+        } catch {
+            self.error = "Delete failed: \(error.localizedDescription)"
+            throw error
+        }
         
         posts.removeAll { $0.id == id }
         
@@ -282,8 +307,66 @@ final class CommunityViewModel: ObservableObject {
 
         do {
             try await supabase.from("community_reports").insert(payload).execute()
+            
+            // Also explicitly securely notify the developer through our Edge function.
+            // Using direct fetch so we don't need to specify advanced generic types
+            var request = URLRequest(url: SupabaseSecrets.supabaseURL.appendingPathComponent("functions/v1/report-notification"))
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(SupabaseSecrets.supabaseKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "post_id": postId.uuidString,
+                "reporter_id": session.user.id.uuidString,
+                "reason": reason,
+                "details": details ?? ""
+            ])
+            _ = try await URLSession.shared.data(for: request)
+            
+            // immediately remove from feed
+            try await hidePost(postId: postId)
         } catch {
             throw NSError(domain: "CommunityVM", code: 410, userInfo: [NSLocalizedDescriptionKey: "Unable to submit report right now. Please try again."])
+        }
+    }
+    
+    func hidePost(postId: UUID) async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "CommunityVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        
+        struct HideReq: Encodable {
+            let user_id: UUID
+            let post_id: UUID
+        }
+        
+        let req = HideReq(user_id: session.user.id, post_id: postId)
+        do {
+            try await supabase.from("hidden_posts").insert(req).execute()
+            posts.removeAll { $0.id == postId }
+        } catch {
+            self.error = "Could not hide post: \(error.localizedDescription)"
+            throw error
+        }
+    }
+
+    func blockUser(userId: UUID) async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "CommunityVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        
+        struct BlockReq: Encodable {
+            let blocker_id: UUID
+            let blocked_id: UUID
+        }
+        
+        let req = BlockReq(blocker_id: session.user.id, blocked_id: userId)
+        do {
+            try await supabase.from("user_blocks").insert(req).execute()
+            posts.removeAll { $0.post.userId == userId }
+        } catch {
+            self.error = "Could not block user: \(error.localizedDescription)"
+            throw error
         }
     }
     
@@ -382,6 +465,9 @@ final class CommunityViewModel: ObservableObject {
         isLoading = true
         
         do {
+            let session = try? await supabase.auth.session
+            let currentUserId = session?.user.id
+
             // Count check: Auto-correct out-of-sync comment_count from database
             struct CommentIdOnly: Decodable { let id: UUID }
             let allCommentsResponse: [CommentIdOnly]? = try? await supabase.from("comments")
@@ -440,7 +526,8 @@ final class CommunityViewModel: ObservableObject {
                 if let users = userResponse {
                     user = users.first
                 }
-                commentsWithUsers.append(CommentWithUser(comment: comment, user: user))
+                let isMine = comment.userId == currentUserId
+                commentsWithUsers.append(CommentWithUser(comment: comment, user: user, isMine: isMine))
             }
             
             comments = commentsWithUsers
@@ -477,7 +564,7 @@ final class CommunityViewModel: ObservableObject {
             .execute()
             .value
             
-        let commentWithUser = CommentWithUser(comment: newComment, user: currentUserResp?.first)
+        let commentWithUser = CommentWithUser(comment: newComment, user: currentUserResp?.first, isMine: true)
         
         await MainActor.run {
             self.comments.insert(commentWithUser, at: 0) // Optimistic Local Insert
@@ -518,7 +605,94 @@ final class CommunityViewModel: ObservableObject {
         
         return newComment
     }
-    
+
+    func deleteComment(commentId: UUID, postId: UUID) async throws {
+        do {
+            try await supabase.from("comments")
+                .delete()
+                .eq("id", value: commentId.uuidString)
+                .execute()
+        } catch {
+            throw NSError(domain: "CommunityVM", code: 500, userInfo: [NSLocalizedDescriptionKey: "Could not delete comment. Please try again."])
+        }
+
+        // Update local list
+        comments.removeAll { $0.id == commentId }
+
+        // Decrement comment count on the parent post
+        if let index = posts.firstIndex(where: { $0.id == postId }) {
+            let newCount = max(0, posts[index].post.commentCount - 1)
+            struct UpdateCommentCount: Encodable { let comment_count: Int }
+            Task {
+                _ = try? await supabase.from("community_posts")
+                    .update(UpdateCommentCount(comment_count: newCount))
+                    .eq("id", value: postId.uuidString)
+                    .execute()
+            }
+            posts[index] = CommunityPostWithUser(
+                post: DBCommunityPost(
+                    id: posts[index].post.id,
+                    userId: posts[index].post.userId,
+                    content: posts[index].post.content,
+                    isAnonymous: posts[index].post.isAnonymous,
+                    tags: posts[index].post.tags,
+                    mediaUrls: posts[index].post.mediaUrls,
+                    likeCount: posts[index].post.likeCount,
+                    commentCount: newCount,
+                    isDeleted: posts[index].post.isDeleted,
+                    createdAt: posts[index].post.createdAt,
+                    updatedAt: posts[index].post.updatedAt
+                ),
+                user: posts[index].user,
+                isMine: posts[index].isMine,
+                isLiked: posts[index].isLiked
+            )
+        }
+    }
+
+    func reportComment(commentId: UUID, reason: String) async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "CommunityVM", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
+        struct CommentReportPayload: Encodable {
+            let comment_id: UUID
+            let reporter_user_id: UUID
+            let reason: String
+            let created_at: String
+        }
+
+        let payload = CommentReportPayload(
+            comment_id: commentId,
+            reporter_user_id: session.user.id,
+            reason: reason,
+            created_at: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await supabase.from("comment_reports").insert(payload).execute()
+            
+            // Explicitly notify the developer through our Edge function.
+            var request = URLRequest(url: SupabaseSecrets.supabaseURL.appendingPathComponent("functions/v1/report-notification"))
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(SupabaseSecrets.supabaseKey, forHTTPHeaderField: "apikey")
+            request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "comment_id": commentId.uuidString,
+                "reporter_id": session.user.id.uuidString,
+                "reason": reason,
+                "details": "" // Comments don't have extra details field in this simple report
+            ])
+            _ = try await URLSession.shared.data(for: request)
+
+            // Remove from local list so reporter doesn't see it anymore
+            comments.removeAll { $0.id == commentId }
+        } catch {
+            throw NSError(domain: "CommunityVM", code: 410, userInfo: [NSLocalizedDescriptionKey: "Unable to submit report right now. Please try again."])
+        }
+    }
+
     func getAvailableTags() async -> [String] {
         do {
             struct TagResult: Decodable {

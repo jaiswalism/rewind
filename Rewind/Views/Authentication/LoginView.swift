@@ -1,9 +1,11 @@
 import SwiftUI
 import UIKit
 import Supabase
+import AuthenticationServices
 
 struct LoginView: View {
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var appleSignInManager = AppleSignInManager()
     
     @State private var email = ""
     @State private var password = ""
@@ -39,8 +41,8 @@ struct LoginView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 80)
-                    .padding(.bottom, 20)
+                    .padding(.top, 60)
+                    .padding(.bottom, 10)
                     
                     // Input Form Card
                     VStack(spacing: 0) {
@@ -94,8 +96,9 @@ struct LoginView: View {
                                 .foregroundStyle(Color.eliteAccentPrimary)
                         }
                     }
+                    .padding(.top, -10)
                     
-                    VStack(spacing: 24) {
+                    VStack(spacing: 20) {
                         // Login Button
                         Button(action: performLogin) {
                             if authViewModel.isLoading {
@@ -123,7 +126,7 @@ struct LoginView: View {
                         }
                         
                         // Social Login Buttons
-                        VStack(spacing: 16) {
+                        VStack(spacing: 14) {
                             Button(action: { performOAuthLogin(provider: .google) }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/googleLogo")
@@ -137,7 +140,7 @@ struct LoginView: View {
                             .buttonStyle(EliteSocialButtonStyle())
                             .disabled(authViewModel.isLoading)
                             
-                            Button(action: { performOAuthLogin(provider: .apple) }) {
+                            Button(action: { performNativeAppleSignIn() }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/appleLogo")
                                         .renderingMode(.template)
@@ -151,6 +154,13 @@ struct LoginView: View {
                             .buttonStyle(EliteSocialButtonStyle())
                             .disabled(authViewModel.isLoading)
                         }
+                        
+                        // Terms & Privacy Notice
+                        Text("By continuing, you agree to our [Terms of Service](https://rewind.shyamjaiswal.in/terms) & [Privacy Policy](https://rewind.shyamjaiswal.in/privacy).")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 4)
                     }
                     
                     // Sign Up Link
@@ -167,7 +177,7 @@ struct LoginView: View {
                                 .foregroundStyle(Color.eliteAccentPrimary)
                         }
                     }
-                    .padding(.top, 12)
+                    .padding(.top, 0)
                     .padding(.bottom, 24)
                 }
                 .frame(maxWidth: .infinity)
@@ -255,6 +265,35 @@ struct LoginView: View {
             } catch {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)
+            }
+        }
+    }
+
+    private func performNativeAppleSignIn() {
+        guard !authViewModel.isLoading else { return }
+        focusedField = nil
+        appleSignInManager.startSignInWithAppleFlow { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let resultTuple):
+                    Task {
+                        do {
+                            try await authViewModel.signInWithAppleNative(idToken: resultTuple.idToken, nonce: resultTuple.nonce, fullName: resultTuple.fullName)
+                            let isCompleted = authViewModel.currentUser?.onboardingCompleted ?? false
+                            if let onOAuthSuccess = onOAuthSuccess {
+                                onOAuthSuccess(isCompleted)
+                            } else {
+                                onLoginSuccess?(isCompleted)
+                            }
+                        } catch {
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.error)
+                        }
+                    }
+                case .failure(let error):
+                    guard (error as NSError).code != ASAuthorizationError.canceled.rawValue else { return }
+                    authViewModel.error = error.localizedDescription
+                }
             }
         }
     }

@@ -34,6 +34,13 @@ struct SettingsView: View {
     @State private var showDeleteConfirm = false
     @State private var isDeletingAccount = false
     @State private var settingsErrorMessage: String?
+    @State private var showingSupportSheet = false
+    
+    private var shouldShowEmail: Bool {
+        // Only show email if it's explicitly linked as an email identity
+        // Social-only accounts (Google/Apple) have emails hidden per user request
+        userViewModel.identities.contains(where: { $0.provider == "email" })
+    }
 
     // MARK: - Body
     var body: some View {
@@ -62,6 +69,8 @@ struct SettingsView: View {
 
                     settingsCard {
                         settingsRow(icon: "person.fill", title: "Personal Information", action: onPersonalInfoTapped)
+                        Divider().padding(.leading, 70)
+                        settingsRow(icon: "envelope.fill", title: "Contact Support", action: contactSupport)
                         Divider().padding(.leading, 70)
                         settingsRow(icon: "square.and.arrow.up", title: "Invite Friends", action: onInviteFriends)
                         Divider().padding(.leading, 70)
@@ -111,6 +120,9 @@ struct SettingsView: View {
             .presentationDetents([.fraction(0.6)])
             .presentationDragIndicator(.visible)
             .presentationCornerRadius(24)
+        }
+        .fullScreenCover(isPresented: $showingSupportSheet) {
+            ContactSupportView()
         }
         .alert("Error", isPresented: .init(
             get: { settingsErrorMessage != nil },
@@ -213,8 +225,8 @@ struct SettingsView: View {
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(.primary)
 
-            // Email
-            if let email = userViewModel.user?.email, !email.isEmpty {
+            // Email (Only if it's a non-social or hybrid account)
+            if shouldShowEmail, let email = userViewModel.user?.email, !email.isEmpty {
                 Text(email)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -400,6 +412,10 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private func contactSupport() {
+        showingSupportSheet = true
     }
 
     private func performDeleteAccount() {

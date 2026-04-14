@@ -210,7 +210,7 @@ struct PersonalInformationView: View {
         await userViewModel.fetchProfile()
         if let user = userViewModel.user {
             await MainActor.run {
-                name = user.name
+                name = user.name ?? ""
                 email = user.email ?? ""
                 if let userAge = user.age {
                     age = String(userAge)

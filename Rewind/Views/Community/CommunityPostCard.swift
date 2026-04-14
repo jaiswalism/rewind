@@ -6,6 +6,8 @@ struct CommunityPostCard: View {
     let onComment: () -> Void
     let onShare: () -> Void
     let onReport: () -> Void
+    let onHide: () -> Void
+    let onBlock: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
     
@@ -73,6 +75,14 @@ struct CommunityPostCard: View {
                             onDelete()
                         }
                     } else {
+                        Button("Hide Post", role: .destructive) {
+                            onHide()
+                        }
+                        if postWithUser.post.userId != nil {
+                            Button("Block User", role: .destructive) {
+                                onBlock()
+                            }
+                        }
                         Button("Report Post", role: .destructive) {
                             onReport()
                         }

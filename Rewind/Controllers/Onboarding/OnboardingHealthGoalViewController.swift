@@ -110,7 +110,6 @@ class OnboardingHealthGoalViewController: UIViewController {
 
         // Navigate to OnboardingGenderViewController (XIB)
         let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
-        genderVC.modalPresentationStyle = .fullScreen
-        present(genderVC, animated: true, completion: nil)
+        self.setRootViewController(genderVC)
     }
         }

@@ -123,8 +123,7 @@ class OnboardingGenderViewController: UIViewController {
     @IBAction func backButton(_ sender: Any) {
         // Navigate back to OnboardingHealthGoalViewController (XIB)
            let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-           goalVC.modalPresentationStyle = .fullScreen
-           present(goalVC, animated: true, completion: nil)
+           self.setRootViewController(goalVC)
        }
     @IBAction func nextButton(_ sender: Any) {
         // Save gender
@@ -140,15 +139,16 @@ class OnboardingGenderViewController: UIViewController {
         
         // Navigate to OnboardingAgeViewController (XIB)
         let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
-        ageVC.modalPresentationStyle = .fullScreen
-        present(ageVC, animated: true, completion: nil)
+        self.setRootViewController(ageVC)
     }
     @IBAction func preferNotToSay(_ sender: Any) {
-        OnboardingDataManager.shared.gender = "prefer_not_to_say"
-        
-        let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
-        ageVC.modalPresentationStyle = .fullScreen
-        present(ageVC, animated: true, completion: nil)
+        let alert = UIAlertController(
+            title: "Gender Required",
+            message: "Please select your gender to continue.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
 

@@ -17,26 +17,16 @@ class SignupViewController: UIHostingController<SignupView> {
     private func setupCallbacks(for view: inout SignupView) {
         view.onSignUpSuccess = { [weak self] in
             DispatchQueue.main.async {
-                let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-                goalVC.modalPresentationStyle = .fullScreen
-                self?.present(goalVC, animated: true, completion: nil)
+                self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
             }
         }
 
         let routeAfterAuthentication: (Bool) -> Void = { [weak self] isCompleted in
             DispatchQueue.main.async {
                 if isCompleted {
-                    let mainTabVC = MainTabBarController()
-                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
-                        sceneDelegate.setRoot(mainTabVC)
-                    } else {
-                        mainTabVC.modalPresentationStyle = .fullScreen
-                        self?.present(mainTabVC, animated: true)
-                    }
+                    self?.setRootViewController(MainTabBarController())
                 } else {
-                    let goalVC = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
-                    goalVC.modalPresentationStyle = .fullScreen
-                    self?.present(goalVC, animated: true)
+                    self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
                 }
             }
         }
@@ -45,9 +35,7 @@ class SignupViewController: UIHostingController<SignupView> {
         
         view.onSignInTapped = { [weak self] in
             DispatchQueue.main.async {
-                let loginVC = LoginViewController()
-                loginVC.modalPresentationStyle = .fullScreen
-                self?.present(loginVC, animated: true, completion: nil)
+                self?.setRootViewController(LoginViewController())
             }
         }
     }
