@@ -1,13 +1,16 @@
 import SwiftUI
 import Supabase
+import AuthenticationServices
 
 struct SignupView: View {
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var appleSignInManager = AppleSignInManager()
     
     @State private var name = ""
     @State private var emailPhone = ""
     @State private var password = ""
     @State private var isPasswordVisible = false
+    @State private var isEULAAgreed = false
     @FocusState private var focusedField: Field?
     
     enum Field {
@@ -92,6 +95,16 @@ struct SignupView: View {
                     )
                     
                     VStack(spacing: 24) {
+                        
+                        // EULA Agreement
+                        Toggle(isOn: $isEULAAgreed) {
+                            Text("I agree to the [Terms of Service](https://rewind.shyamjaiswal.in/terms) & [Privacy Policy](https://rewind.shyamjaiswal.in/privacy). Rewind maintains zero tolerance for objectionable content; violations lead to immediate account removal.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .toggleStyle(SwitchToggleStyle(tint: Color.eliteAccentPrimary))
+                        .padding(.horizontal, 4)
+                        
                         // Sign Up Button
                         Button(action: performSignUp) {
                             if authViewModel.isLoading {
@@ -102,8 +115,8 @@ struct SignupView: View {
                             }
                         }
                         .buttonStyle(ElitePrimaryButtonStyle())
-                        .disabled(authViewModel.isLoading || name.isEmpty || emailPhone.isEmpty || password.isEmpty)
-                        .opacity(name.isEmpty || emailPhone.isEmpty || password.isEmpty ? 0.6 : 1.0)
+                        .disabled(authViewModel.isLoading || name.isEmpty || emailPhone.isEmpty || password.isEmpty || !isEULAAgreed)
+                        .opacity(name.isEmpty || emailPhone.isEmpty || password.isEmpty || !isEULAAgreed ? 0.6 : 1.0)
                         
                         // Or Divider
                         HStack(spacing: 16) {
@@ -131,9 +144,10 @@ struct SignupView: View {
                                 }
                             }
                             .buttonStyle(EliteSocialButtonStyle())
-                            .disabled(authViewModel.isLoading)
+                            .disabled(authViewModel.isLoading || !isEULAAgreed)
+                            .opacity(!isEULAAgreed ? 0.6 : 1.0)
                             
-                            Button(action: { performOAuthSignIn(provider: .apple) }) {
+                            Button(action: { performNativeAppleSignIn() }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/appleLogo")
                                         .renderingMode(.template)
@@ -145,7 +159,8 @@ struct SignupView: View {
                                 }
                             }
                             .buttonStyle(EliteSocialButtonStyle())
-                            .disabled(authViewModel.isLoading)
+                            .disabled(authViewModel.isLoading || !isEULAAgreed)
+                            .opacity(!isEULAAgreed ? 0.6 : 1.0)
                         }
                     }
                     
@@ -230,7 +245,7 @@ struct SignupView: View {
     }
 
     private func performOAuthSignIn(provider: Provider) {
-        guard !authViewModel.isLoading else { return }
+        guard !authViewModel.isLoading, isEULAAgreed else { return }
 
         focusedField = nil
 
@@ -246,6 +261,37 @@ struct SignupView: View {
             } catch {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)
+            }
+        }
+    }
+
+    private func performNativeAppleSignIn() {
+        guard !authViewModel.isLoading, isEULAAgreed else { return }
+        focusedField = nil
+        appleSignInManager.startSignInWithAppleFlow { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let resultTuple):
+                    Task {
+                        do {
+                            // Store name for the onboarding submit — Apple only sends it once
+                            OnboardingDataManager.shared.displayName = resultTuple.fullName
+                            try await authViewModel.signInWithAppleNative(idToken: resultTuple.idToken, nonce: resultTuple.nonce, fullName: resultTuple.fullName)
+                            let isCompleted = authViewModel.currentUser?.onboardingCompleted ?? false
+                            if let onOAuthSuccess = onOAuthSuccess {
+                                onOAuthSuccess(isCompleted)
+                            } else {
+                                onSignUpSuccess?()
+                            }
+                        } catch {
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.error)
+                        }
+                    }
+                case .failure(let error):
+                    guard (error as NSError).code != ASAuthorizationError.canceled.rawValue else { return }
+                    authViewModel.error = error.localizedDescription
+                }
             }
         }
     }

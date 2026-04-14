@@ -8,6 +8,10 @@ struct CommentSheetView: View {
     @State private var isSubmitting: Bool = false
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
+    @State private var commentToDelete: CommunityViewModel.CommentWithUser?
+    @State private var showDeleteConfirm: Bool = false
+    @State private var reportingComment: CommunityViewModel.CommentWithUser?
+    @State private var reportBannerMessage: String?
     
     var body: some View {
         NavigationStack {
@@ -36,7 +40,17 @@ struct CommentSheetView: View {
                         ScrollView {
                             LazyVStack(spacing: 16) {
                                 ForEach(communityViewModel.comments) { comment in
-                                    CommentRowView(commentItem: comment)
+                                    CommentRowView(
+                                        commentItem: comment,
+                                        postId: postId,
+                                        onDelete: {
+                                            commentToDelete = comment
+                                            showDeleteConfirm = true
+                                        },
+                                        onReport: {
+                                            reportingComment = comment
+                                        }
+                                    )
                                 }
                             }
                             .padding(.vertical, 16)
@@ -101,12 +115,66 @@ struct CommentSheetView: View {
             }, message: {
                 Text(errorMessage)
             })
+            .alert("Delete Comment?", isPresented: $showDeleteConfirm, actions: {
+                Button("Delete", role: .destructive) {
+                    guard let comment = commentToDelete,
+                          let postUUID = UUID(uuidString: postId) else { return }
+                    Task {
+                        do {
+                            try await communityViewModel.deleteComment(
+                                commentId: comment.id,
+                                postId: postUUID
+                            )
+                        } catch {
+                            await MainActor.run {
+                                errorMessage = error.localizedDescription
+                                showError = true
+                            }
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) { commentToDelete = nil }
+            }, message: {
+                Text("This will permanently remove your comment.")
+            })
             .onAppear {
                 if let uuid = UUID(uuidString: postId) {
                     Task {
                         await communityViewModel.fetchComments(postId: uuid)
                     }
                 }
+            }
+            .sheet(item: $reportingComment) { comment in
+                ReportContentSheet(type: .comment) { reason, details in
+                    Task {
+                        do {
+                            try await communityViewModel.reportComment(
+                                commentId: comment.id,
+                                reason: reason
+                            )
+                            await MainActor.run {
+                                reportBannerMessage = "Thanks. Your report has been submitted."
+                                reportingComment = nil
+                            }
+                        } catch {
+                            await MainActor.run {
+                                reportBannerMessage = error.localizedDescription
+                                reportingComment = nil
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(24)
+            }
+            .alert("Report", isPresented: .init(
+                get: { reportBannerMessage != nil },
+                set: { if !$0 { reportBannerMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(reportBannerMessage ?? "")
             }
         }
     }
@@ -115,7 +183,14 @@ struct CommentSheetView: View {
         guard let uuid = UUID(uuidString: postId) else { return }
         let textToSend = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !textToSend.isEmpty else { return }
-        
+
+        // Block submission if comment contains objectionable language
+        if ContentFilter.containsObjectionableContent(text: textToSend) {
+            errorMessage = "Your comment contains language that violates our community guidelines. Please revise it before posting."
+            showError = true
+            return
+        }
+
         isSubmitting = true
         Task {
             do {
@@ -137,7 +212,10 @@ struct CommentSheetView: View {
 
 struct CommentRowView: View {
     let commentItem: CommunityViewModel.CommentWithUser
-    
+    let postId: String
+    let onDelete: () -> Void
+    let onReport: () -> Void
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Avatar
@@ -173,6 +251,26 @@ struct CommentRowView: View {
                     Text(timeAgo(from: commentItem.comment.createdAt))
                         .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(.secondary)
+                    
+                    Menu {
+                        if commentItem.isMine {
+                            Button(role: .destructive, action: onDelete) {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        } else {
+                            Button(role: .destructive, action: onReport) {
+                                Label("Report", systemImage: "flag")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, 8)
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 Text(commentItem.comment.content)

@@ -144,11 +144,13 @@ class OnboardingGenderViewController: UIViewController {
         present(ageVC, animated: true, completion: nil)
     }
     @IBAction func preferNotToSay(_ sender: Any) {
-        OnboardingDataManager.shared.gender = "prefer_not_to_say"
-        
-        let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
-        ageVC.modalPresentationStyle = .fullScreen
-        present(ageVC, animated: true, completion: nil)
+        let alert = UIAlertController(
+            title: "Gender Required",
+            message: "Please select your gender to continue.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
 

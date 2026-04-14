@@ -1,9 +1,11 @@
 import SwiftUI
 import UIKit
 import Supabase
+import AuthenticationServices
 
 struct LoginView: View {
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var appleSignInManager = AppleSignInManager()
     
     @State private var email = ""
     @State private var password = ""
@@ -137,7 +139,7 @@ struct LoginView: View {
                             .buttonStyle(EliteSocialButtonStyle())
                             .disabled(authViewModel.isLoading)
                             
-                            Button(action: { performOAuthLogin(provider: .apple) }) {
+                            Button(action: { performNativeAppleSignIn() }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/appleLogo")
                                         .renderingMode(.template)
@@ -255,6 +257,35 @@ struct LoginView: View {
             } catch {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)
+            }
+        }
+    }
+
+    private func performNativeAppleSignIn() {
+        guard !authViewModel.isLoading else { return }
+        focusedField = nil
+        appleSignInManager.startSignInWithAppleFlow { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let resultTuple):
+                    Task {
+                        do {
+                            try await authViewModel.signInWithAppleNative(idToken: resultTuple.idToken, nonce: resultTuple.nonce, fullName: resultTuple.fullName)
+                            let isCompleted = authViewModel.currentUser?.onboardingCompleted ?? false
+                            if let onOAuthSuccess = onOAuthSuccess {
+                                onOAuthSuccess(isCompleted)
+                            } else {
+                                onLoginSuccess?(isCompleted)
+                            }
+                        } catch {
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.error)
+                        }
+                    }
+                case .failure(let error):
+                    guard (error as NSError).code != ASAuthorizationError.canceled.rawValue else { return }
+                    authViewModel.error = error.localizedDescription
+                }
             }
         }
     }

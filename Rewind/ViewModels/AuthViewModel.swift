@@ -120,6 +120,40 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    struct UserUpdate: Encodable {
+        let name: String
+    }
+
+    func signInWithAppleNative(idToken: String, nonce: String, fullName: String?) async throws {
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        do {
+            let session = try await supabase.auth.signInWithIdToken(
+                credentials: OpenIDConnectCredentials(
+                    provider: .apple,
+                    idToken: idToken,
+                    nonce: nonce
+                )
+            )
+
+            isLoggedIn = true
+
+            // Apple strips 'name' from the JWT, manually patch if available
+            if let validName = fullName {
+                _ = try? await supabase.auth.update(user: UserAttributes(data: ["name": .string(validName)]))
+                _ = try? await supabase.from("users").update(UserUpdate(name: validName)).eq("id", value: session.user.id).execute()
+            }
+            
+            await ensureInitialPawsBalanceForNewUser(userId: session.user.id)
+            await fetchCurrentUser()
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
+    }
+
     private func seedInitialPawsBalance(userId: UUID, updatedAt: String) async throws {
         struct InitialPawsUpdate: Encodable {
             var paws_balance: Int

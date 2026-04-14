@@ -76,6 +76,7 @@ final class UserViewModel: ObservableObject {
     static let shared = UserViewModel()
 
     @Published var user: DBUser?
+    @Published var identities: [UserIdentity] = []
     @Published var isLoading = false
     @Published var error: String?
     
@@ -93,6 +94,7 @@ final class UserViewModel: ObservableObject {
                 .execute()
                 .value
             user = response.first
+            identities = session.user.identities ?? []
         } catch {
             self.error = error.localizedDescription
         }

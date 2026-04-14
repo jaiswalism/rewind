@@ -372,42 +372,58 @@ struct CreatePostView: View {
     // MARK: - Anonymous Toggle
 
     private var anonymousSection: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.eliteAccentPrimary.opacity(0.12))
-                    .frame(width: 40, height: 40)
-                Image(systemName: "eye.slash.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color.eliteAccentPrimary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.eliteAccentPrimary.opacity(0.12))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "eye.slash.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.eliteAccentPrimary)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Post Anonymously")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(isEditMode ? "Cannot change identity while editing" : "Your name will be hidden")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: $isAnonymous)
+                    .labelsHidden()
+                    .tint(Color.eliteAccentPrimary)
+                    .disabled(isEditMode)
             }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Post Anonymously")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.primary)
-                Text("Your name will be hidden")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+            .padding(16)
+            .background(
+                colorScheme == .dark
+                    ? AnyShapeStyle(.regularMaterial)
+                    : AnyShapeStyle(Color.white.opacity(0.85)),
+                in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.secondary.opacity(0.12), lineWidth: 0.5)
+            )
+            .opacity(isEditMode ? 0.6 : 1.0)
+            
+            if isAnonymous {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 12))
+                    Text("Objectionable content is strictly prohibited. Violations lead to immediate account removal.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 8)
             }
-
-            Spacer()
-
-            Toggle("", isOn: $isAnonymous)
-                .labelsHidden()
-                .tint(Color.eliteAccentPrimary)
         }
-        .padding(16)
-        .background(
-            colorScheme == .dark
-                ? AnyShapeStyle(.regularMaterial)
-                : AnyShapeStyle(Color.white.opacity(0.85)),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 0.5)
-        )
     }
 
     // MARK: - Actions
@@ -415,6 +431,13 @@ struct CreatePostView: View {
     private func submitPost() {
         let content = postText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !content.isEmpty else { return }
+
+        // Block submission if content contains objectionable language
+        if ContentFilter.containsObjectionableContent(text: content) {
+            errorMessage = "Your post contains language that violates our community guidelines. Please revise it before posting."
+            showError = true
+            return
+        }
 
         isPosting = true
 

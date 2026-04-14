@@ -4,9 +4,9 @@ import Foundation
 // DB columns: id, email, name, profile_image_url, timezone, location, date_of_birth, gender,
 //             age, health_goal, seeking_professional_help, created_at, updated_at
 // + DB migration adds: phone, paws_balance, total_posts, onboarding_completed
-struct DBUser: Codable, Identifiable {
+struct DBUser: Codable, Identifiable, Equatable {
     let id: UUID
-    var name: String
+    var name: String?
     var email: String?
     var phone: String?
     var profileImageUrl: String?
@@ -23,8 +23,8 @@ struct DBUser: Codable, Identifiable {
     var ownedStyles: [String]?
     var accountDeletionRequestedAt: String?
     var accountDeletionDueAt: String?
-    let createdAt: String
-    var updatedAt: String
+    var createdAt: String?
+    var updatedAt: String?
 
     enum CodingKeys: String, CodingKey {
         case id, name, email, phone, timezone, location, gender, age

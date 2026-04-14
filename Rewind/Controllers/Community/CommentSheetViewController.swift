@@ -97,6 +97,19 @@ class CommentSheetViewController: UIViewController {
 
     @objc private func sendComment() {
         guard let text = inputTextField.text, !text.isEmpty, let postId = postId, let uuid = UUID(uuidString: postId) else { return }
+
+        // Block objectionable content at submission
+        if ContentFilter.containsObjectionableContent(text: text) {
+            let alert = UIAlertController(
+                title: "Community Guidelines",
+                message: "Your comment contains language that violates our community guidelines. Please revise it before posting.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
         sendButton.isEnabled = false
         Task {
             do {

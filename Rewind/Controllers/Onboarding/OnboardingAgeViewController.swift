@@ -11,7 +11,7 @@ class OnboardingAgeViewController: UIViewController {
 
     @IBOutlet var collectionView: UICollectionView!
     
-    let ageRange = Array(14...99)
+    let ageRange = Array(18...99)
     var selectedAge: Int = 18
     
     private let agePickerLayout = AgePickerLayout()
@@ -69,11 +69,13 @@ class OnboardingAgeViewController: UIViewController {
         }
     }
     @IBAction func preferNotToSay(_ sender: Any) {
-        OnboardingDataManager.shared.age = 25 // Default fallback
-        
-        let profhelpVC = OnboardingProfHelpViewController(nibName: "OnboardingProfHelpViewController", bundle: nil)
-        profhelpVC.modalPresentationStyle = .fullScreen
-        present(profhelpVC, animated: true, completion: nil)
+        let alert = UIAlertController(
+            title: "Age Required",
+            message: "To comply with our 18+ policy, we need your age to continue.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     @IBAction func backButton(_ sender: Any) {
         let genderVC = OnboardingGenderViewController(nibName: "OnboardingGenderViewController", bundle: nil)
