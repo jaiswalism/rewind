@@ -41,8 +41,8 @@ struct LoginView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 80)
-                    .padding(.bottom, 20)
+                    .padding(.top, 60)
+                    .padding(.bottom, 10)
                     
                     // Input Form Card
                     VStack(spacing: 0) {
@@ -96,8 +96,9 @@ struct LoginView: View {
                                 .foregroundStyle(Color.eliteAccentPrimary)
                         }
                     }
+                    .padding(.top, -10)
                     
-                    VStack(spacing: 24) {
+                    VStack(spacing: 20) {
                         // Login Button
                         Button(action: performLogin) {
                             if authViewModel.isLoading {
@@ -125,7 +126,7 @@ struct LoginView: View {
                         }
                         
                         // Social Login Buttons
-                        VStack(spacing: 16) {
+                        VStack(spacing: 14) {
                             Button(action: { performOAuthLogin(provider: .google) }) {
                                 HStack(spacing: 12) {
                                     Image("illustrations/auth/googleLogo")
@@ -153,6 +154,13 @@ struct LoginView: View {
                             .buttonStyle(EliteSocialButtonStyle())
                             .disabled(authViewModel.isLoading)
                         }
+                        
+                        // Terms & Privacy Notice
+                        Text("By continuing, you agree to our [Terms of Service](https://rewind.shyamjaiswal.in/terms) & [Privacy Policy](https://rewind.shyamjaiswal.in/privacy).")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 4)
                     }
                     
                     // Sign Up Link
@@ -169,7 +177,7 @@ struct LoginView: View {
                                 .foregroundStyle(Color.eliteAccentPrimary)
                         }
                     }
-                    .padding(.top, 12)
+                    .padding(.top, 0)
                     .padding(.bottom, 24)
                 }
                 .frame(maxWidth: .infinity)
