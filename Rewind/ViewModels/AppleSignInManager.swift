@@ -87,13 +87,23 @@ extension AppleSignInManager: ASAuthorizationControllerDelegate {
 extension AppleSignInManager: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         let scenes = UIApplication.shared.connectedScenes
-        let windowScene = scenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene ?? scenes.first as? UIWindowScene
+        let windowScene = (scenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene)
+            ?? (scenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene)
         
+        // In modern iOS, we must have a scene to have a window.
+        // We find the most appropriate scene and use the modern initializer.
         if let scene = windowScene {
             return scene.windows.first { $0.isKeyWindow } ?? UIWindow(windowScene: scene)
         }
         
-        // Last resort/fallback for non-scene contexts or initialization failures
-        return UIWindow(frame: .zero)
+        // If no scene is available (unlikely for a foreground app), 
+        // we use the first available scene to satisfy the requirement.
+        let fallbackScene = scenes.first as? UIWindowScene
+        if let scene = fallbackScene {
+            return UIWindow(windowScene: scene)
+        }
+        
+        // This point should be unreachable in a running app with a UI
+        fatalError("No window scene available for Apple Sign-In presentation")
     }
 }
