@@ -31,7 +31,13 @@ struct CommunityView: View {
 
                 ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 20) {
-                        if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
+                        if communityViewModel.isLoading && communityViewModel.posts.isEmpty {
+                            // Skeleton loading state
+                            ForEach(0..<3) { _ in
+                                CommunityPostSkeleton()
+                                    .padding(.horizontal, 20)
+                            }
+                        } else if communityViewModel.posts.isEmpty && !communityViewModel.isLoading {
                             VStack(spacing: 16) {
                                 Image(systemName: "person.2.square.stack")
                                     .font(.system(size: 48))

@@ -125,12 +125,12 @@ struct ContactSupportView: View {
                     .disabled(isSubmitting || !isFormValid)
                     .opacity(!isFormValid ? 0.6 : 1.0)
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 12)
                     
                     Text("A copy of this request will be sent to your email.")
-                        .font(.system(size: 12))
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                        .padding(.bottom, 32)
+                        .padding(.bottom, 8)
                 }
                 .background(colorScheme == .dark ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color.white.opacity(0.95)))
             }
