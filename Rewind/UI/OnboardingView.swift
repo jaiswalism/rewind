@@ -138,7 +138,7 @@ struct OnboardingView: View {
                 .frame(maxWidth: 420)
                 .background(
                     RoundedRectangle(cornerRadius: 28)
-                        .fill(.ultraThinMaterial)
+                        .fill(.regularMaterial)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 28)

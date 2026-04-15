@@ -43,13 +43,13 @@ class OnboardingBaseViewController: UIViewController {
 
     func setupGradientBackground() {
         gradientLayer.colors = [
+            UIColor(named: "colors/Blue&Shades/blue-500")?.cgColor ?? UIColor(red: 0.15, green: 0.15, blue: 0.65, alpha: 1.0).cgColor,
             UIColor(named: "colors/Blue&Shades/blue-400")?.cgColor ?? UIColor(red: 0.25, green: 0.25, blue: 0.75, alpha: 1.0).cgColor,
-            UIColor(named: "colors/Blue&Shades/blue-300")?.cgColor ?? UIColor(red: 0.35, green: 0.35, blue: 0.85, alpha: 1.0).cgColor,
             UIColor(named: "colors/Blue&Shades/blue-500")?.cgColor ?? UIColor(red: 0.15, green: 0.15, blue: 0.65, alpha: 1.0).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.locations = [0.0, 0.7, 1.0]
         view.layer.insertSublayer(gradientLayer, at: 0)
     }
 
