@@ -12,7 +12,7 @@
         <!--Onboarding Screen View Controller-->
         <scene sceneID="vYz-Ne-nrF">
             <objects>
-                <viewController id="Apn-P8-zwA" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Apn-P8-zwA" customClass="IntroScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="e5K-nq-rKe">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -91,7 +91,7 @@
         <!--Onboarding Screen View Controller-->
         <scene sceneID="lsA-w4-w50">
             <objects>
-                <viewController id="Nma-FY-01D" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Nma-FY-01D" customClass="IntroScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="rz7-Lf-sak">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -172,7 +172,7 @@
         <!--Onboarding Screen View Controller-->
         <scene sceneID="FeE-ad-8V3">
             <objects>
-                <viewController id="bZr-K2-eY0" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="bZr-K2-eY0" customClass="IntroScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ela-29-ukh">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -253,7 +253,7 @@
         <!--Onboarding Screen View Controller-->
         <scene sceneID="AJN-4e-ILS">
             <objects>
-                <viewController id="h2S-q5-lWg" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="h2S-q5-lWg" customClass="IntroScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="66s-Hc-Vha">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -334,7 +334,7 @@
         <!--Onboarding Screen View Controller-->
         <scene sceneID="bKA-89-ypA">
             <objects>
-                <viewController id="QMP-yR-XF1" customClass="OnboardingScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="QMP-yR-XF1" customClass="IntroScreenViewController" customModule="Rewind" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="jSa-YI-Alc">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -346,7 +346,7 @@
                                 <rect key="frame" x="0.0" y="500" width="393" height="352"/>
                                 <preferredSymbolConfiguration key="preferredSymbolConfiguration" scale="default"/>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Mood Journaling &amp; AI Companian" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zQp-gk-Dnx">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Mood Journaling &amp; AI Companion" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zQp-gk-Dnx">
                                 <rect key="frame" x="21.666666666666657" y="597" width="350" height="114"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="350" id="MGA-Ww-PTg"/>

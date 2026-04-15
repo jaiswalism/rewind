@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24504"/>
         <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -112,7 +112,6 @@ age?</string>
                 <constraint firstItem="fnl-2z-Ty3" firstAttribute="trailing" secondItem="QpJ-ac-kji" secondAttribute="trailing" id="DN0-DS-AJs"/>
                 <constraint firstAttribute="bottom" secondItem="gyZ-JS-fpK" secondAttribute="bottom" constant="70" id="M93-Ub-bJF"/>
                 <constraint firstItem="SBf-cl-RqH" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="P5n-9u-tem"/>
-                <constraint firstItem="gyZ-JS-fpK" firstAttribute="top" secondItem="Qbk-7t-0I4" secondAttribute="bottom" constant="20" id="RmL-PC-RwI"/>
                 <constraint firstItem="QpJ-ac-kji" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="VmZ-ex-3sA"/>
                 <constraint firstItem="QpJ-ac-kji" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" id="eFO-ib-Oyo"/>
                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="vT6-pK-sij" secondAttribute="trailing" constant="24" id="fbY-cv-ri2"/>
@@ -121,7 +120,6 @@ age?</string>
                 <constraint firstItem="SBf-cl-RqH" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="80" id="kwx-TB-6sh"/>
                 <constraint firstItem="RPA-VZ-ULZ" firstAttribute="leading" secondItem="fnl-2z-Ty3" secondAttribute="leading" constant="12" id="lMr-9G-Bqk"/>
                 <constraint firstItem="vT6-pK-sij" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="lOh-nH-wAf"/>
-                <constraint firstItem="Qbk-7t-0I4" firstAttribute="centerX" secondItem="i5M-Pr-FkT" secondAttribute="centerX" id="nhm-VV-H9Q"/>
                 <constraint firstItem="vT6-pK-sij" firstAttribute="top" secondItem="SBf-cl-RqH" secondAttribute="bottom" constant="30" id="qLX-fw-23k"/>
                 <constraint firstItem="vT6-pK-sij" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="24" id="z5n-Qd-ZC6"/>
             </constraints>

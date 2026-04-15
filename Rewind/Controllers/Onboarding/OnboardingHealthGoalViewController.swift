@@ -7,19 +7,24 @@
 
 import UIKit
 
+#if canImport(OnboardingLayoutHelpers)
+import OnboardingLayoutHelpers
+#endif
+
 class OnboardingHealthGoalViewController: UIViewController {
 
     @IBOutlet var optionButtons: [UIButton]!
     @IBOutlet weak var nextButton: UIButton!
-    
+
     let unselectedColor = UIColor(named: "colors/Primary/Light")
     let nextButtonEnabledColor = UIColor(named: "colors/Primary/Light")
     let nextButtonDisabledColor = UIColor.systemGray4
     let selectedBackgroundColor = UIColor(named: "colors/Blue&Shades/blue-300")
     let selectedTextColor: UIColor = .white
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
+
 
         // 1. Set the update handler for every button in the group
         for button in optionButtons {
@@ -27,12 +32,12 @@ class OnboardingHealthGoalViewController: UIViewController {
                 self?.updateButtonAppearance(for: button)
             }
         }
-        
+
         nextButton.configurationUpdateHandler = { [weak self] button in
             guard let self = self else { return }
 
             var config = button.configuration
-            
+
             // 2. Automatically change color based on 'isEnabled'
             if button.isEnabled {
                 config?.background.backgroundColor = self.nextButtonEnabledColor
@@ -41,32 +46,32 @@ class OnboardingHealthGoalViewController: UIViewController {
                 config?.background.backgroundColor = self.nextButtonDisabledColor
                 config?.attributedTitle?.foregroundColor = .systemGray // Darker gray for disabled text
             }
-            
+
             // 3. Apply the changes
             button.configuration = config
         }
-                
+
         nextButton.isEnabled = false
     }
-    
+
     @IBAction func optionTapped(_ sender: UIButton) {
         for button in optionButtons {
             button.isSelected = (button == sender)
         }
-        
+
         nextButton.isEnabled = true
     }
-    
+
     private func updateButtonAppearance(for button: UIButton) {
         var config = button.configuration
-        
+
         if button.isSelected {
             // --- SELECTED STATE ---
-            
+
             config?.background.backgroundColor = selectedBackgroundColor
-            
+
             config?.attributedTitle?.foregroundColor = selectedTextColor
-            
+
             button.layer.borderColor = UIColor.white.cgColor
             button.layer.shadowColor = UIColor.black.cgColor
             button.layer.shadowOpacity = 0.3
@@ -76,14 +81,14 @@ class OnboardingHealthGoalViewController: UIViewController {
 
         } else {
             // --- NORMAL STATE (Unselected) ---
-            
+
             config?.background.backgroundColor = unselectedColor
-            
+
             button.layer.shadowOpacity = 0
-            
+
             config?.attributedTitle?.foregroundColor = UIColor(named: "colors/Primary/Dark") // Dark text on Light background
         }
-        
+
         button.configuration = config
     }
 

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		5275E91E2F69C8A10093C480 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E83A2F69C8A10093C480 /* AppDelegate.swift */; };
-		5275E9322F69C8A10093C480 /* OnboardingScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */; };
 		5275E9412F69C8A10093C480 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E8A12F69C8A10093C480 /* ViewController.swift */; };
 		5275E9432F69C8A10093C480 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5275E8952F69C8A10093C480 /* SceneDelegate.swift */; };
 		5275E9562F69CBBD0093C480 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 5275E9552F69CBBD0093C480 /* Auth */; };
@@ -38,7 +37,6 @@
 
 /* Begin PBXFileReference section */
 		5275E83A2F69C8A10093C480 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScreenViewController.swift; sourceTree = "<group>"; };
 		5275E8952F69C8A10093C480 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		5275E8A12F69C8A10093C480 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		52A84E2A2EB9531100D47157 /* Rewind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Rewind.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -47,13 +45,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		5275E9522F69CB000093C480 /* Exceptions for "Controllers" folder in "Rewind" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Onboarding/OnboardingScreenViewController.swift,
-			);
-			target = 52A84E292EB9531100D47157 /* Rewind */;
-		};
 		5275E9612F69CC000093C480 /* Exceptions for "Resources" folder in "Rewind" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -76,9 +67,6 @@
 		};
 		5275E8732F69C8A10093C480 /* Controllers */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				5275E9522F69CB000093C480 /* Exceptions for "Controllers" folder in "Rewind" target */,
-			);
 			path = Controllers;
 			sourceTree = "<group>";
 		};
@@ -162,7 +150,6 @@
 				5275E8732F69C8A10093C480 /* Controllers */,
 				5275E87D2F69C8A10093C480 /* Core */,
 				5275E88C2F69C8A10093C480 /* Models */,
-				5275E88D2F69C8A10093C480 /* OnboardingScreenViewController.swift */,
 				5275E8942F69C8A10093C480 /* Resources */,
 				5275E8952F69C8A10093C480 /* SceneDelegate.swift */,
 				5275E8982F69C8A10093C480 /* Services */,
@@ -357,7 +344,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5275E91E2F69C8A10093C480 /* AppDelegate.swift in Sources */,
-				5275E9322F69C8A10093C480 /* OnboardingScreenViewController.swift in Sources */,
 				5275E9412F69C8A10093C480 /* ViewController.swift in Sources */,
 				5275E9432F69C8A10093C480 /* SceneDelegate.swift in Sources */,
 			);
@@ -408,7 +394,7 @@
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -449,7 +435,7 @@
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to enable voice conversations with your pet.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to understand what you're saying to your pet.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";

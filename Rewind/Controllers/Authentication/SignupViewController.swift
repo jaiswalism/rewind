@@ -17,7 +17,7 @@ class SignupViewController: UIHostingController<SignupView> {
     private func setupCallbacks(for view: inout SignupView) {
         view.onSignUpSuccess = { [weak self] in
             DispatchQueue.main.async {
-                self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
+                self?.setRootViewController(GoalSelectionViewController())
             }
         }
 
@@ -26,7 +26,7 @@ class SignupViewController: UIHostingController<SignupView> {
                 if isCompleted {
                     self?.setRootViewController(MainTabBarController())
                 } else {
-                    self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
+                    self?.setRootViewController(GoalSelectionViewController())
                 }
             }
         }

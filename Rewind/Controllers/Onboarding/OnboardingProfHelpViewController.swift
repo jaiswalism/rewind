@@ -7,13 +7,19 @@
 
 import UIKit
 
+#if canImport(OnboardingLayoutHelpers)
+import OnboardingLayoutHelpers
+#endif
+
 class OnboardingProfHelpViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+
     }
+    
     @IBAction func backButton(_ sender: Any) {
         // Navigate back to OnboardingAgeViewController (XIB)
                 let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
@@ -22,11 +28,11 @@ class OnboardingProfHelpViewController: UIViewController {
     @IBAction func yesButton(_ sender: Any) {
         submitOnboarding(seekingHelp: true)
     }
-    
+
     @IBAction func noButton(_ sender: Any) {
         submitOnboarding(seekingHelp: false)
     }
-    
+
     private func submitOnboarding(seekingHelp: Bool) {
         OnboardingDataManager.shared.seekingProfessionalHelp = seekingHelp
         Task {
@@ -44,7 +50,7 @@ class OnboardingProfHelpViewController: UIViewController {
             }
         }
     }
-    
+
     /*
     // MARK: - Navigation
 

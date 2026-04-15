@@ -7,13 +7,17 @@
 
 import UIKit
 
+#if canImport(OnboardingLayoutHelpers)
+import OnboardingLayoutHelpers
+#endif
+
 class OnboardingAgeViewController: UIViewController {
 
     @IBOutlet var collectionView: UICollectionView!
-    
+
     let ageRange = Array(18...99)
     var selectedAge: Int = 18
-    
+
     private let agePickerLayout = AgePickerLayout()
     private var currentActiveIndex: Int = 0
 
@@ -21,8 +25,9 @@ class OnboardingAgeViewController: UIViewController {
         super.viewDidLoad()
         setupCollectionView()
         scrollToDefaultAge()
+
     }
-    
+
     private func setupCollectionView() {
         collectionView.collectionViewLayout = agePickerLayout
         collectionView.decelerationRate = .fast

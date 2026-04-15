@@ -7,11 +7,15 @@
 
 import UIKit
 
+#if canImport(OnboardingLayoutHelpers)
+import OnboardingLayoutHelpers
+#endif
+
 class OnboardingGenderViewController: UIViewController {
-    
+
     @IBOutlet var genderButtons: [UIButton]!
     @IBOutlet weak var nextButton: UIButton!
-    
+
     let maleSelectedImage = UIImage(named: "illustrations/onboarding/Male Selected")
     let maleUnselectedImage = UIImage(named: "illustrations/onboarding/Male Unselected")
     let femaleSelectedImage = UIImage(named: "illustrations/onboarding/Female Selected")
@@ -20,13 +24,14 @@ class OnboardingGenderViewController: UIViewController {
     // Next Button Colors
     let nextButtonEnabledColor = UIColor(named: "colors/Primary/Light")
     let nextButtonDisabledColor = UIColor.systemGray4
-    
+
     // Next Button Text Color
     let nextButtonEnabledTextColor = UIColor(named: "colors/Blue&Shades/blue-400")
     let nextButtonDisabledTextColor = UIColor.systemGray
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
 
         // --- Setup for Next Button ---
         nextButton.configurationUpdateHandler = { [weak self] button in
@@ -41,15 +46,15 @@ class OnboardingGenderViewController: UIViewController {
             }
             button.configuration = config
         }
-        
+
         nextButton.isEnabled = false
-        
+
         // --- Setup for Gender Buttons ---
         for button in genderButtons {
             button.configurationUpdateHandler = { [weak self] button in
                 self?.updateGenderButtonAppearance(for: button)
             }
-            
+
             button.layer.cornerRadius = 20
             button.clipsToBounds = true
         }
@@ -142,13 +147,12 @@ class OnboardingGenderViewController: UIViewController {
         self.setRootViewController(ageVC)
     }
     @IBAction func preferNotToSay(_ sender: Any) {
-        let alert = UIAlertController(
-            title: "Gender Required",
-            message: "Please select your gender to continue.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        // Skip gender selection and proceed to next step
+        OnboardingDataManager.shared.gender = "prefer_not_to_say"
+        
+        // Navigate to OnboardingAgeViewController (XIB)
+        let ageVC = OnboardingAgeViewController(nibName: "OnboardingAgeViewController", bundle: nil)
+        self.setRootViewController(ageVC)
     }
 }
 
