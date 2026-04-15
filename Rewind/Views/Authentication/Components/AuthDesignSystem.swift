@@ -61,12 +61,12 @@ struct EliteBackgroundView: View {
     @State private var animate = false
     @Environment(\.colorScheme) private var colorScheme
     
-    private var orbOpacity: Double { colorScheme == .dark ? 0.12 : 0.18 }
+    private var orbOpacity: Double { colorScheme == .dark ? 0.08 : 0.12 }
     
     var body: some View {
         ZStack {
-            // Adaptive base — off-white tint in light mode, system black in dark
-            (colorScheme == .dark ? Color(UIColor.systemBackground) : Color(red: 0.94, green: 0.96, blue: 1.0))
+            // Adaptive base — Soft matte tint in light mode, system background in dark
+            (colorScheme == .dark ? Color(UIColor.systemBackground) : Color(red: 0.96, green: 0.97, blue: 0.98))
                 .ignoresSafeArea()
             
             // Smoothly floating and blending ambient orbs

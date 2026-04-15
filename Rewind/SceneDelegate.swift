@@ -7,6 +7,7 @@
 
 import UIKit
 import Supabase
+import SwiftUI
 
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -52,7 +53,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     @MainActor
     private func resolveInitialScreen() async {
         guard !Task.isCancelled else { return }
-
+        
         if pendingRecoveryRoute {
             pendingRecoveryRoute = false
             await waitForMinimumSplashDuration()
@@ -96,17 +97,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 // Fully onboarded user → go straight to main tab
                 nextViewController = MainTabBarController()
             } else {
-                // Session exists but onboarding not done → resume from first question
-                nextViewController = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+                // Session exists but onboarding not done → resume from first question (programmatic UIKit)
+                nextViewController = GoalSelectionViewController()
             }
         } else {
-            // No session → brand-new user, show the onboarding intro storyboard
-            let onboardingStoryboard = UIStoryboard(name: "Onboarding", bundle: nil)
-            if let onboardingVC = onboardingStoryboard.instantiateInitialViewController() {
-                nextViewController = onboardingVC
-            } else {
-                nextViewController = OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil)
+            // No session → brand-new user, show the 5-page programmatic info tutorial
+            var onboardingView = OnboardingView()
+            onboardingView.onCompletion = { [weak self] in
+                let loginVC = LoginViewController()
+                self?.setRoot(loginVC)
             }
+            nextViewController = UIHostingController(rootView: onboardingView)
         }
 
         await waitForMinimumSplashDuration()

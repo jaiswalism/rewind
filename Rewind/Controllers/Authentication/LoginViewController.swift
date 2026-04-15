@@ -13,7 +13,7 @@ class LoginViewController: UIHostingController<LoginView> {
                 if isCompleted {
                     self?.setRootViewController(MainTabBarController())
                 } else {
-                    self?.setRootViewController(OnboardingHealthGoalViewController(nibName: "OnboardingHealthGoalViewController", bundle: nil))
+                    self?.setRootViewController(GoalSelectionViewController())
                 }
             }
         }
